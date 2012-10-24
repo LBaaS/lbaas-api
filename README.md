@@ -1,12 +1,12 @@
-API server env + build
+LBaaS API server environment and build information
 --------------------------------------------------
-1) standard medium  / ubuntu 12.04 64 bit 
+1) ubuntu 12.04 64 bit bit OS 
 
-2) install lbaas api sources
+2) install lbaas api sources, clone from git repo
 
-3) sudo apt-get install maven
+3) sudo apt-get install maven, needed to build
 
-4) install java 7 ( needed for gearman java )
+4) install java 7, needed for gearman java
 sudo add-apt-repository ppa:webupd8team/java -y
 sudo apt-get update
 sudo apt-get install oracle-java7-installer
@@ -19,13 +19,13 @@ sudo apt-get install mysql-server ( root pwd should be 'lbaas' for testing )
 
 7) build it
 mvn clean install
-mvn assembly:assembly
+mvn assembly:assembly ( should have no errors )
 
 8) initialize DB
 mysql/mysql -u root -p < lbaas.sql    ( build the DB, first time only, will drop DBs and create LBaaS schemas )
 
 9) install gearman ( can be local for testing or on a system of your choice )
-sudo apt-get install gearman-job-server
+sudo apt-get install gearman-job-server     <<  should also start gearmand
 
 10) check config params
 lbaas.config defines run time params, this is setup for local testing by default
