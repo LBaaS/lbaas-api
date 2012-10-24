@@ -26,6 +26,7 @@ mysql/mysql -u root -p < lbaas.sql    ( build the DB, first time only, will drop
 
 9) install gearman ( can be local for testing or on a system of your choice )
 sudo apt-get install gearman-job-server     <<  should also start gearmand
+Note, you may need to change /etc/default/gearman-job-server  to listen on 0.0.0.0 rather than 127.0.0.1 
 
 10) check config params
 lbaas.config defines run time params, this is setup for local testing by default
