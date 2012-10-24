@@ -1,5 +1,9 @@
 package org.pem.lbaas;
 
+/**
+ * pemellquist@gmail.com
+ */
+
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
@@ -9,6 +13,7 @@ public class LbaasConfig {
 	private static Logger logger = Logger.getLogger(LbaasConfig.class);
 	
 	public static String API_PORT       = "api-port";
+	public static String ADMIN_PORT     = "admin-port";
 	public static String DB_PATH        = "db-path";
 	public static String DB_DRIVER      = "db-driver";
 	public static String DB_USER        = "db-user";
@@ -18,6 +23,7 @@ public class LbaasConfig {
 		
 	
 	public int apiPort;
+	public int adminPort;
 	public String dbPath;
 	public String dbDriver;
 	public String dbUser;
@@ -31,6 +37,7 @@ public class LbaasConfig {
 	           XMLConfiguration serviceConfig = new XMLConfiguration(filename);
 	           
 	           apiPort = serviceConfig.getInt(API_PORT);
+	           adminPort = serviceConfig.getInt(ADMIN_PORT);
 	           
 	           dbPath = serviceConfig.getString(DB_PATH);
 	           dbDriver = serviceConfig.getString(DB_DRIVER);
@@ -51,6 +58,7 @@ public class LbaasConfig {
 	public void log() {
 	   
 	   logger.info("API port               : " + apiPort);
+	   logger.info("ADMIN port             : " + adminPort);
 	   logger.info("DB Path                : " + dbPath);
 	   logger.info("DB Driver              : " + dbDriver);
 	   logger.info("Gearman Server Address : " + gearmanServerAddr);
