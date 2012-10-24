@@ -1,0 +1,21 @@
+{
+    "name": "first test",
+    "nodes":      [
+                    {
+                      "address": "15.185.96.137",
+                      "port": "80"
+                    },
+                    {
+                      "address": "15.185.96.223",
+                      "port": "80"
+                    }
+                   ],
+     "virtualIps": [
+                    {
+                      "address": "10.1.1.1",
+                      "type": "PUBLIC",
+                      "ipVersion": "IPV4"
+                    }
+                  ]
+
+}

@@ -1,0 +1,6 @@
+{
+    "name": "lbaas-10.5.251.48",
+    "address": "15.185.96.125",
+    "type":"HAProxy",
+    "status":"offline"
+}

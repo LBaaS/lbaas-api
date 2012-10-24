@@ -1,0 +1,101 @@
+JSON /loadbalancers
+--------------------------------------------------------------------------
+GET     /loadbalancers                                      DONE
+GET     /loadbalancers/{loadBalancerId}                     DONE
+POST    /loadbalancers                                      DONE
+PUT     /loadbalancers/{loadBalancerId}                     DONE  
+DELETE  /loadbalancers/{loadBalancerId}                     DONE
+GET     /loadbalancers/{loadBalancerId}/nodes               NOT IMPLEMENTED
+GET     /loadbalancers/{loadBalancerId}/nodes/{nodeId}      NOT IMPLEMENTED
+POST    /loadbalancers/{loadBalancerId}/nodes               NOT IMPLEMENTED
+PUT     /loadbalancers/{loadBalancerId}/nodes/{nodeId}      NOT IMPLEMENTED
+DELETE  /loadbalancers/{loadBalancerId}/nodes/{nodeId}      NOT IMPLEMENTED
+GET     /loadbalancers/{loadBalancerId}/virtualips          NOT IMPLEMENTED
+GET     /loadbalancers/{loadBalancerId}/usage               NOT IMPLEMENTED
+GET     /loadbalancers/{loadBalancerId}/healthmonitor       NOT IMPLEMENTED
+PUT     /loadbalancers/{loadBalancerId}/healthmonitor       NOT IMPLEMENTED
+DELETE  /loadbalancers/{loadBalancerId}/healthmonitor       NOT IMPLEMENTED
+GET     /loadbalancers/{loadBalancerId}/sessionpersistence  NOT IMPLEMENTED
+PUT     /loadbalancers/{loadBalancerId}/sessionpersistence  NOT IMPLEMENTED
+DELETE  /loadbalancers/{loadBalancerId}/sessionpersistence  NOT IMPLEMENTED
+GET     /loadbalancers/{loadBalancerId}/connectionthrottle  NOT IMPLEMENTED
+PUT     /loadbalancers/{loadBalancerId}/connectionthrottle  NOT IMPLEMENTED
+DELETE  /loadbalancers/{loadBalancerId}/connectionthrottle  NOT IMPLEMENTED
+
+JSON /protocols
+----------------------------------------------------------------------------
+GET     /protocols                                          NOT IMPLEMENTED
+
+JSON Algorithms
+----------------------------------------------------------------------------
+GET     /algorithms                                         NOT IMPLEMENTED
+
+JSON    /devices
+----------------------------------------------------------------------------
+GET     /devices                                            DONE
+PUT     /devices/{deviceId}                                 DONE
+POST    /devices                                            DONE
+DELETE     /devices/{deviceId}                              DONE
+
+Config File
+---------------------------------------------------------------------------
+sql,gearman, ports, certs                                   DONE
+
+
+Admin ports
+---------------------------------------------------------------------------
+devices and web ui on different port than tenant API        NOT IMPLEMENTED
+
+
+Keystone integration 
+---------------------------------------------------------------------------
+CS auth filter                                              NOT IMPLEMENTED
+only allow access to your own tenant via tenant port 
+admin port allows access to all tenants
+
+
+Pagination Support
+---------------------------------------------------------------------------
+limit and marker for lists                                 NOT IMPLEMENTED 
+
+
+Certificate Management Support 
+---------------------------------------------------------------------------
+api and strategy for storage and applying customer certs   NOT IMPLEMENTED
+
+
+Custom Fault Body
+---------------------------------------------------------------------------
+Fault body compliant with Atlas                            NOT IMPLEMENTED
+
+
+Resource Limits
+---------------------------------------------------------------------------
+Default tenant limits on max # of LBs                      NOT IMPLEMENTED
+
+DB
+---------------------------------------------------------------------------
+improved mysql connection pooling and mgmt                 NOT IMPLEMENTED
+
+Pending state request blocking
+---------------------------------------------------------------------------
+should requests be blocked when in BUILD or PENDING_UPDATE state ?
+
+
+Notes:
+node ids are only unique to the LB and not unique for all nodes across LBs, this should be ok.
+'condition' not in schema?, can we use 'extra' fields and then keep XSDs 100%?
+Do we need to lock db on reads and writes?
+How to handle gearman HA?
+
+
+Questions:
+---------------------------------------------------------------------------
+How many LBs and devices can we handle max?
+BIGINTS or UUIDs?
+
+
+
+
+	
+	
