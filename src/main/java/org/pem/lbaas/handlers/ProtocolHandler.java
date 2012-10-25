@@ -1,5 +1,9 @@
 package org.pem.lbaas.handlers;
 
+/**
+ * pemellquist@gmail.com
+ */
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,10 +22,13 @@ import org.pem.lbaas.datamodel.Protocol;
 @Path("/protocols")
 public class ProtocolHandler {
    private static Logger logger = Logger.getLogger(ProtocolHandler.class);
+   private static String HTTP = "HTTP";
+   private static String TCP = "TCP";
+   
    @SuppressWarnings("serial")
    static List<Protocol> protocols = new ArrayList<Protocol>() {{
-	     add( new Protocol("HTTP", 80));
-	     add( new Protocol("TCP",443));
+	     add( new Protocol(HTTP, 80));
+	     add( new Protocol(TCP,443));
       }};
    
    
