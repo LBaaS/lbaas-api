@@ -31,10 +31,15 @@ Note, you may need to change /etc/default/gearman-job-server  to listen on 0.0.0
 10) check config params
 lbaas.config defines run time params, this is setup for local testing by default
 
-11) test it
-curl localhost:8888/devices
-{"devices":[]}                     << will return empty device listlook in logs/lbaas.log for run time info.
+11) Run it
+./lbaas.sh is the start and stop script. To have logs locally create a logs directory.
+./lbaas.sh start
+logs/launch.log will show how it started
+logs/lbaas.log will log based on the log4j config
 
-12) for logging & debug log4j path must vbe correct in lbaa.hs based on your deployment
+12) test it
+curl localhost:8888/devices
+{"devices":[]}                     << will return empty device list, look in logs/lbaas.log for run time info.
+
 
 
