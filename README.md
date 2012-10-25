@@ -34,3 +34,7 @@ lbaas.config defines run time params, this is setup for local testing by default
 11) test it
 curl localhost:8888/devices
 {"devices":[]}                     << will return empty device listlook in logs/lbaas.log for run time info.
+
+12) for logging & debug log4j path must vbe correct in lbaa.hs based on your deployment
+
+
