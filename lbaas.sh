@@ -1,6 +1,6 @@
 #!/bin/bash
 JAR="./target/lbaas-0.0.1-jar-with-dependencies.jar"
-LOGCFG="file:/home/ubuntu/lbaas/log4j.properties"
+LOGCFG="file:/home/ubuntu/lbaas/lbaas-10-24-2012/log4j.properties"
 CONFIG="./lbaas.config"
 
 if [ $# -lt 1 ]
