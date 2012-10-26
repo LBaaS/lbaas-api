@@ -1,9 +1,14 @@
 package org.pem.lbaas;
 
+/**
+ * pemellquist@gmail.com
+ */
+
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
+import org.eclipse.jetty.server.ssl.SslSocketConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
@@ -20,15 +25,20 @@ public class DeviceThread extends Thread {
    }
 
 
-   public void run()
+@SuppressWarnings("deprecation")
+public void run()
    {	
       try {
     	  
 	     Server server = new Server();
-	     
-	     Connector restconnector = new SelectChannelConnector();			   		   
-		 restconnector.setPort(lbaasConfig.adminPort);
-		 server.addConnector(restconnector);			   
+	     	    		 
+		 SslSocketConnector sslConnector = new SslSocketConnector();
+         sslConnector.setPort(lbaasConfig.adminPort);
+		 sslConnector.setKeyPassword(lbaasConfig.keystorePwd);
+   	     sslConnector.setKeystore(lbaasConfig.keystore);  
+   	     server.addConnector(sslConnector);
+		 
+		 
 		 ServletHolder sh = new ServletHolder();
 		 sh.setName("device");
 		 sh.setClassName("com.sun.jersey.spi.container.servlet.ServletContainer");
@@ -36,7 +46,7 @@ public class DeviceThread extends Thread {
 		 ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
 		 context.setContextPath("/");
 		 server.setHandler(context); 
-		 context.addServlet(sh, "/*");	
+		 context.addServlet(sh, "/v1/*");	
 						    				   
          server.start();
 		 server.join();
