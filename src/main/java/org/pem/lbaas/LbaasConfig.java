@@ -14,6 +14,8 @@ public class LbaasConfig {
 	
 	public static String API_PORT       = "api-port";
 	public static String ADMIN_PORT     = "admin-port";
+	public static String KEYSTORE       = "keystore";
+	public static String KEYSTOREPWD    = "keystorepwd";
 	public static String DB_PATH        = "db-path";
 	public static String DB_DRIVER      = "db-driver";
 	public static String DB_USER        = "db-user";
@@ -24,6 +26,8 @@ public class LbaasConfig {
 	
 	public int apiPort;
 	public int adminPort;
+	public String keystore;
+	public String keystorePwd;
 	public String dbPath;
 	public String dbDriver;
 	public String dbUser;
@@ -38,6 +42,8 @@ public class LbaasConfig {
 	           
 	           apiPort = serviceConfig.getInt(API_PORT);
 	           adminPort = serviceConfig.getInt(ADMIN_PORT);
+	           keystore = serviceConfig.getString(KEYSTORE);
+	           keystorePwd = serviceConfig.getString(KEYSTOREPWD);
 	           
 	           dbPath = serviceConfig.getString(DB_PATH);
 	           dbDriver = serviceConfig.getString(DB_DRIVER);
@@ -59,6 +65,7 @@ public class LbaasConfig {
 	   
 	   logger.info("API port               : " + apiPort);
 	   logger.info("ADMIN port             : " + adminPort);
+	   logger.info("Keystore               : " + keystore);
 	   logger.info("DB Path                : " + dbPath);
 	   logger.info("DB Driver              : " + dbDriver);
 	   logger.info("Gearman Server Address : " + gearmanServerAddr);
