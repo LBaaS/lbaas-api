@@ -12,7 +12,7 @@ import org.json.JSONObject;
 import org.pem.lbaas.Lbaas;
 import org.pem.lbaas.datamodel.Device;
 import org.pem.lbaas.datamodel.LoadBalancer;
-import org.pem.lbaas.handlers.LbaasHandler;
+import org.pem.lbaas.handlers.tenant.LbaasHandler;
 import org.pem.lbaas.persistency.DeviceDataModel;
 import org.pem.lbaas.persistency.LoadBalancerDataModel;
 
