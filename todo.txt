@@ -24,11 +24,11 @@ DELETE  /loadbalancers/{loadBalancerId}/connectionthrottle  NOT IMPLEMENTED
 
 JSON /protocols
 ----------------------------------------------------------------------------
-GET     /protocols                                          NOT IMPLEMENTED
+GET     /protocols                                          DONE
 
 JSON Algorithms
 ----------------------------------------------------------------------------
-GET     /algorithms                                         NOT IMPLEMENTED
+GET     /algorithms                                         DONE
 
 JSON    /devices
 ----------------------------------------------------------------------------
@@ -44,7 +44,7 @@ sql,gearman, ports, certs                                   DONE
 
 Admin ports
 ---------------------------------------------------------------------------
-devices and web ui on different port than tenant API        NOT IMPLEMENTED
+devices and web ui on different port than tenant API        DONE
 
 
 Keystone integration 
@@ -66,7 +66,7 @@ api and strategy for storage and applying customer certs   NOT IMPLEMENTED
 
 Custom Fault Body
 ---------------------------------------------------------------------------
-Fault body compliant with Atlas                            NOT IMPLEMENTED
+Fault body compliant with Atlas                            DONE
 
 
 Resource Limits
