@@ -30,7 +30,6 @@ public class Lbaas
 		
 		 try {	    	  
             Server server = new Server();  
-		    logger.info("http port:" + lbaasConfig.apiPort);	
 				      			   
 		    Connector restconnector = new SelectChannelConnector();			   		   
 		    restconnector.setPort(lbaasConfig.apiPort);
@@ -38,11 +37,14 @@ public class Lbaas
 			ServletHolder sh = new ServletHolder();
 			sh.setName("lbaas");
 			sh.setClassName("com.sun.jersey.spi.container.servlet.ServletContainer");
-			sh.setInitParameter("com.sun.jersey.config.property.packages", "org.pem.lbaas.handlers");
+			sh.setInitParameter("com.sun.jersey.config.property.packages", "org.pem.lbaas.handlers.tenant");
 			ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
 			context.setContextPath("/");
 			server.setHandler(context); 
-			context.addServlet(sh, "/*");			    	   
+			context.addServlet(sh, "/*");	
+			
+		    DeviceThread deviceThread = new DeviceThread(lbaasConfig);
+		    deviceThread.start();
 			    				   
 		    server.start();
 		    server.join();
