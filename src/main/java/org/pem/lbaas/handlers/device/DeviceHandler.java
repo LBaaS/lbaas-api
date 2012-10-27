@@ -16,7 +16,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.pem.lbaas.datamodel.Device;
 import org.pem.lbaas.persistency.DeviceDataModel;
-import org.pem.lbaas.handlers.tenant.LBaaSException;;
+import org.pem.lbaas.handlers.tenant.LBaaSException;
 
 import javax.ws.rs.WebApplicationException;
 
@@ -26,15 +26,24 @@ public class DeviceHandler {
 	private static Logger logger = Logger.getLogger(DeviceHandler.class);
 	public final String DEFAULT_TYPE = "HAProxy";
 	
+	public final String JSON_DEVICES      = "devices";
+	public final String JSON_ID           = "id";
+	public final String JSON_NAME         = "name";
+	public final String JSON_ADDRESS      = "address";
+	public final String JSON_LOADBALANCER = "loadbalancer";
+	public final String JSON_TYPE         = "type";
+	public final String JSON_STATUS       = "status";
+	
+	
     protected String deviceToJson(Device device) throws JSONException {		
 	   JSONObject jsonDevice=new JSONObject();
 	   try {		  				
-	      jsonDevice.put("id", device.getId());
-		  jsonDevice.put("name", device.getName());
-		  jsonDevice.put("address", device.getAddress());
-		  jsonDevice.put("loadbalancer", device.getLbId());
-		  jsonDevice.put("type", device.getLbType());
-		  jsonDevice.put("status", device.getStatus());	
+	      jsonDevice.put(JSON_ID, device.getId());
+		  jsonDevice.put(JSON_NAME, device.getName());
+		  jsonDevice.put(JSON_ADDRESS, device.getAddress());
+		  jsonDevice.put(JSON_LOADBALANCER, device.getLbId());
+		  jsonDevice.put(JSON_TYPE, device.getLbType());
+		  jsonDevice.put(JSON_STATUS, device.getStatus());	
 			  			   			   
 		  return jsonDevice.toString();
       }
@@ -54,17 +63,17 @@ public class DeviceHandler {
 		try {	
 		   for (int x=0;x<devices.size();x++) {
 			   JSONObject jsonDevice=new JSONObject();
-			   jsonDevice.put("id", devices.get(x).getId());
-			   jsonDevice.put("name", devices.get(x).getName());
-			   jsonDevice.put("address", devices.get(x).getAddress());
-			   jsonDevice.put("loadbalancer", devices.get(x).getLbId());
-			   jsonDevice.put("type", devices.get(x).getLbType());
-			   jsonDevice.put("status", devices.get(x).getStatus());			   
+			   jsonDevice.put(JSON_ID, devices.get(x).getId());
+			   jsonDevice.put(JSON_NAME, devices.get(x).getName());
+			   jsonDevice.put(JSON_ADDRESS, devices.get(x).getAddress());
+			   jsonDevice.put(JSON_LOADBALANCER, devices.get(x).getLbId());
+			   jsonDevice.put(JSON_TYPE, devices.get(x).getLbType());
+			   jsonDevice.put(JSON_STATUS, devices.get(x).getStatus());			   
 			   
 			   jsonArray.put(jsonDevice);
 		   }
 			
-		   jsonObject.put("devices",jsonArray);		   				   	   		   
+		   jsonObject.put(JSON_DEVICES,jsonArray);		   				   	   		   
 		   return jsonObject.toString();
 		}
 		catch ( JSONException jsone) {			
@@ -108,38 +117,35 @@ public class DeviceHandler {
 		try {
 		   JSONObject jsonObject=new JSONObject(content);
 		   
-		   if ( jsonObject.has("name")) {
-			   String name = (String) jsonObject.get("name");
+		   // name
+		   if ( jsonObject.has(JSON_NAME)) {
+			   String name = (String) jsonObject.get(JSON_NAME);
 			   device.setName(name);
-			   logger.info("   name = " + name);
+			   logger.info("   name : " + name);
 			   if ( deviceModel.existsName(name)) {
-				   throw new LBaaSException("device name already exists", 400);  //  bad request
+				   throw new LBaaSException("device name : " + name + " already exists", 400);  //  bad request
 			   }
 		   }
 		   else {
-			   throw new LBaaSException("Missing 'name' in resource request", 400);  //  bad request
+			   throw new LBaaSException("POST requires 'name' in request body", 400);  //  bad request
 		   }
 		   
-		   if ( jsonObject.has("address")) {
-			   String address = (String) jsonObject.get("address");
+		   // adddress
+		   if ( jsonObject.has(JSON_ADDRESS)) {
+			   String address = (String) jsonObject.get(JSON_ADDRESS);
 			   device.setAddress(address);
-			   logger.info("   address = " + address); 
+			   logger.info("   address : " + address); 
 		   }
 		   else {
-			   throw new LBaaSException("Missing 'address' in resource request", 400);  //  bad request
+			   throw new LBaaSException("POST requires 'address' in request body", 400);  //  bad request
 		   }
 		   
 		  	 
 		   // default loadbalancer to 0 which means unassigned
 		   device.setLbId(new Integer(0 ));		   
 		   
-		   if ( jsonObject.has("type")) {
-			   String type = (String) jsonObject.get("type");
-			   device.setLbType(type);
-			   logger.info("   type = " + type);
-		   }
-		   else
-			   device.setLbType(DEFAULT_TYPE);
+		   // type  
+		   device.setLbType(DEFAULT_TYPE);
 		   
 		   // default status to offline
 		   device.setStatus(Device.STATUS_OFFLINE);		   
@@ -175,7 +181,7 @@ public class DeviceHandler {
 		Integer devId = new Integer(id);
 		int deleteCount = deviceModel.deleteDevice(devId);
 		if (deleteCount==0) {
-			throw new LBaaSException("could not find id on delete : " + id, 404);           // not found			
+			throw new LBaaSException("could not find id : " + id + " on delete : ", 404);           // not found			
 		}
 	}
 	
@@ -190,7 +196,7 @@ public class DeviceHandler {
 		Integer devId = new Integer(id);
 		Device device = deviceModel.getDevice(devId);
 		if ( device == null) {
-			throw new LBaaSException("could not find id on put : " + id, 404);           // not found
+			throw new LBaaSException("could not find id : " + id + " on put : " + id, 404);           // not found
 		}
 		
 		String name, status;
@@ -202,13 +208,14 @@ public class DeviceHandler {
 		catch (JSONException jsone) {
 			throw new LBaaSException("Submitted JSON Exception : " + jsone.toString(), 400);  //  bad request
 		}
-				
+		
+		// change the device name
 		try {
-		   name = (String) jsonObject.get("name");
+		   name = (String) jsonObject.get(JSON_NAME);
 		   device.setName(name);
 		   logger.info("name = " + name);
 		   if ( deviceModel.existsName(name)) {
-			   throw new LBaaSException("device name already exists", 400);  //  bad request
+			   throw new LBaaSException("device name : " + name + " already exists", 400);  //  bad request
 		   }
 		}
 		catch (JSONException e) {
