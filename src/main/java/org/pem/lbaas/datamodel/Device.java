@@ -17,6 +17,8 @@ public class Device implements Serializable {
 	 public static String STATUS_OFFLINE    = "OFFLINE";           // device is offline not functioning as an LB
 	 public static String STATUS_ONLINE     = "ONLINE";            // device is online and functional as defined by associated LB
 	 public static String STATUS_ERROR      = "ERROR";             // device is in an error state and not functional
+	 protected String created;
+	 protected String updated;
 	 
 	 public Integer getId() {
 	    return id;
@@ -65,6 +67,22 @@ public class Device implements Serializable {
      
      public Integer getLbId() {
     	 return lbId;
+     }
+     
+     public String getCreated() {
+    	 return created;    	     	 
+     }
+     
+     public void setCreated( String time) {
+    	 created = time;    	 
+     }
+     
+     public String getUpdated() {
+    	 return updated;    	     	 
+     }
+     
+     public void setUpdated( String time) {
+    	 updated = time;    	 
      }
      
      
