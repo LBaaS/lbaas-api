@@ -78,27 +78,18 @@ Device REST calls allow receiving and sending device resources represented in JS
 
 ####Example of a single device 
 
-`
-{
 
-     "id":1,
+    {
+        "id":1,
+        "updated":"Mon 2012.10.29 at 07:21:48 PM UTC",
+        "created":"Mon 2012.10.29 at 07:21:48 PM UTC",  
+        "status":"OFFLINE",
+        "address":"15.185.96.125",
+        "name":"lbaas-v1-067e6162-3b6f-4ae2-a171-2470b63dff00",
+        "loadbalancer":0,
+        "type":"HAProxy"
+    }
 
-     "updated":"Mon 2012.10.29 at 07:21:48 PM UTC",
-
-     "created":"Mon 2012.10.29 at 07:21:48 PM UTC",
-
-     "status":"OFFLINE",
-
-     "address":"15.185.96.125",
-
-     "name":"lbaas-v1-067e6162-3b6f-4ae2-a171-2470b63dff00",
-
-     "loadbalancer":0,
-
-     "type":"HAProxy"
-
-}
-`
 
 #Operations
 
