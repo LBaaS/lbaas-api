@@ -8,7 +8,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.Produces; 
 
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
@@ -16,6 +16,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.pem.lbaas.datamodel.Device;
 import org.pem.lbaas.persistency.DeviceDataModel;
+import org.pem.lbaas.persistency.DeviceUsage;
 import org.pem.lbaas.handlers.tenant.LBaaSException;
 
 import javax.ws.rs.WebApplicationException;
@@ -26,13 +27,18 @@ public class DeviceHandler {
 	private static Logger logger = Logger.getLogger(DeviceHandler.class);
 	public final String DEFAULT_TYPE = "HAProxy";
 	
-	public final String JSON_DEVICES      = "devices";
-	public final String JSON_ID           = "id";
-	public final String JSON_NAME         = "name";
-	public final String JSON_ADDRESS      = "address";
-	public final String JSON_LOADBALANCER = "loadbalancer";
-	public final String JSON_TYPE         = "type";
-	public final String JSON_STATUS       = "status";
+	public final String JSON_DEVICES       = "devices";
+	public final String JSON_ID            = "id";
+	public final String JSON_NAME          = "name";
+	public final String JSON_ADDRESS       = "address";
+	public final String JSON_LOADBALANCER  = "loadbalancer";
+	public final String JSON_CREATED       = "created";
+	public final String JSON_UPDATED       = "updated";
+	public final String JSON_TYPE          = "type";
+	public final String JSON_STATUS        = "status";
+	public final String JSON_TOTAL_DEVICES = "total";
+	public final String JSON_FREE_DEVICES  = "free";
+	public final String JSON_TAKEN_DEVICES = "taken";
 	
 	
     protected String deviceToJson(Device device) throws JSONException {		
@@ -44,6 +50,8 @@ public class DeviceHandler {
 		  jsonDevice.put(JSON_LOADBALANCER, device.getLbId());
 		  jsonDevice.put(JSON_TYPE, device.getLbType());
 		  jsonDevice.put(JSON_STATUS, device.getStatus());	
+		  jsonDevice.put(JSON_CREATED, device.getCreated());
+		  jsonDevice.put(JSON_UPDATED, device.getUpdated());
 			  			   			   
 		  return jsonDevice.toString();
       }
@@ -68,7 +76,9 @@ public class DeviceHandler {
 			   jsonDevice.put(JSON_ADDRESS, devices.get(x).getAddress());
 			   jsonDevice.put(JSON_LOADBALANCER, devices.get(x).getLbId());
 			   jsonDevice.put(JSON_TYPE, devices.get(x).getLbType());
-			   jsonDevice.put(JSON_STATUS, devices.get(x).getStatus());			   
+			   jsonDevice.put(JSON_STATUS, devices.get(x).getStatus());
+			   jsonDevice.put(JSON_CREATED, devices.get(x).getCreated());
+			   jsonDevice.put(JSON_UPDATED, devices.get(x).getUpdated());
 			   
 			   jsonArray.put(jsonDevice);
 		   }
@@ -102,6 +112,27 @@ public class DeviceHandler {
 			throw new LBaaSException("Internal JSON Exception : " + jsone.toString(), 500);  //  internal error
 		} 
 	
+	}
+	
+	@GET
+	@Path("/usage")
+	@Produces("application/json")
+	public String usage() 
+	{
+		logger.info("GET usage");
+		DeviceDataModel deviceModel = new DeviceDataModel();
+		DeviceUsage usage = deviceModel.getUsage();
+		JSONObject jsonUsage = new JSONObject();
+		try {		  				
+			jsonUsage.put(JSON_TOTAL_DEVICES, usage.total);
+			jsonUsage.put(JSON_FREE_DEVICES, usage.free);
+			jsonUsage.put(JSON_TAKEN_DEVICES, usage.taken);
+			  				  			   			   
+			return jsonUsage.toString();
+	      }
+		  catch ( JSONException jsone) {
+			  throw new LBaaSException("Internal JSON Exception : " + jsone.toString(), 500);  //  internal error
+		   }
 	}
 	
 	@POST
@@ -199,7 +230,7 @@ public class DeviceHandler {
 			throw new LBaaSException("could not find id : " + id + " on put : " + id, 404);           // not found
 		}
 		
-		String name, status;
+		String name, address;
 		JSONObject jsonObject=null;
 		
 		try {
@@ -222,24 +253,20 @@ public class DeviceHandler {
 			name =null;
 		}
 		
+		// change the address
 		try {
-			   status = (String) jsonObject.get("status");
-			   device.setStatus(status);
-			   logger.info("status = " + status);
+			address = (String) jsonObject.get(JSON_ADDRESS);
+			device.setAddress(address);
+			logger.info("address = " + address);
 		}
 		catch (JSONException e) {
-			status =null;
+			address =null;
 		}
 		
-		if ((name==null) && (status==null)) {
-			throw new LBaaSException("missing 'name' and 'status' ", 400);  //  bad request
+		if ((name==null) && (address==null)) {
+			throw new LBaaSException("missing 'name' and 'address' ", 400);  //  bad request
 		}
 		
-		if (name !=null)
-			device.setName(name);
-		
-		if (status != null)
-			device.setStatus(status);
 		
 		deviceModel.setDevice(device);
 										
