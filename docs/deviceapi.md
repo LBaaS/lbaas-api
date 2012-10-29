@@ -77,6 +77,7 @@ Device REST calls allow receiving and sending device resources represented in JS
 
 ####Example of a single device 
 
+`
 {
 
      "id":1,
@@ -96,6 +97,7 @@ Device REST calls allow receiving and sending device resources represented in JS
      "type":"HAProxy"
 
 }
+`
 
 #Operations
 
