@@ -53,7 +53,9 @@ public class DeviceDataModel {
 			   device.setAddress(rs.getString("address"));
 			   device.setLbId(new Integer (rs.getInt("loadbalancer")));
 			   device.setLbType(rs.getString("type"));
-			   device.setStatus(rs.getString("status"));			  			   
+			   device.setStatus(rs.getString("status"));	
+			   device.setCreated(rs.getString("created"));
+			   device.setUpdated(rs.getString("updated"));
 		   }
 		   catch (SQLException sqle){                                              
 	           logger.error( "SQL Exception : " + sqle); 
