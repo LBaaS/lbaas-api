@@ -1,17 +1,17 @@
 # LBaaS Device API
 
 ## Description
-The LBaaS service provides two classes of APIs including a tenant facing API and admin API. The admin API is designed for internal usage to facilitate administrating the LBaaS service itself. As part of this, the *Device API* allows for managing devices which are the actual load balancer devices used by LBaaS. 
+The LBaaS service provides two classes of APIs including a tenant facing API and admin API. The admin API is designed for internal usage to allow administration of the LBaaS service itself. As part of this, the *Device API* allows for managing devices which are the actual load balancer devices used by LBaaS. 
 
 ## API Overview
-The device API is not visibile to tenants thus it is designed to operate on its own HTTPS port which is configurable. The device API only supports a JSON resource representation for reading and writing. The API is designed as a RESTful API including support of CRUD operations for creating, reading, updating and deleting devices.
+The device API is not visible to tenants thus it is designed to operate on its own HTTPS port which is configurable. The device API only supports a JSON resource representation for reading and writing. The API is designed as a RESTful API including support of CRUD operations for creating, reading, updating and deleting devices.
 
 ###Base URL and port
-All device API calls run on the same TCP port and require HTTPS for access. The specific HTTPS port and certificate are configurable by the LBaaS service and will comply with the HP Cloud security requirements including the certificate signing. The API is versioned such that all calls are prefixed with a version URI. For example,
+All device API calls run on the same TCP port and require HTTPS for access. The specific HTTPS port and certificate are configurable by the LBaaS service and will comply with the HP Cloud security requirements including the certificate signing. The API is version'ed such that all calls are prefixed with a version URI. For example,
 
 `https://lbaas-service:8889/v1/devices/...`
 
-would access the LBaaS system hosted on lbaas-service, using HTTPS on port 8889 usin version 1of the API.
+would access the LBaaS system hosted on lbaas-service, using HTTPS on port 8889 using version 1of the API.
 
 ###Exceptions
 As a RESTful service, the device API can return standard HTTP status codes with each request including success and error codes mentioned below. In the event a non 200 series status is returned, a JSON formatted error body is provided with additional details. The format of the JSON error body is as follows:
@@ -168,7 +168,7 @@ A JSON request body is required for this request.
 
 #### Example
 
-    curl -X POST -H "Content-type:application/json" --data-binary "@device.json" https://15.185.107.220:8889/v1/devices
+    curl -X POST -H "Content-type:application/json" --data-binary "@device.json" -k https://15.185.107.220:8889/v1/devices
 
 Response:
 
@@ -193,6 +193,11 @@ Delete a device will delete a device from the LBaaS service. Note, this call can
 #### Return Status
 204 on success, 400 bad request, 500 for internal error
 
+#### Example
+
+    curl -X POST -k https://15.185.107.220:8889/v1/devices/1
+
+
 ## Update a Device
 Update a device allows changing the address or name of a device. No other fields can be changed and will be ignored.
 
@@ -211,7 +216,7 @@ A JSON request body is required for this request.
 
 #### Example
 
-    curl -X PUT -H "Content-type:application/json" --data-binary "@device.json" https://15.185.107.220:8889/v1/devices/1
+    curl -X PUT -H "Content-type:application/json" --data-binary "@device.json" -k https://15.185.107.220:8889/v1/devices/1
 
 Response:
 
@@ -236,7 +241,7 @@ This call allows obtaining usage summary information for all devices.
 
 #### Example
 
-    curl -X https://15.185.107.220:8889/v1/devices/usage
+    curl -k https://15.185.107.220:8889/v1/devices/usage
 
 Response:
 
