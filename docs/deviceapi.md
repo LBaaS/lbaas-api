@@ -98,14 +98,14 @@ Get all devices currently defined.
 
     GET <baseURI>/devices
 
-#### return status
+#### Return Status
 200 on success, 500 for internal error
 
 #### Example
 
 `curl -k https://15.185.107.220:8889/v1/devices`
 
-
+Response:
     {
         "devices":[
             {
@@ -114,7 +114,7 @@ Get all devices currently defined.
                 "created":"Mon 2012.10.29 at 07:21:48 PM UTC",
                 "status":"OFFLINE",
                 "address":"15.185.96.125",
-                "name":"lbaas-10.5.251.48",
+                "name":"lbaas-v1-067e6162-3b6f-4ae2-a171-2470b63dff00",
                 "loadbalancer":0,
                 "type":"HAProxy"
             }
@@ -126,29 +126,69 @@ Get a specific device.
 
     GET <baseURI>/devices/{deviceId}
 
-#### return status
+#### Return Status
 200 on success, 404 not found, 500 for internal error
 
 #### Example
 
 `curl -k https://15.185.107.220:8889/v1/devices/1`
 
-            {
-                "id":1,
-                "updated":"Mon 2012.10.29 at 07:21:48 PM UTC",
-                "created":"Mon 2012.10.29 at 07:21:48 PM UTC",
-                "status":"OFFLINE",
-                "address":"15.185.96.125",
-                "name":"lbaas-10.5.251.48",
-                "loadbalancer":0,
-                "type":"HAProxy"
-            }
+Response:
+    {
+        "id":1,
+        "updated":"Mon 2012.10.29 at 07:21:48 PM UTC",
+        "created":"Mon 2012.10.29 at 07:21:48 PM UTC",
+        "status":"OFFLINE",
+        "address":"15.185.96.125",
+        "name":"lbaas-v1-067e6162-3b6f-4ae2-a171-2470b63dff00",
+        "loadbalancer":0,
+        "type":"HAProxy"
+    }
 
 
 
 ## Create a Device
+Create a new device will register an already deployed device with the LBaaS service. In order to do so, LBaaS will need to know its name and address. Returned will be the new device including its *id*.
+
+    POST <baseURI>/devices
+
+#### Return Status
+200 on success, 400 bad request, 500 for internal error
+
+#### Request Body
+A JSON request body is required for this request.
+
+    {
+        "name": "lbaas-v1-067e6162-3b6f-4ae2-a171-2470b63dff00",
+        "address": "15.185.96.125"
+    }
+
+
+#### Example
+
+    curl -X POST -H "Content-type:application/json" --data-binary "@device.json" https://15.185.107.220:8889/v1/devices
+
+Response:
+    {
+        "id":1,
+        "updated":"Mon 2012.10.29 at 07:21:48 PM UTC",
+        "created":"Mon 2012.10.29 at 07:21:48 PM UTC",
+        "status":"OFFLINE",
+        "address":"15.185.96.125",
+        "name":"lbaas-v1-067e6162-3b6f-4ae2-a171-2470b63dff00",
+        "loadbalancer":0,
+        "type":"HAProxy"
+    }
+
+
 
 ## Delete a Device
+Delete a device will delete a device from the LBaaS service. Note, this call can be dangerous and effect a customers load balancer if it is in use. *please use this call with extreme caution!*.
+
+    DELETE <baseURI>/devices/{deviceId}
+
+#### Return Status
+204 on success, 400 bad request, 500 for internal error
 
 ## Update a Device
 
