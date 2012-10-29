@@ -20,7 +20,6 @@ As a RESTful service, the device API can return standard HTTP status codes with 
 
 
     {
-
        "message":"Bad Request",
        "details":"device name : lbaas-10.5.251.48 already exists",
        "code":400
@@ -29,7 +28,7 @@ As a RESTful service, the device API can return standard HTTP status codes with 
 
 
 ### Base URI
-All LBaaS Device API calls have a common based URI defined as follows:
+All LBaaS Device API calls have a common base URI defined as follows:
 
 `
 <baseURI> = https://<lbaas-system-addr>:<lbaas-device-port>/v1
@@ -42,11 +41,11 @@ All LBaaS Device API calls have a common based URI defined as follows:
 * */v1/devices* will prefix all REST calls.
 
 ### Device Data Model
-Device REST calls allow receiving and sending device resources represented in JSON. The data model in JSON for devices is defined as follows:
+Device REST calls allow reading and writing device resources represented in JSON. The data model for devices is defined as follows:
 
 ####id
 
-*id* is an integer representing a unique id for the device. *id* is created by the LBaaS service when devices are created. *id* are used to reference devices as the REST collection id.
+*id* is an integer representing a unique id for the device. *id* is created by the LBaaS service when devices are created. *id* is used to reference devices as the REST collection id.
 
 ####updated
 
@@ -61,7 +60,7 @@ Device REST calls allow receiving and sending device resources represented in JS
 *status* is a text string representing the status of the device as reported by the device to the LBaaS service ( this is done through the gearman client / worker interface ). Status values can be 'OFFLINE', 'ONLINE', 'ERROR'.
 
 ####address
-*address* is the IPv4 or IPV6 address of the device. This is the adress which will be used as the LBs address used by the customer. Note, this should be a Nova floating IP address for usage with HAProxy on Nova.
+*address* is the IPv4 or IPV6 address of the device. This is the adress which will be used as the loadbalancer's address used by the customer. Note, this should be a Nova floating IP address for usage with HAProxy on Nova.
 
 ####name
 *name* is the name of the device which is used internally by LBaaS as the gearman worker name. Each device name is specified by the pool manager and must be unique for each device. The format of the name is 
