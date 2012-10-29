@@ -103,7 +103,7 @@ Get all devices currently defined.
 
 #### Example
 
-`curl -k https://15.185.107.220:8889/v1/devices`
+    curl -k https://15.185.107.220:8889/v1/devices
 
 Response:
 
@@ -132,7 +132,7 @@ Get a specific device.
 
 #### Example
 
-`curl -k https://15.185.107.220:8889/v1/devices/1`
+    curl -k https://15.185.107.220:8889/v1/devices/1
 
 Response:
 
@@ -194,14 +194,57 @@ Delete a device will delete a device from the LBaaS service. Note, this call can
 204 on success, 400 bad request, 500 for internal error
 
 ## Update a Device
+Update a device allows changing the address or name of a device. No other fields can be changed and will be ignored.
+
+    PUT <baseURI>/devices/{deviceId}
+
+#### Return Status
+200 on success, 400 bad request, 500 for internal error
+
+#### Request Body
+A JSON request body is required for this request.
+
+    {
+        "name": "lbaas-v1-067e6162-3b6f-4ae2-a171-2470b63dff00",
+        "address": "15.185.96.125"
+    }
+
+#### Example
+
+    curl -X PUT -H "Content-type:application/json" --data-binary "@device.json" https://15.185.107.220:8889/v1/devices/1
+
+Response:
+
+    {
+        "id":1,
+        "updated":"Mon 2012.10.29 at 07:21:48 PM UTC",
+        "created":"Mon 2012.10.29 at 07:21:48 PM UTC",
+        "status":"OFFLINE",
+        "address":"15.185.96.125",
+        "name":"lbaas-v1-067e6162-3b6f-4ae2-a171-2470b63dff00",
+        "loadbalancer":0,
+        "type":"HAProxy"
+    }
 
 ## Get Usage of Devices
+This call allows obtaining usage summary information for all devices.
 
+    GET <baseURI>/devices/usage
 
+#### Return Status
+200 on success, 500 for internal error
 
+#### Example
 
+    curl -X https://15.185.107.220:8889/v1/devices/usage
 
+Response:
 
+    {
+        "total": 100,
+        "free" : 50,
+        "taken": 50
+    }
 
 
 
