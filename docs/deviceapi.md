@@ -103,30 +103,33 @@ Get all devices currently defined.
 
 #### Example
 
-curl -k https://15.185.107.220:8889/v1/devices
+`curl -k https://15.185.107.220:8889/v1/devices`
 
 
-{
-
-"devices":[
-
-{
-
-  "id":1,
-  "updated":"Mon 2012.10.29 at 07:21:48 PM UTC",
-  "created":"Mon 2012.10.29 at 07:21:48 PM UTC",
-  "status":"OFFLINE",
-  "address":"15.185.96.125",
-  "name":"lbaas-10.5.251.48",
-  "loadbalancer":0,
-  "type":"HAProxy"
-}
-
-]
-
-}
+    {
+        "devices":[
+            {
+                "id":1,
+                "updated":"Mon 2012.10.29 at 07:21:48 PM UTC",
+                "created":"Mon 2012.10.29 at 07:21:48 PM UTC",
+                "status":"OFFLINE",
+                "address":"15.185.96.125",
+                "name":"lbaas-10.5.251.48",
+                "loadbalancer":0,
+                "type":"HAProxy"
+            }
+        ]
+    }
 
 ## Get a Device
+Get a specific device.
+
+`GET <baseURI>/devices/{deviceId}'
+
+#### return status
+200 on success, 404 not found, 500 for internal error
+
+
 
 ## Create a Device
 
