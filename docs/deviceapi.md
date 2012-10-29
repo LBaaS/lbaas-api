@@ -18,13 +18,14 @@ As a RESTful service, the device API can return standard HTTP status codes with 
 
 *Example of a bad request JSON error response body*
 
+`
 {
 
        "message":"Bad Request",
        "details":"device name : lbaas-10.5.251.48 already exists",
        "code":400
 }
-
+`
 
 
 ### Base URI
