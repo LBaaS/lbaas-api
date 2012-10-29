@@ -106,6 +106,7 @@ Get all devices currently defined.
 `curl -k https://15.185.107.220:8889/v1/devices`
 
 Response:
+
     {
         "devices":[
             {
@@ -134,6 +135,7 @@ Get a specific device.
 `curl -k https://15.185.107.220:8889/v1/devices/1`
 
 Response:
+
     {
         "id":1,
         "updated":"Mon 2012.10.29 at 07:21:48 PM UTC",
@@ -169,6 +171,7 @@ A JSON request body is required for this request.
     curl -X POST -H "Content-type:application/json" --data-binary "@device.json" https://15.185.107.220:8889/v1/devices
 
 Response:
+
     {
         "id":1,
         "updated":"Mon 2012.10.29 at 07:21:48 PM UTC",
