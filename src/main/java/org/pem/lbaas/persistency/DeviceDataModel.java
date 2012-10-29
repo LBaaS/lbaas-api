@@ -1,6 +1,8 @@
 package org.pem.lbaas.persistency;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.sql.*;
 
@@ -191,10 +193,10 @@ public class DeviceDataModel {
 		Statement stmt=null;
 		int id = device.getId().intValue();
 		String name = device.getName();
-		String status = device.getStatus();
+		String address = device.getAddress();
 		int lbid = device.getLbId().intValue();
 		if (conn!=null) {
-		   String update = "UPDATE devices SET name = '" + name + "' , status = '" + status + "' , loadbalancer = " + lbid + " WHERE id = " + id;
+		   String update = "UPDATE devices SET name = '" + name + "' , address = '" + address + "' , loadbalancer = " + lbid + " WHERE id = " + id;
 		   try {
 		      stmt=conn.createStatement();
 		      stmt.execute(update);
@@ -217,18 +219,28 @@ public class DeviceDataModel {
 		return true;
 	}
 	
+	public DeviceUsage getUsage() {
+		DeviceUsage usage = new DeviceUsage();
+		
+		return usage;
+	}
+	
 	public Integer createDevice( Device device) {		
 		
 		int val=0;				
 		Connection conn = dbConnect();
 		try {
-			String query = "insert into devices (name,address,loadbalancer,type,status) values(?, ?, ?, ?, ?)";
+			String query = "insert into devices (name,address,loadbalancer,type,created, updated, status) values(?, ?, ?, ?, ?, ?, ?)";
 			PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);	
 			statement.setString(1,device.getName() );
 			statement.setString(2, device.getAddress());
 			statement.setInt(3,device.getLbId().intValue());
 			statement.setString(4,device.getLbType());
-			statement.setString(5,device.getStatus());			
+			Date dNow = new Date();
+		    SimpleDateFormat ft = new SimpleDateFormat ("E yyyy.MM.dd 'at' hh:mm:ss a zzz");
+			statement.setString(5,ft.format(dNow));	
+			statement.setString(6,ft.format(dNow));	
+			statement.setString(7,device.getStatus());			
 			
 			int affectedRows = statement.executeUpdate();
 			if (affectedRows == 0) {
