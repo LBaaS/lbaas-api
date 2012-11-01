@@ -7,11 +7,11 @@ The LBaaS service provides two classes of APIs including a tenant facing API and
 The device API is not visible to tenants thus it is designed to operate on its own HTTPS port which is configurable. The device API only supports a JSON resource representation for reading and writing. The API is designed as a RESTful API including support of CRUD operations for creating, reading, updating and deleting devices.
 
 ###Base URL and port
-All device API calls run on the same TCP port and require HTTPS for access. The specific HTTPS port and certificate are configurable by the LBaaS service and will comply with the HP Cloud security requirements including the certificate signing. The API is version'ed such that all calls are prefixed with a version URI. For example,
+All device API calls run on the same TCP port and require HTTPS for access. The specific HTTPS port and certificate are configurable by the LBaaS service and will comply with the Cloud security requirements including the certificate signing. The API is version'ed such that all calls are prefixed with a version URI. For example,
 
 `https://lbaas-service:8889/v1/devices/...`
 
-would access the LBaaS system hosted on lbaas-service, using HTTPS on port 8889 using version 1of the API.
+would access the LBaaS system hosted on lbaas-service, using HTTPS on port 8889 using version 1 of the API.
 
 ###Exceptions
 As a RESTful service, the device API can return standard HTTP status codes with each request including success and error codes mentioned below. In the event a non 200 series status is returned, a JSON formatted error body is provided with additional details. The format of the JSON error body is as follows:
