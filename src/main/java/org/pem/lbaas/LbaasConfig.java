@@ -20,6 +20,7 @@ public class LbaasConfig {
 	public static String DB_DRIVER      = "db-driver";
 	public static String DB_USER        = "db-user";
 	public static String DB_PWD         = "db-pwd";
+	public static String DB_VALID_TO    = "db-valid-to";
 	public static String GEARMAN_JOB_SERVER_ADDR = "gearman-job-server-addr";
 	public static String GEARMAN_JOB_SERVER_PORT = "gearman-job-server-port";
 		
@@ -32,6 +33,7 @@ public class LbaasConfig {
 	public String dbDriver;
 	public String dbUser;
 	public String dbPwd;
+	public int dbValidTimeOut;
 	public String gearmanServerAddr;
 	public int gearmanServerPort;
 	
@@ -49,6 +51,7 @@ public class LbaasConfig {
 	           dbDriver = serviceConfig.getString(DB_DRIVER);
 	           dbUser = serviceConfig.getString(DB_USER);
 	           dbPwd = serviceConfig.getString(DB_PWD);
+	           dbValidTimeOut = serviceConfig.getInt(DB_VALID_TO);
 	           
 	           gearmanServerAddr = serviceConfig.getString(GEARMAN_JOB_SERVER_ADDR);
 	           gearmanServerPort = serviceConfig.getInt(GEARMAN_JOB_SERVER_PORT);
@@ -68,6 +71,7 @@ public class LbaasConfig {
 	   logger.info("Keystore               : " + keystore);
 	   logger.info("DB Path                : " + dbPath);
 	   logger.info("DB Driver              : " + dbDriver);
+	   logger.info("DB Valid Time Out      : " + dbValidTimeOut);
 	   logger.info("Gearman Server Address : " + gearmanServerAddr);
 	   logger.info("Gearman Server Port    : " + gearmanServerPort);
 	      
