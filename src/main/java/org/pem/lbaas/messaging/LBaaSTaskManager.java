@@ -12,11 +12,15 @@ import org.json.JSONObject;
 import org.pem.lbaas.Lbaas;
 import org.pem.lbaas.datamodel.Device;
 import org.pem.lbaas.datamodel.LoadBalancer;
+import org.pem.lbaas.handlers.tenant.LBaaSException;
 import org.pem.lbaas.handlers.tenant.LbaasHandler;
 import org.pem.lbaas.persistency.DeviceDataModel;
+import org.pem.lbaas.persistency.DeviceModelAccessException;
 import org.pem.lbaas.persistency.LoadBalancerDataModel;
 
 public class LBaaSTaskManager implements GearmanJobEventCallback<String> {
+	
+	// TODO: make models static for better perf
 	
 	private static Logger logger = Logger.getLogger(LBaaSTaskManager.class);
 	
@@ -43,7 +47,13 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String> {
 	
 	public boolean sendJob( Integer deviceId, String job) {
 		DeviceDataModel deviceModel = new DeviceDataModel();
-		Device device = deviceModel.getDevice(deviceId);
+		Device device = null;
+		try {
+		   device = deviceModel.getDevice(deviceId);
+		}
+		catch (DeviceModelAccessException dme) {
+            logger.error(dme.message);
+        }
 		try {
 		    return this.sendJob( device.getName() ,job);
 		}
@@ -86,14 +96,24 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String> {
 			    	// move lb to active state
 			    	lbModel.setStatus(LoadBalancer.STATUS_ACTIVE, id);
 			    	// move device status to online
-			    	devModel.setStatus(Device.STATUS_ONLINE, deviceId);
+			    	try {
+			    	   devModel.setStatus(Device.STATUS_ONLINE, deviceId);
+			    	}
+			    	catch (DeviceModelAccessException dme) {
+			             logger.error(dme.message);
+		           }
 			    }
 			    else
 			    if ( action.equalsIgnoreCase(LbaasHandler.ACTION_DELETE)) {
 			    	// update Device status to free, putting it back in the pool as free
-			    	// LB has already been deleted in API thread			    	
-			    	devModel.markAsFree(deviceId);			
-			    	devModel.setStatus(Device.STATUS_OFFLINE, deviceId);
+			    	// LB has already been deleted in API thread	
+			    	try {
+			    	   devModel.markAsFree(deviceId);			
+			    	   devModel.setStatus(Device.STATUS_OFFLINE, deviceId);
+			    	}
+			    	catch (DeviceModelAccessException dme) {
+			             logger.error(dme.message);
+		           }
 			    }
 		    }
 		    else {
@@ -105,7 +125,12 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String> {
 		    	   lbModel.setStatus(LoadBalancer.STATUS_ERROR, id);
 		    	
 		    	// move device to error state
-		    	devModel.setStatus(Device.STATUS_ERROR, deviceId);
+		    	try {
+		    	   devModel.setStatus(Device.STATUS_ERROR, deviceId);
+		    	}
+		    	catch (DeviceModelAccessException dme) {
+		             logger.error(dme.message);
+	           }
 		    }		    			    
 		}
 		catch (JSONException e) {
