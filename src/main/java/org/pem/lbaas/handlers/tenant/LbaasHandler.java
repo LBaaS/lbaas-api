@@ -26,6 +26,7 @@ import org.pem.lbaas.datamodel.VirtualIp;
 import org.pem.lbaas.datamodel.VirtualIps;
 import org.pem.lbaas.messaging.LBaaSTaskManager;
 import org.pem.lbaas.persistency.DeviceDataModel;
+import org.pem.lbaas.persistency.DeviceModelAccessException;
 import org.pem.lbaas.persistency.LoadBalancerDataModel;
 import javax.ws.rs.WebApplicationException;
 
@@ -429,7 +430,14 @@ public class LbaasHandler {
 		   
 		   // find free device to use
 		   DeviceDataModel deviceModel = new DeviceDataModel();
-		   device = deviceModel.findFreeDevice();
+		   try {
+		      device = deviceModel.findFreeDevice();
+		   }
+		   catch (DeviceModelAccessException dme) {
+	             throw new LBaaSException(dme.message, 500);
+           }
+		   
+		   
 		   if ( device == null) {
 			   throw new LBaaSException("cannot find free device available" , 503);    //  not available
 		   }
@@ -442,7 +450,12 @@ public class LbaasHandler {
 		   
 		   // set device lb and write it back to data model
 		   device.setLbId(lbId);
-		   deviceModel.setDevice(device);
+		   try {
+		      deviceModel.setDevice(device);
+		   }
+		   catch (DeviceModelAccessException dme) {
+	             throw new LBaaSException(dme.message, 500);
+         }
 		   
 		}
 		catch (JSONException e) {
