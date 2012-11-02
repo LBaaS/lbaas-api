@@ -59,7 +59,7 @@ public class AlgorithmsHandler {
 		}
 		catch ( JSONException jsone) {
 			logger.error("Internal Server error 500, JSON exception :" + jsone.toString());
-			WebApplicationException wae = new WebApplicationException(500);   // internal server error
+			WebApplicationException wae = new WebApplicationException(500);    
 			throw wae;
 		}
    }
