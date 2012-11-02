@@ -42,8 +42,7 @@ public class Lbaas
 			sslConnector.setKeyPassword(lbaasConfig.keystorePwd);
       	    sslConnector.setKeystore(lbaasConfig.keystore);  
       	    server.addConnector(sslConnector);
-			
-			
+						
 			ServletHolder sh = new ServletHolder();
 			sh.setName("lbaas");
 			sh.setClassName("com.sun.jersey.spi.container.servlet.ServletContainer");
