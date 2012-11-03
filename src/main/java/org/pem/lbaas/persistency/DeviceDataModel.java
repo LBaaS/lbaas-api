@@ -345,8 +345,33 @@ public class DeviceDataModel {
     * 
     * @return DeviceUsage
     */
-   public DeviceUsage getUsage() {
+   public DeviceUsage getUsage() throws DeviceModelAccessException{
+      Connection conn = dbConnect();
+      Statement stmt=null;
+      long count=0;
+      long free=0;
+      String queryCount = "SELECT COUNT(*) FROM devices";
+      String queryFree = "SELECT COUNT(*) FROM devices WHERE loadbalancer = 0";
+	  try {
+		  stmt=conn.createStatement();
+		  ResultSet res = stmt.executeQuery(queryCount);
+		  while (res.next()){
+			  count = res.getInt(1);
+		  }
+		  
+		  res = stmt.executeQuery(queryFree);
+		  while (res.next()){
+			  free = res.getInt(1);
+		  }
+		  
+	  }
+	  catch (SQLException s) {
+	    	throw new DeviceModelAccessException("SQL Exception : " + s);   
+		}
       DeviceUsage usage = new DeviceUsage();
+      usage.total = count;
+      usage.free  = free;
+      usage.taken = count - free;
       return usage;
    }
 	
