@@ -7,6 +7,7 @@ import org.gearman.GearmanJobEvent;
 import org.gearman.GearmanJobEventCallback;
 import org.gearman.GearmanJoin;
 import org.gearman.GearmanServer;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.pem.lbaas.Lbaas;
@@ -38,7 +39,7 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String> {
 	
 	public boolean sendJob( String workerName, String message ) throws InterruptedException {
        logger.info("gearman client submitting job to :" + workerName);	
-       //logger.info("gearman client job request msg : " + message);
+       logger.info("gearman client job request msg : " + message);
        GearmanJoin<String> join = gearmanClient.submitJob( workerName, message.getBytes(), workerName, this);            
        join.join();		
        logger.info("gearman job submitted");
@@ -76,12 +77,18 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String> {
 		try {
 		    JSONObject jsonObject=new JSONObject(message);
 			   
-		    String lbname = (String) jsonObject.get("name");
-		    Integer id = (Integer) jsonObject.getInt("id");
+		   
 		    Integer deviceId = (Integer) jsonObject.getInt(LbaasHandler.HPCS_DEVICE);
 		    String action = (String) jsonObject.get(LbaasHandler.HPCS_ACTION);
 		    Integer requestId = (Integer) jsonObject.getInt(LbaasHandler.HPCS_REQUESTID);
 		    String response = (String) jsonObject.get(LbaasHandler.HPCS_RESPONSE);
+		    
+		    // temp hack, just grabs the first one for now
+		    JSONArray jsonLbs = (JSONArray) jsonObject.get("loadbalancers");
+		    JSONObject jsonlb = jsonLbs.getJSONObject(0);
+		    String lbname = (String) jsonlb.get("name");
+		    Integer id = (Integer) jsonlb.getInt("id");
+		    
 		    
 		    logger.info("LB        : " + lbname);
 		    logger.info("LB ID     : " + id );
