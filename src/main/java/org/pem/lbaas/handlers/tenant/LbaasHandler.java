@@ -1,6 +1,7 @@
 package org.pem.lbaas.handlers.tenant;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
@@ -49,18 +50,12 @@ public class LbaasHandler {
     
 		    
 	/*
-	 * Utility method for JSON'izing a single LB
+	 * Utility method for JSON'izing a single LB for tenant API
 	 */
-	protected String LbToJson(LoadBalancer lb, String action) throws JSONException{
+	protected String LbToJson(LoadBalancer lb) throws JSONException{
 		
 		JSONObject jsonResponseObject=new JSONObject();
 		try {	
-		   // internal fields for worker IPC only	
-		   if ( action != null) {
-			   jsonResponseObject.put(HPCS_REQUESTID,++requestId);
-			   jsonResponseObject.put(HPCS_ACTION,action);
-			   jsonResponseObject.put(HPCS_DEVICE, lb.getDevice());
-		   }
 		   jsonResponseObject.put("name",lb.getName());	
 		   jsonResponseObject.put("id",lb.getId());
 		   jsonResponseObject.put("protocol",lb.getProtocol());
@@ -110,6 +105,73 @@ public class LbaasHandler {
 		}
 	}
 	
+	/*
+	 * Utility method for JSON'izing array of LBs for gearman worker API
+	 */
+	protected String LbToJsonArray(List<LoadBalancer> lbs, String action) throws JSONException {
+		
+		JSONObject jsonObject=new JSONObject();
+		JSONArray jsonArray = new JSONArray();
+		
+		try {
+		   for (int x=0;x<lbs.size();x++) {
+			   JSONObject jsonLb=new JSONObject();
+			   jsonLb.put("name",lbs.get(x).getName());	
+			   jsonLb.put("id",lbs.get(x).getId());
+			   jsonLb.put("protocol",lbs.get(x).getProtocol());
+			   jsonLb.put("port", lbs.get(x).getPort());
+			   jsonLb.put("algorithm",lbs.get(x).getAlgorithm());
+			   jsonLb.put("status", lbs.get(x).getStatus());
+			   jsonLb.put("created",lbs.get(x).getCreated());
+			   jsonLb.put("updated",lbs.get(x).getUpdated());
+			   
+			   JSONArray jsonVipArray = new JSONArray();		   
+			   VirtualIps vips = lbs.get(x).getVirtualIps();
+			   if ( vips != null) {
+				   List<VirtualIp> vipslist = vips.getVirtualIps();
+				   if ( vipslist!=null)
+					   for ( int y=0;y<vipslist.size();y++) {
+						   JSONObject jsonVIP=new JSONObject();
+						   jsonVIP.put("address", vipslist.get(x).getAddress());
+						   jsonVIP.put("id", vipslist.get(x).getId());
+						   jsonVIP.put("type", vipslist.get(x).getType());
+						   jsonVIP.put("ipVersion", vipslist.get(x).getIpVersion());
+						   jsonVipArray.put(jsonVIP);
+					   }
+			   }
+			   jsonLb.put("virtualIps", jsonVipArray);
+			   			
+			   JSONArray jsonNodeArray = new JSONArray();
+			   Nodes nodes = lbs.get(x).getNodes();
+			   if (nodes != null) {
+				   List<Node> nodeList = nodes.getNodes();
+				   for ( int y=0;y<nodeList.size();y++) {
+					   JSONObject jsonNode=new JSONObject();
+					   jsonNode.put("address", nodeList.get(y).getAddress());
+					   jsonNode.put("id",nodeList.get(y).getId()); 			   
+					   jsonNode.put("port" ,nodeList.get(y).getPort());
+					   jsonNode.put("status", nodeList.get(y).getStatus());
+					   jsonNodeArray.put(jsonNode);
+				   }		   		   
+			   }		   
+			   jsonLb.put("nodes", jsonNodeArray);
+			   
+			   jsonArray.put(jsonLb);
+		   }
+		   jsonObject.put(HPCS_REQUESTID,++requestId);
+		   jsonObject.put(HPCS_ACTION, action);
+		   jsonObject.put(HPCS_DEVICE,lbs.get(0).getDevice()); 
+		   jsonObject.put("loadbalancers",jsonArray);		   				   	   		   
+		   return jsonObject.toString();
+		}
+		catch ( JSONException jsone) {
+			throw jsone;
+		}
+		
+	}		
+		
+
+
 	
 	/*
 	 * return list of all LBs
@@ -161,7 +223,7 @@ public class LbaasHandler {
 		}
 		
 		try {
-			return LbToJson(lb,null);
+			return LbToJson(lb);
 		}
 		catch ( JSONException jsone) {
 			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);  //  internal error
@@ -237,7 +299,9 @@ public class LbaasHandler {
 		
 		// have the device process the job 
 		try {
-		   lbaasTaskManager.sendJob( lb.getDevice(), LbToJson(lb, ACTION_UPDATE ));
+		   List<LoadBalancer> lbs = new  ArrayList<LoadBalancer>();
+		   lbs.add(lb);
+		   lbaasTaskManager.sendJob( lb.getDevice(), LbToJsonArray(lbs, ACTION_UPDATE ));
 		}
 		catch ( JSONException jsone) {
 			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);  //  internal error
@@ -269,7 +333,9 @@ public class LbaasHandler {
 		
 		// have the device process the job 
 		try {
-		   lbaasTaskManager.sendJob( lb.getDevice(), LbToJson(lb, ACTION_DELETE ));
+		   List<LoadBalancer> lbs = new  ArrayList<LoadBalancer>();
+		   lbs.add(lb);
+		   lbaasTaskManager.sendJob( lb.getDevice(), LbToJsonArray(lbs, ACTION_DELETE ));
 		}
 		catch ( JSONException jsone) {
 			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);  //  internal error
@@ -467,7 +533,9 @@ public class LbaasHandler {
  		
 		// have the device process the request
 		try {
-		   lbaasTaskManager.sendJob( lbResponse.getDevice(), LbToJson(lb, ACTION_CREATE ));
+           List<LoadBalancer> lbs = new  ArrayList<LoadBalancer>();
+		   lbs.add(lb);
+		   lbaasTaskManager.sendJob( lbResponse.getDevice(), LbToJsonArray(lbs, ACTION_CREATE ));
 		}
 		catch ( JSONException jsone) {
 			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);  //  internal error
@@ -475,7 +543,7 @@ public class LbaasHandler {
 		
 		//respond with JSON
 		try {
-		   return LbToJson(lbResponse,null);
+		   return LbToJson(lbResponse);
 		}
 		catch ( JSONException jsone) {
 			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);  //  internal error
