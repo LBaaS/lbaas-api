@@ -9,6 +9,9 @@ import org.apache.log4j.Logger;
 	
 @Path("/limits")
 public class LimitsHandler {
+   public static final int LIMIT_MAX_NAME_SIZE = 64;
+   public static final int LIMIT_MAX_ADDR_SIZE = 64;
+   
    private static Logger logger = Logger.getLogger(LimitsHandler.class);
    
    @GET
