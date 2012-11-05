@@ -23,6 +23,7 @@ import org.pem.lbaas.persistency.DeviceDataModel;
 import org.pem.lbaas.persistency.DeviceModelAccessException;
 import org.pem.lbaas.persistency.DeviceUsage;
 import org.pem.lbaas.handlers.tenant.LBaaSException;
+import org.pem.lbaas.handlers.tenant.LimitsHandler;
 
 import javax.ws.rs.WebApplicationException;
 
@@ -140,7 +141,14 @@ public class DeviceHandler {
    {
       logger.info("GET usage");
 		
-      DeviceUsage usage = deviceModel.getUsage();
+      DeviceUsage usage=null;
+      try {
+         usage = deviceModel.getUsage();
+      }
+      catch (DeviceModelAccessException dme) {
+    	  throw new LBaaSException( dme.message,500);
+      }
+      
       JSONObject jsonUsage = new JSONObject();
       try {		  				
          jsonUsage.put(JSON_TOTAL_DEVICES, usage.total);
@@ -170,6 +178,8 @@ public class DeviceHandler {
          // name
          if ( jsonObject.has(JSON_NAME)) {
             String name = (String) jsonObject.get(JSON_NAME);
+            if ( name.length() > LimitsHandler.LIMIT_MAX_NAME_SIZE)
+            	throw new LBaaSException("'name' is over max allowed length of : " + LimitsHandler.LIMIT_MAX_NAME_SIZE, 400);  
             device.setName(name);
             logger.info("   name : " + name);
             if ( deviceModel.existsName(name)) {
@@ -179,10 +189,12 @@ public class DeviceHandler {
          else {
             throw new LBaaSException("POST requires 'name' in request body", 400);   
          }
-		   
+                  		   
          // adddress
          if ( jsonObject.has(JSON_ADDRESS)) {
             String address = (String) jsonObject.get(JSON_ADDRESS);
+            if ( address.length() > LimitsHandler.LIMIT_MAX_ADDR_SIZE)
+            	throw new LBaaSException("'address' is over max allowed length of : " + LimitsHandler.LIMIT_MAX_ADDR_SIZE, 400);
             device.setAddress(address);
             logger.info("   address : " + address); 
          }
@@ -230,6 +242,23 @@ public class DeviceHandler {
       logger.info("DELETE loadbalancer : " + id);
 		
       Integer devId = new Integer(id);
+      Device device = null;
+      
+      try {
+          device = deviceModel.getDevice(devId);
+       }
+       catch ( DeviceModelAccessException dme) {
+          throw new LBaaSException(dme.message, 500);
+       }
+       
+       if ( device == null) {
+          throw new LBaaSException("could not find id : " + id + " on put : " + id, 404);
+       }
+       
+       if ( device.getLbId() != LB_UNASSIGNED) {
+    	   throw new LBaaSException("can not delete, device still in use by loadbalancer : " + device.getLbId(), 403);
+       }
+      
       int deleteCount=0;
       try {
          deleteCount = deviceModel.deleteDevice(devId);
