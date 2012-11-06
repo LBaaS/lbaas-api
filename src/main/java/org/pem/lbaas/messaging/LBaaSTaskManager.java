@@ -101,7 +101,13 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String> {
 		    	logger.info("worker response : PASS");
 			    if ( action.equalsIgnoreCase(LbaasHandler.ACTION_CREATE) ||  action.equalsIgnoreCase(LbaasHandler.ACTION_UPDATE)) {	
 			    	// move lb to active state
-			    	lbModel.setStatus(LoadBalancer.STATUS_ACTIVE, id);
+			    	try {
+			    	   lbModel.setStatus(LoadBalancer.STATUS_ACTIVE, id);
+			    	}
+			    	catch (DeviceModelAccessException dme) {
+			             logger.error(dme.message);
+		            }
+			    	
 			    	// move device status to online
 			    	try {
 			    	   devModel.setStatus(Device.STATUS_ONLINE, deviceId);
@@ -128,8 +134,14 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String> {
 		    	logger.info("message : " + message);
 		    	
 		    	// move lb to error state
-		    	if ( !action.equalsIgnoreCase(LbaasHandler.ACTION_DELETE))
-		    	   lbModel.setStatus(LoadBalancer.STATUS_ERROR, id);
+		    	if ( !action.equalsIgnoreCase(LbaasHandler.ACTION_DELETE)) {
+		    	   try {			    	
+		    	      lbModel.setStatus(LoadBalancer.STATUS_ERROR, id);
+		    	   }
+		    	   catch (DeviceModelAccessException dme) {
+			             logger.error(dme.message);
+		           }
+		    	}
 		    	
 		    	// move device to error state
 		    	try {
