@@ -500,9 +500,16 @@ public class LbaasHandler {
 		int x=0;
 		try {
 		   JSONObject jsonObject=new JSONObject(content);
-		   String name = (String) jsonObject.get("name");
-		   lb.setName(name);
-		   logger.info("   name = " + name);
+		   
+		   // name
+	       if ( jsonObject.has(JSON_NAME)) {		   
+		      String name = (String) jsonObject.get("name");
+		      lb.setName(name);
+		      logger.info("   name = " + name);
+	       }
+	       else {
+	            throw new LBaaSException("POST requires 'name' in request body", 400);   
+	       }
 		   
 		   // minimally request needs nodes
 		   if ( !jsonObject.has("nodes") ) {
