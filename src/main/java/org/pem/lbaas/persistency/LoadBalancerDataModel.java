@@ -21,6 +21,7 @@ import org.pem.lbaas.datamodel.Nodes;
 import org.pem.lbaas.datamodel.VipType;
 import org.pem.lbaas.datamodel.VirtualIp;
 import org.pem.lbaas.datamodel.VirtualIps;
+import org.pem.lbaas.handlers.tenant.ProtocolHandler;
 
 public class LoadBalancerDataModel {
 	
@@ -39,8 +40,6 @@ public class LoadBalancerDataModel {
 	protected final static String SQL_NODES         = "nodes";
 	protected final static String SQL_VIPS          = "vips";
 	
-	static final protected String DEFAULT_PROTOCOL_HTTP    = "HTTP";
-	static final protected int    DEFAULT_PORT_HTTP        = 80;	
 	static final protected String DEFAULT_ALGO             = "ROUND_ROBIN";
 	
    /**
@@ -341,22 +340,9 @@ public class LoadBalancerDataModel {
 	 * @return new id for LoadBalancer
 	 * @throws DeviceModelAccessException
 	 */
-	public Integer createLoadBalancer( LoadBalancer lb) throws DeviceModelAccessException{	
+	public Integer createLoadBalancer( LoadBalancer lb) throws DeviceModelAccessException {	
 				
 		int val=0;
-		
-		// protocol
-		if (lb.getProtocol() == null)
-			lb.setProtocol(DEFAULT_PROTOCOL_HTTP);
-		
-		// port
-		if (lb.getPort() == null)
-			if ( lb.getProtocol().equalsIgnoreCase(DEFAULT_PROTOCOL_HTTP))
-			   lb.setPort(new Integer(DEFAULT_PORT_HTTP));
-		
-		// algo
-		if ( lb.getAlgorithm() == null)
-			lb.setAlgorithm(DEFAULT_ALGO);
 		
 		// status
 		lb.setStatus(LoadBalancer.STATUS_BUILD);
