@@ -75,7 +75,7 @@ Default tenant limits on max # of LBs                      NOT IMPLEMENTED
 
 DB
 ---------------------------------------------------------------------------
-improved mysql connection pooling and mgmt                 NOT IMPLEMENTED
+improved mysql connection pooling and mgmt                For Devices, not yet LBs
 
 Pending state request blocking
 ---------------------------------------------------------------------------
