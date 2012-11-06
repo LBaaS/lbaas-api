@@ -20,14 +20,14 @@ public class DeviceDataModel {
    private static Logger logger       = Logger.getLogger(DeviceDataModel.class);
    protected Connection  dbConnection = null;
    
-   public final static String SQL_ID            = "id";
-   public final static String SQL_NAME          = "name";
-   public final static String SQL_ADDRESS       = "address";
-   public final static String SQL_LOADBALANCER  = "loadbalancer";
-   public final static String SQL_TYPE          = "type";
-   public final static String SQL_STATUS        = "status";
-   public final static String SQL_CREATED       = "created";
-   public final static String SQL_UPDATED       = "updated";
+   protected final static String SQL_ID            = "id";
+   protected final static String SQL_NAME          = "name";
+   protected final static String SQL_ADDRESS       = "address";
+   protected final static String SQL_LOADBALANCER  = "loadbalancer";
+   protected final static String SQL_TYPE          = "type";
+   protected final static String SQL_STATUS        = "status";
+   protected final static String SQL_CREATED       = "created";
+   protected final static String SQL_UPDATED       = "updated";
 	
    /**
     * Get a connection to database
