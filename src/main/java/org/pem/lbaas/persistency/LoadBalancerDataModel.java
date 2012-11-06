@@ -1,5 +1,10 @@
 package org.pem.lbaas.persistency;
 
+/**
+ * Persistency class for LBaaS LoadBalancers
+ * @author Peter Mellquist pemellquist@gmail.com
+ */
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,40 +25,96 @@ import org.pem.lbaas.datamodel.VirtualIps;
 public class LoadBalancerDataModel {
 	
 	private static Logger logger = Logger.getLogger(LoadBalancerDataModel.class);
-
+	protected Connection  dbConnection = null;
+	
+	protected final static String SQL_ID            = "id";
+	protected final static String SQL_NAME          = "name";	
+	protected final static String SQL_PROTOCOL      = "protocol";	
+	protected final static String SQL_PORT          = "port";
+	protected final static String SQL_STATUS        = "status";	
+	protected final static String SQL_ALGORITHM     = "algorithm";	
+	protected final static String SQL_CREATED       = "created";
+	protected final static String SQL_UPDATED       = "updated";
+	protected final static String SQL_DEVICE        = "device";
+	protected final static String SQL_NODES         = "nodes";
+	protected final static String SQL_VIPS          = "vips";
+	
 	static final protected String DEFAULT_PROTOCOL_HTTP    = "HTTP";
 	static final protected int    DEFAULT_PORT_HTTP        = 80;	
 	static final protected String DEFAULT_ALGO             = "ROUND_ROBIN";
 	
-	public Connection dbConnect()  {
-		Connection connection = null;				
-        try
-        {           
-            Class.forName (Lbaas.lbaasConfig.dbDriver).newInstance ();
-            connection = DriverManager.getConnection (Lbaas.lbaasConfig.dbPath, Lbaas.lbaasConfig.dbUser, Lbaas.lbaasConfig.dbPwd);
-            return connection;
-        }
-        catch (Exception e)
-        {
-        	logger.error("Cannot connect to database server exception :"+ e);
-        	return null;
-        }       
-	}
-	
-	public void dbClose(Connection connection) {
-		 if (connection != null)
-         {
-             try
-             {
-            	 connection.close ();
-             }
-             catch (Exception e) { 
-            	 logger.error("Cannot close Database Connection exception :" + e);            	 
-             }
+   /**
+    * Get a connection to database
+    * 
+    * Obtain a connection to database which tries to maintain a single connection and only re-open when needed.
+    * 
+    * @return Connection
+    * @throws DeviceModelAccessException
+    */
+   protected Connection dbConnect() throws DeviceModelAccessException {
+      if ( dbConnection==null ) {
+	     try {           
+            logger.info("not open, opening db connection");
+	        Class.forName (Lbaas.lbaasConfig.dbDriver).newInstance ();
+	        dbConnection = DriverManager.getConnection (Lbaas.lbaasConfig.dbPath, Lbaas.lbaasConfig.dbUser, Lbaas.lbaasConfig.dbPwd);
+	        return dbConnection;
+	      }
+	      catch (Exception e) {
+	         throw new DeviceModelAccessException("Cannot connect to database server "+ e);
+	      }       
+      }
+      else {
+         try {
+            if (( dbConnection.isClosed()) || ( !dbConnection.isValid(Lbaas.lbaasConfig.dbValidTimeOut))) {
+               try {          
+                  logger.info("closed, re-opening db connection");
+			      Class.forName (Lbaas.lbaasConfig.dbDriver).newInstance ();
+			      dbConnection = DriverManager.getConnection (Lbaas.lbaasConfig.dbPath, Lbaas.lbaasConfig.dbUser, Lbaas.lbaasConfig.dbPwd);
+			      return dbConnection;
+			    }
+			    catch (Exception e) {
+                   throw new DeviceModelAccessException("Cannot connect to database server "+ e);
+		        }      
+            }
+			else
+			   return dbConnection;
          }
-	}
+		 catch (SQLException sqe) {
+            throw new DeviceModelAccessException("Cannot connect to database server "+ sqe);				
+         }
+      }
+   }
+      
+   /**
+    * Close the database connection
+    */
+   protected void dbClose() {
+      if (dbConnection != null)
+      {
+         try {
+            logger.info("closing db connection");
+            dbConnection.close ();
+          }
+          catch (Exception e) { 
+            logger.error("Cannot close Database Connection " + e);
+          }
+       }
+   }
 	
-	public String encodeNodeDBFields( LoadBalancer lb) {
+   
+   /**
+    * finalize'r closes database 
+    */
+   protected void finalize ()  {
+      dbClose();
+   }
+	
+   /**
+    * encode the node fields
+    * @param lb
+    * @return an encoded node string
+    */
+	protected String encodeNodeDBFields( LoadBalancer lb) {
 		String nodesString = new String();
 		Nodes nodes = lb.getNodes();
 		   if (nodes != null) {
@@ -75,7 +136,12 @@ public class LoadBalancerDataModel {
 		return nodesString;
 	}
 	
-	public String encodeVIPDBFields( LoadBalancer lb) {
+	/**
+	 * encode VIP fields
+	 * @param lb
+	 * @return and encoded VIP string
+	 */
+	protected String encodeVIPDBFields( LoadBalancer lb) {
 		String vipString = new String();
 		VirtualIps vips = lb.getVirtualIps();
 		   if (vips != null) {
@@ -97,22 +163,28 @@ public class LoadBalancerDataModel {
 		return vipString;
 	}
 	
+	/**
+	 * Convert a result set into a Loadbalancer object
+	 * @param rs
+	 * @return a LoadBalancer object
+	 * @throws SQLException
+	 */
 	public LoadBalancer rsToLb( ResultSet rs ) throws SQLException {
 	   LoadBalancer lb = new LoadBalancer();
 	   try {
-		   lb.setId(new Integer(rs.getInt("id")));
-		   lb.setName(rs.getString("name"));
-		   lb.setProtocol(rs.getString("protocol"));
-		   lb.setPort(rs.getInt("port"));
-		   lb.setStatus(rs.getString("status"));
-		   lb.setAlgorithm(rs.getString("algorithm"));
-		   lb.setCreated(rs.getString("created"));
-		   lb.setUpdated(rs.getString("updated"));
-		   lb.setDevice(new Integer(rs.getInt("device")));
+		   lb.setId(new Integer(rs.getInt(SQL_ID)));
+		   lb.setName(rs.getString(SQL_NAME));
+		   lb.setProtocol(rs.getString(SQL_PROTOCOL));
+		   lb.setPort(rs.getInt(SQL_PORT));
+		   lb.setStatus(rs.getString(SQL_STATUS));
+		   lb.setAlgorithm(rs.getString(SQL_ALGORITHM));
+		   lb.setCreated(rs.getString(SQL_CREATED));
+		   lb.setUpdated(rs.getString(SQL_UPDATED));
+		   lb.setDevice(new Integer(rs.getInt(SQL_DEVICE)));
 		  
 		   // nodes
 		   Nodes nodes = new Nodes();
-		   String nodeString = rs.getString("nodes");
+		   String nodeString = rs.getString(SQL_NODES);
 		   StringTokenizer stNodes = new StringTokenizer(nodeString, ",");
 		   while(stNodes.hasMoreTokens()) { 
 		      String fields = stNodes.nextToken(); 
@@ -135,11 +207,10 @@ public class LoadBalancerDataModel {
 		   
 		   // vips
 		   VirtualIps virtualIps = new VirtualIps();
-		   String vipString = rs.getString("vips");
+		   String vipString = rs.getString(SQL_VIPS);
 		   StringTokenizer stVips = new StringTokenizer(vipString, ",");
 		   while(stVips.hasMoreTokens()) { 
 			      String fields = stVips.nextToken(); 
-			      //logger.info("vip fields :" + fields);
 			      StringTokenizer stVipFields = new StringTokenizer(fields, ":");
 			      while(stVipFields.hasMoreTokens()) { 
 				     String address = stVipFields.nextToken();
@@ -165,12 +236,8 @@ public class LoadBalancerDataModel {
 				     
 				     virtualIps.getVirtualIps().add(virtualIp);				   
 			      }
-			   }
-		   
-		   
-		   lb.setVirtualIps(virtualIps);
-
-		   
+			   }		   
+		   lb.setVirtualIps(virtualIps);		   
 	   }
 	   catch (SQLException sqle){                                              
            logger.error( "SQL Exception : " + sqle); 
@@ -180,16 +247,34 @@ public class LoadBalancerDataModel {
 	   return lb;   
 	}
 	
-	
-	public boolean setStatus( String status, Integer id) {			
+	 /**
+	    * Change the status on a Loadbalancer
+	    * 
+	    * Changes device status returns true if changed or false if Device not found
+	    * 
+	    * @param status
+	    * @param id
+	    * @return boolean
+	    * @throws DeviceModelAccessException if internal database error
+	    */
+	public boolean setStatus( String status, Integer id) throws DeviceModelAccessException {			
 	   LoadBalancer lb = this.getLoadBalancer(id);
+	   if (lb == null)
+	      return false;     
 	   lb.setStatus( status);
 	   this.setLoadBalancer(lb);	
 	   return true;	
 	}
 		
 	
-	public LoadBalancer getLoadBalancer( Integer lbId) {
+	  /**
+	    * Get a Loadbalancer based on its id
+	    * 
+	    * @param id
+	    * @return Device or null if not found
+	    * @throws DeviceModelAccessException if internal database error
+	    */
+	public LoadBalancer getLoadBalancer( Integer lbId) throws DeviceModelAccessException {
 		Connection conn = dbConnect();
 		Statement stmt=null;
 		if (conn!=null) {
@@ -197,47 +282,66 @@ public class LoadBalancerDataModel {
 		   try {
 		      stmt=conn.createStatement();
 		      ResultSet rs=stmt.executeQuery(query);
-		      rs.next();
-		      LoadBalancer lb = rsToLb(rs);
-		      rs.close();
-		      stmt.close();
-		      dbClose(conn);
-		      return lb;
+		      if (rs.next()) {
+			      LoadBalancer lb = rsToLb(rs);
+			      rs.close();
+			      stmt.close();
+			      return lb;
+		      }
+		      else {
+		         rs.close();
+				 stmt.close(); 
+		         return null;            // not found
+			  }
 		   }
 		   catch (SQLException s){                                              
-               logger.error( "SQL Exception : " + s);
-               dbClose(conn);
+			   throw new DeviceModelAccessException("SQL Exception : " + s);
            }
 		}
 		return null;
 	}
 	
-	public boolean setLoadBalancer( LoadBalancer lb) {	
+	/**
+	    * Change a LoadBalancer based on its ID
+	    * 
+	    * Change a LoadBalancer based on its id, only allows change of name, algorithm and status
+	    * 
+	    * @param device
+	    * @return boolean
+	    * @throws DeviceModelAccessException if internal database error
+	    */
+	public boolean setLoadBalancer(LoadBalancer lb)  throws DeviceModelAccessException {
+		
+		if ( this.getLoadBalancer(lb.getId())==null)
+			  return false;   
+		
 		Connection conn = dbConnect();
-		Statement stmt=null;
-		int id = lb.getId().intValue();
-		String name = lb.getName();
-		String status = lb.getStatus();
-		String algorithm = lb.getAlgorithm();
-		if (conn!=null) {
-		   String update = "UPDATE loadbalancers SET name = '" + name + "' , algorithm = '" + algorithm + "' , status = '" + status  + "'  WHERE id = " + id;
-		   try {
-		      stmt=conn.createStatement();
-		      stmt.execute(update);		      
-		      return true;
-		   }
-		   catch (SQLException s){                                              
-               logger.error( "SQL Exception : " + s);
-               dbClose(conn);
-           }
-		}
-		return false;		 
-
+		
+		try {
+			String query = "UPDATE loadbalancers SET name = ?, algorithm = ?, status = ? WHERE id = ?";			
+			PreparedStatement statement = conn.prepareStatement(query);
+			statement.setString(1,lb.getName());
+			statement.setString(2,lb.getAlgorithm());
+			statement.setString(3,lb.getStatus());
+			statement.setInt(4,lb.getId().intValue());
+			statement.executeUpdate();
+			statement.close();
+			return true;
+      }
+      catch (SQLException s) {
+	    	throw new DeviceModelAccessException("SQL Exception : " + s);   
+	  }		
+		
 	}
 	
-	public Integer createLoadBalancer( LoadBalancer lb) {	
-		
-		logger.info("createLoadBalancer");
+	
+	/**
+	 * Create a LoadBalancer
+	 * @param LoadBalancer
+	 * @return new id for LoadBalancer
+	 * @throws DeviceModelAccessException
+	 */
+	public Integer createLoadBalancer( LoadBalancer lb) throws DeviceModelAccessException{	
 				
 		int val=0;
 		
@@ -262,7 +366,6 @@ public class LoadBalancerDataModel {
 	    SimpleDateFormat ft = new SimpleDateFormat ("E yyyy.MM.dd 'at' hh:mm:ss a zzz");
 		lb.setCreated(ft.format(dNow));
 		lb.setUpdated(ft.format(dNow));
-		//logger.info("create time : " + lb.getCreated());
 		
 		Connection conn = dbConnect();
 		try {
@@ -282,31 +385,32 @@ public class LoadBalancerDataModel {
 			
 			int affectedRows = statement.executeUpdate();
 			if (affectedRows == 0) {
-	            throw new SQLException("Creating loadbalancer failed, no rows affected.");
+	            throw new DeviceModelAccessException("Creating loadbalancer failed, no rows affected.");
 	        }
 
 	        ResultSet generatedKeys = statement.getGeneratedKeys();
 	        if (generatedKeys.next()) {
 	            val = generatedKeys.getInt(1);
 	        } else {
-	            throw new SQLException("Creating loadbalancer failed, no generated key obtained.");
+	            throw new DeviceModelAccessException("Creating loadbalancer failed, no generated key obtained.");
 	        }
-			
-			
-		   lb.setId(new Integer(val));
-		   dbClose(conn);
+						
+		    lb.setId(new Integer(val));
 	    }
 	    catch (SQLException s){
-			  logger.error( "SQL Exception : " + s);
-              dbClose(conn);
+	    	throw new DeviceModelAccessException("SQL Exception : " + s);   
 		}
 				
 		return new Integer(val);
 	
 	}
 	
-	
-	public  List<LoadBalancer> getLoadBalancers() {
+	/**
+	 * Get a list of LoadBalancers
+	 * @return List of LoadBalancer
+	 * @throws DeviceModelAccessException
+	 */
+	public  List<LoadBalancer> getLoadBalancers() throws DeviceModelAccessException {
 		List<LoadBalancer> lbs = new  ArrayList<LoadBalancer>();
 		Connection conn = dbConnect();
 		Statement stmt=null;
@@ -321,18 +425,22 @@ public class LoadBalancerDataModel {
 		      }
 		      rs.close();
 		      stmt.close();
-		      dbClose(conn);
 		   }
 		   catch (SQLException s){                                              
-               logger.error( "SQL Exception : " + s);
-               dbClose(conn);
+			   throw new DeviceModelAccessException("SQL Exception : " + s);
            }
 		}
 		return lbs;
 	}
 
 	
-	public int deleteLoadBalancer( Integer lbId) {
+	/**
+	 * Delete a LoadBalancer
+	 * @param id of LoadBalancer to delete
+	 * @return number deleted, should be 1 or 0 if not found
+	 * @throws DeviceModelAccessException
+	 */
+	public int deleteLoadBalancer( Integer lbId) throws DeviceModelAccessException {
 		Connection conn = dbConnect();
 		Statement stmt=null;
 		if (conn!=null) {
@@ -340,16 +448,12 @@ public class LoadBalancerDataModel {
 		   try {
 		      stmt=conn.createStatement();
 		      int deleteCount = stmt.executeUpdate(query);
-		      logger.info("deleted " + deleteCount + " records");
-		    	  
-		      stmt.close();
-		      dbClose(conn);
-		      
+		      logger.info("deleted " + deleteCount + " records");		    	  
+		      stmt.close();		      
 		      return deleteCount;
 		   }
 		   catch (SQLException s){                                              
-               logger.error( "SQL Exception : " + s);
-               dbClose(conn);
+			   throw new DeviceModelAccessException("SQL Exception : " + s);
            }
 		}
 		return 0;
