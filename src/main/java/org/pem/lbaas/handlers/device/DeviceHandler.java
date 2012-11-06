@@ -1,9 +1,5 @@
 package org.pem.lbaas.handlers.device;
 
-/**
- * pemellquist@gmail.com
- */
-
 import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -27,6 +23,13 @@ import org.pem.lbaas.handlers.tenant.LimitsHandler;
 
 import javax.ws.rs.WebApplicationException;
 
+
+/**
+ * DeviceHandler JAX-RS REST handler for devices
+ * @author peter
+ *
+ */
+
 @Path("/devices")
 public class DeviceHandler {
    private static Logger logger = Logger.getLogger(DeviceHandler.class);
@@ -34,20 +37,27 @@ public class DeviceHandler {
    public final String DEFAULT_TYPE       = "HAProxy";
    public final int    LB_UNASSIGNED      = 0;
 	
-   public final String JSON_DEVICES       = "devices";
-   public final String JSON_ID            = "id";
-   public final String JSON_NAME          = "name";
-   public final String JSON_ADDRESS       = "address";
-   public final String JSON_LOADBALANCER  = "loadbalancer";
-   public final String JSON_CREATED       = "created";
-   public final String JSON_UPDATED       = "updated";
-   public final String JSON_TYPE          = "type";
-   public final String JSON_STATUS        = "status";
-   public final String JSON_TOTAL_DEVICES = "total";
-   public final String JSON_FREE_DEVICES  = "free";
-   public final String JSON_TAKEN_DEVICES = "taken";
+   // JSON names
+   protected final String JSON_DEVICES       = "devices";
+   protected final String JSON_ID            = "id";
+   protected final String JSON_NAME          = "name";
+   protected final String JSON_ADDRESS       = "address";
+   protected final String JSON_LOADBALANCER  = "loadbalancer";
+   protected final String JSON_CREATED       = "created";
+   protected final String JSON_UPDATED       = "updated";
+   protected final String JSON_TYPE          = "type";
+   protected final String JSON_STATUS        = "status";
+   protected final String JSON_TOTAL_DEVICES = "total";
+   protected final String JSON_FREE_DEVICES  = "free";
+   protected final String JSON_TAKEN_DEVICES = "taken";
 	
 	
+   /**
+    * Convert a Device object to JSON
+    * @param device
+    * @return JSON encoded Device
+    * @throws JSONException
+    */
    protected String deviceToJson(Device device) throws JSONException {		
       JSONObject jsonDevice=new JSONObject();
       try {		  				
@@ -68,6 +78,10 @@ public class DeviceHandler {
    }
    
 	
+   /**
+    * Get All devices
+    * @return JSON array of devices
+    */
    @GET
    @Produces("application/json")
    public String getAll() {
@@ -106,10 +120,15 @@ public class DeviceHandler {
    }
    
 	
+    /**
+     * Get a specific Device object referenced by its id
+     * @param id
+     * @return JSON encoded Device
+     */
 	@GET
 	@Path("/{id}")
 	@Produces("application/json")
-	public String getLb(@PathParam("id") String id) 
+	public String getDevice(@PathParam("id") String id) 
 	{
 		logger.info("GET device : " + id);
 		Device device = null;
@@ -134,6 +153,10 @@ public class DeviceHandler {
 		} 
 	}
 	
+   /**
+    * Get usage stats on all Devices	
+    * @return JSON encoded usage stats
+    */
    @GET
    @Path("/usage")
    @Produces("application/json")
@@ -163,6 +186,11 @@ public class DeviceHandler {
    }
    
 	
+   /**
+    * Create a new device using POST'ed JSON body
+    * @param content
+    * @return newly created Device with all fields
+    */
    @POST
    @Consumes("application/json")
    @Produces("application/json")
@@ -233,13 +261,16 @@ public class DeviceHandler {
       } 							
    }	
 	
-	
+   /**
+    * Delete a Device
+    * @param id
+    */
    @DELETE
    @Path("/{id}")
    @Produces("application/json")
-   public void deleteLb(@PathParam("id") String id) 
+   public void deleteDevice(@PathParam("id") String id) 
    {
-      logger.info("DELETE loadbalancer : " + id);
+      logger.info("DELETE device : " + id);
 		
       Integer devId = new Integer(id);
       Device device = null;
@@ -273,11 +304,17 @@ public class DeviceHandler {
    }
 	
 	
+   /**
+    * Update an existing device
+    * @param id
+    * @param content
+    * @return changed device
+    */
    @PUT
    @Path("/{id}")
    @Consumes("application/json")
    @Produces("application/json")
-   public String updateLb(@PathParam("id") String id, String content) 
+   public String updateDevice(@PathParam("id") String id, String content) 
    {
       logger.info("PUT devices : " + id);
       Device device = null;
