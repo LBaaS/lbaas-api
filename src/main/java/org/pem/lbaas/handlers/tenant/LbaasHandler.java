@@ -215,7 +215,7 @@ public class LbaasHandler {
 	 * @param jsonNodesArray
 	 * @return Nodes
 	 */
-	Nodes jsonToNodes(JSONObject jsonObject) throws JSONException {
+	protected Nodes jsonToNodes(JSONObject jsonObject) throws JSONException {
 	   if ( jsonObject.has(JSON_NODES) ) {			   
 		   Nodes nodes = new Nodes();
 		   try {
@@ -249,7 +249,7 @@ public class LbaasHandler {
 	 * @return
 	 * @throws JSONException
 	 */
-	VirtualIps jsonToVips(JSONObject jsonObject) throws JSONException {		
+	protected VirtualIps jsonToVips(JSONObject jsonObject) throws JSONException {		
 	   if ( jsonObject.has(JSON_VIPS) ) {
 		   VirtualIps virtualIps = new VirtualIps();
 		   try {
@@ -280,6 +280,22 @@ public class LbaasHandler {
 	   else {
 		   return null;
 	   }
+	}
+	
+	/**
+	 * Create VirtualIps from a Device
+	 * @param device
+	 * @return VirtualIps
+	 */
+	protected VirtualIps deviceToVips( Device device) {
+		 VirtualIps virtualIps = new VirtualIps();
+		 VirtualIp virtualIp = new VirtualIp();
+		 virtualIp.setAddress(device.getAddress());
+		 virtualIp.setIpVersion(IpVersion.IPV_4);
+		 virtualIp.setType(VipType.PUBLIC);
+		 virtualIp.setId(new Integer(1));
+		 virtualIps.getVirtualIps().add(virtualIp);
+		 return virtualIps;
 	}
 		
 	
@@ -627,18 +643,7 @@ public class LbaasHandler {
 		   catch ( JSONException jsone) {
 				throw new LBaaSException( jsone.toString(), 400);  
 		   } 
-		   
-		   //vips
-		   VirtualIps virtualIps = null;
-		   try {
-		      virtualIps = jsonToVips(jsonObject);
-		   }
-		   catch ( JSONException jsone) {
-				throw new LBaaSException( jsone.toString(), 400);  
-		   } 
-		   if ( virtualIps != null)
-			   lb.setVirtualIps(virtualIps);
-		   
+		   		   		   
 		   
 		   // find free device to use
 		   try {
@@ -653,10 +658,29 @@ public class LbaasHandler {
 		   }
 		   
 		   logger.info("found free device at id : " + device.getId().toString());
-		   		   		   
-		   // create new LB
-		   lb.setDevice( device.getId());              // set lb device id
-		   lbId = model.createLoadBalancer(lb);	   // write it to datamodel	   	
+		   
+		   //vips
+		   VirtualIps virtualIps = null;
+		   try {
+		      virtualIps = jsonToVips(jsonObject);		      		      		      
+		   }
+		   catch ( JSONException jsone) {
+				throw new LBaaSException( jsone.toString(), 400);  
+		   } 
+		   if ( virtualIps != null) {
+			   lb.setVirtualIps(virtualIps);
+		   }
+		   else {
+			   // make a vip to return to caller based on device
+			   virtualIps = deviceToVips( device);
+			   lb.setVirtualIps(virtualIps);
+		   }
+		   		   		   		   
+		   // mark lb as using found device
+		   lb.setDevice( device.getId());              
+		   
+		   // write it to datamodel
+		   lbId = model.createLoadBalancer(lb);	       	   	
 		   
 		   // set device lb and write it back to data model
 		   device.setLbId(lbId);
