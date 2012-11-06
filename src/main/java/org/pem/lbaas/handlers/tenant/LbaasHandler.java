@@ -29,13 +29,21 @@ import org.pem.lbaas.messaging.LBaaSTaskManager;
 import org.pem.lbaas.persistency.DeviceDataModel;
 import org.pem.lbaas.persistency.DeviceModelAccessException;
 import org.pem.lbaas.persistency.LoadBalancerDataModel;
-import javax.ws.rs.WebApplicationException;
+
+/**
+ * LbaasHandler JAX-RS REST handler for Load Balancers
+ * @author Peter Mellquist pemellquist@hp.com
+ *
+ */
 
 @Path("/loadbalancers")
 public class LbaasHandler {
-	private static Logger logger = Logger.getLogger(LbaasHandler.class);	
+	private static Logger logger = Logger.getLogger(LbaasHandler.class);
+	private static LoadBalancerDataModel model = new LoadBalancerDataModel();
     private static LBaaSTaskManager lbaasTaskManager = new LBaaSTaskManager();
     private static long requestId=0;
+    
+    // actions and HPCS private JSON names
     public static String HPCS_ACTION         = "hpcs_action";
     public static String HPCS_REQUESTID      = "hpcs_requestid";
     public static String HPCS_RESPONSE       = "hpcs_response";
@@ -48,22 +56,41 @@ public class LbaasHandler {
     public static String ACTION_ENABLE       = "ENABLE";
     public static String ACTION_DELETE       = "DELETE";
     
-		    
-	/*
-	 * Utility method for JSON'izing a single LB for tenant API
+    // JSON names
+    protected static String JSON_NAME        = "name";
+    protected static String JSON_ID          = "id";	
+    protected static String JSON_PROTOCOL    = "protocol";
+    protected static String JSON_PORT        = "port";
+    protected static String JSON_ALGORITHM   = "algorithm";
+    protected static String JSON_STATUS      = "status";
+    protected static String JSON_CREATED     = "created";
+    protected static String JSON_UPDATED     = "updated";
+    protected static String JSON_ADDRESS     = "address";
+    protected static String JSON_TYPE        = "type";
+    protected static String JSON_IPVER       = "ipVersion";
+    protected static String JSON_VIPS        = "virtualIps";
+    protected static String JSON_NODES       = "nodes";
+    protected static String JSON_LBS         = "loadbalancers";
+
+    
+	/**
+	 * Convert a LoadBalancer to JSON format
+	 * @param LoadBalancer
+	 * @return JSON encoded LoadBalancer
+	 * @throws JSONException
 	 */
 	protected String LbToJson(LoadBalancer lb) throws JSONException{
 		
 		JSONObject jsonResponseObject=new JSONObject();
 		try {	
-		   jsonResponseObject.put("name",lb.getName());	
-		   jsonResponseObject.put("id",lb.getId());
-		   jsonResponseObject.put("protocol",lb.getProtocol());
-		   jsonResponseObject.put("port", lb.getPort());
-		   jsonResponseObject.put("algorithm", lb.getAlgorithm());
-		   jsonResponseObject.put("status", lb.getStatus());
-		   jsonResponseObject.put("created",  lb.getCreated());
-		   jsonResponseObject.put("updated",  lb.getUpdated());
+		   jsonResponseObject.put(JSON_NAME,lb.getName());	
+		   jsonResponseObject.put(JSON_ID,lb.getId());
+		   jsonResponseObject.put(JSON_PROTOCOL,lb.getProtocol());
+		   jsonResponseObject.put(JSON_PORT, lb.getPort());
+		   jsonResponseObject.put(JSON_ALGORITHM,lb.getAlgorithm());
+		   jsonResponseObject.put(JSON_STATUS,lb.getStatus());
+		   jsonResponseObject.put(JSON_CREATED,lb.getCreated());
+		   jsonResponseObject.put(JSON_UPDATED,lb.getUpdated());
 		   
 		   // vips
 		   JSONArray jsonVipArray = new JSONArray();		   
@@ -73,14 +100,14 @@ public class LbaasHandler {
 			   if ( vipslist!=null)
 				   for ( int x=0;x<vipslist.size();x++) {
 					   JSONObject jsonVIP=new JSONObject();
-					   jsonVIP.put("address", vipslist.get(x).getAddress());
-					   jsonVIP.put("id", vipslist.get(x).getId());
-					   jsonVIP.put("type", vipslist.get(x).getType());
-					   jsonVIP.put("ipVersion", vipslist.get(x).getIpVersion());
+					   jsonVIP.put(JSON_ADDRESS, vipslist.get(x).getAddress());
+					   jsonVIP.put(JSON_ID, vipslist.get(x).getId());
+					   jsonVIP.put(JSON_TYPE, vipslist.get(x).getType());
+					   jsonVIP.put(JSON_IPVER, vipslist.get(x).getIpVersion());
 					   jsonVipArray.put(jsonVIP);
 				   }
 		   }
-		   jsonResponseObject.put("virtualIps", jsonVipArray);
+		   jsonResponseObject.put(JSON_VIPS, jsonVipArray);
 		   
 		   // nodes
 		   JSONArray jsonNodeArray = new JSONArray();
@@ -89,14 +116,14 @@ public class LbaasHandler {
 			   List<Node> nodeList = nodes.getNodes();
 			   for ( int y=0;y<nodeList.size();y++) {
 				   JSONObject jsonNode=new JSONObject();
-				   jsonNode.put("address", nodeList.get(y).getAddress());
-				   jsonNode.put("id",nodeList.get(y).getId()); 			   
-				   jsonNode.put("port" ,nodeList.get(y).getPort());
-				   jsonNode.put("status", nodeList.get(y).getStatus());
+				   jsonNode.put(JSON_ADDRESS, nodeList.get(y).getAddress());
+				   jsonNode.put(JSON_ID,nodeList.get(y).getId()); 			   
+				   jsonNode.put(JSON_PORT ,nodeList.get(y).getPort());
+				   jsonNode.put(JSON_STATUS, nodeList.get(y).getStatus());
 				   jsonNodeArray.put(jsonNode);
 			   }		   		   
 		   }		   
-		   jsonResponseObject.put("nodes", jsonNodeArray);
+		   jsonResponseObject.put(JSON_NODES, jsonNodeArray);
 		   		   
 		   return jsonResponseObject.toString();
 		}
@@ -105,9 +132,15 @@ public class LbaasHandler {
 		}
 	}
 	
-	/*
-	 * Utility method for JSON'izing array of LBs for gearman worker API
-	 */
+	
+	
+    /**
+     * Create a JSON array of LoadBalancers to be sent to gearman worker
+     * @param lbs
+     * @param action
+     * @return JSON encoded array
+     * @throws JSONException
+     */
 	protected String LbToJsonArray(List<LoadBalancer> lbs, String action) throws JSONException {
 		
 		JSONObject jsonObject=new JSONObject();
@@ -116,14 +149,14 @@ public class LbaasHandler {
 		try {
 		   for (int x=0;x<lbs.size();x++) {
 			   JSONObject jsonLb=new JSONObject();
-			   jsonLb.put("name",lbs.get(x).getName());	
-			   jsonLb.put("id",lbs.get(x).getId());
-			   jsonLb.put("protocol",lbs.get(x).getProtocol());
-			   jsonLb.put("port", lbs.get(x).getPort());
-			   jsonLb.put("algorithm",lbs.get(x).getAlgorithm());
-			   jsonLb.put("status", lbs.get(x).getStatus());
-			   jsonLb.put("created",lbs.get(x).getCreated());
-			   jsonLb.put("updated",lbs.get(x).getUpdated());
+			   jsonLb.put(JSON_NAME,lbs.get(x).getName());	
+			   jsonLb.put(JSON_ID,lbs.get(x).getId());
+			   jsonLb.put(JSON_PROTOCOL,lbs.get(x).getProtocol());
+			   jsonLb.put(JSON_PORT, lbs.get(x).getPort());
+			   jsonLb.put(JSON_ALGORITHM,lbs.get(x).getAlgorithm());
+			   jsonLb.put(JSON_STATUS, lbs.get(x).getStatus());
+			   jsonLb.put(JSON_CREATED,lbs.get(x).getCreated());
+			   jsonLb.put(JSON_UPDATED,lbs.get(x).getUpdated());
 			   
 			   JSONArray jsonVipArray = new JSONArray();		   
 			   VirtualIps vips = lbs.get(x).getVirtualIps();
@@ -132,14 +165,14 @@ public class LbaasHandler {
 				   if ( vipslist!=null)
 					   for ( int y=0;y<vipslist.size();y++) {
 						   JSONObject jsonVIP=new JSONObject();
-						   jsonVIP.put("address", vipslist.get(x).getAddress());
-						   jsonVIP.put("id", vipslist.get(x).getId());
-						   jsonVIP.put("type", vipslist.get(x).getType());
-						   jsonVIP.put("ipVersion", vipslist.get(x).getIpVersion());
+						   jsonVIP.put(JSON_ADDRESS, vipslist.get(x).getAddress());
+						   jsonVIP.put(JSON_ID, vipslist.get(x).getId());
+						   jsonVIP.put(JSON_TYPE, vipslist.get(x).getType());
+						   jsonVIP.put(JSON_IPVER, vipslist.get(x).getIpVersion());
 						   jsonVipArray.put(jsonVIP);
 					   }
 			   }
-			   jsonLb.put("virtualIps", jsonVipArray);
+			   jsonLb.put(JSON_VIPS, jsonVipArray);
 			   			
 			   JSONArray jsonNodeArray = new JSONArray();
 			   Nodes nodes = lbs.get(x).getNodes();
@@ -147,21 +180,21 @@ public class LbaasHandler {
 				   List<Node> nodeList = nodes.getNodes();
 				   for ( int y=0;y<nodeList.size();y++) {
 					   JSONObject jsonNode=new JSONObject();
-					   jsonNode.put("address", nodeList.get(y).getAddress());
-					   jsonNode.put("id",nodeList.get(y).getId()); 			   
-					   jsonNode.put("port" ,nodeList.get(y).getPort());
-					   jsonNode.put("status", nodeList.get(y).getStatus());
+					   jsonNode.put(JSON_ADDRESS, nodeList.get(y).getAddress());
+					   jsonNode.put(JSON_ID,nodeList.get(y).getId()); 			   
+					   jsonNode.put(JSON_PORT ,nodeList.get(y).getPort());
+					   jsonNode.put(JSON_STATUS, nodeList.get(y).getStatus());
 					   jsonNodeArray.put(jsonNode);
 				   }		   		   
 			   }		   
-			   jsonLb.put("nodes", jsonNodeArray);
+			   jsonLb.put(JSON_NODES, jsonNodeArray);
 			   
 			   jsonArray.put(jsonLb);
 		   }
 		   jsonObject.put(HPCS_REQUESTID,++requestId);
 		   jsonObject.put(HPCS_ACTION, action);
 		   jsonObject.put(HPCS_DEVICE,lbs.get(0).getDevice()); 
-		   jsonObject.put("loadbalancers",jsonArray);		   				   	   		   
+		   jsonObject.put(JSON_LBS,jsonArray);		   				   	   		   
 		   return jsonObject.toString();
 		}
 		catch ( JSONException jsone) {
@@ -171,34 +204,42 @@ public class LbaasHandler {
 	}		
 		
 
-
 	
-	/*
-	 * return list of all LBs
-	 */
+	
+    /**
+     * Get all Loadbalancers
+     * @return JSON encoded list of LoadBalancers in abbreviated format per Atlas specification
+     */
 	@GET
 	@Produces("application/json")
 	public String getAll() {
 		logger.info("GET loadbalancers");
 		JSONObject jsonObject = new JSONObject();
-		JSONArray jsonArray = new JSONArray();
-		LoadBalancerDataModel model = new LoadBalancerDataModel();
-		List<LoadBalancer> lbs = model.getLoadBalancers();
+		JSONArray jsonArray = new JSONArray();		
+		List<LoadBalancer> lbs=null;
+		
+		try {
+		   lbs = model.getLoadBalancers();
+		}
+		catch ( DeviceModelAccessException dme) {
+	         throw new LBaaSException(dme.message, 500);                                   
+	    }
+		
 		try {	
 		   for (int x=0;x<lbs.size();x++) {
 			   JSONObject jsonLb=new JSONObject();
-			   jsonLb.put("name", lbs.get(x).getName());
-			   jsonLb.put("id", lbs.get(x).getId());
-			   jsonLb.put("protocol",lbs.get(x).getProtocol());
-			   jsonLb.put("port",lbs.get(x).getPort());
-			   jsonLb.put("algorithm", lbs.get(x).getAlgorithm());
-			   jsonLb.put("status",lbs.get(x).getStatus());
-			   jsonLb.put("created", lbs.get(x).getCreated());
-			   jsonLb.put("updated", lbs.get(x).getUpdated());
+			   jsonLb.put(JSON_NAME, lbs.get(x).getName());
+			   jsonLb.put(JSON_ID, lbs.get(x).getId());
+			   jsonLb.put(JSON_PROTOCOL,lbs.get(x).getProtocol());
+			   jsonLb.put(JSON_PORT,lbs.get(x).getPort());
+			   jsonLb.put(JSON_ALGORITHM, lbs.get(x).getAlgorithm());
+			   jsonLb.put(JSON_STATUS,lbs.get(x).getStatus());
+			   jsonLb.put(JSON_CREATED, lbs.get(x).getCreated());
+			   jsonLb.put(JSON_UPDATED, lbs.get(x).getUpdated());
 			   jsonArray.put(jsonLb);
 		   }
 			
-		   jsonObject.put("loadbalancers",jsonArray);		   				   	   		   
+		   jsonObject.put(JSON_LBS,jsonArray);		   				   	   		   
 		   return jsonObject.toString();
 		}
 		catch ( JSONException jsone) {
@@ -206,8 +247,12 @@ public class LbaasHandler {
 		}
 	}
 	
-	/*
-	 * return a specific LB
+	
+	
+	/**
+	 * Get a specific LoadBalancer base on its id
+	 * @param id
+	 * @return
 	 */
 	@GET
 	@Path("/{id}")
@@ -215,36 +260,53 @@ public class LbaasHandler {
 	public String getLb(@PathParam("id") String id) 
 	{
 		logger.info("GET loadbalancer : " + id);
-		LoadBalancerDataModel model = new LoadBalancerDataModel();
+		LoadBalancer lb = null;
+	
 		Integer lbId = new Integer(id);
-		LoadBalancer lb = model.getLoadBalancer(lbId);
-		if ( lb == null) {
-			throw new LBaaSException("could not find id : " + id, 404);  //  not found
+		try {
+		   lb = model.getLoadBalancer(lbId);
+		}
+		catch ( DeviceModelAccessException dme) {
+			throw new LBaaSException(dme.message, 500);                                     
+		}
+		
+		if (lb == null) {
+			throw new LBaaSException("loadbalancer id:" + id + " not found", 404);  
 		}
 		
 		try {
 			return LbToJson(lb);
 		}
-		catch ( JSONException jsone) {
+		catch (JSONException jsone) {
 			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);  //  internal error
 		} 
 	}
 	
-	/*
-	 * Update a specific LB
-	 * only allows changing name or algorithm
+	
+	/**
+	 * Update a specific LoadBalancer
+	 * @param id of LoadBalancer
+	 * @param content JSON put body
 	 */
 	@PUT
 	@Path("/{id}")
 	@Consumes("application/json")
-	public void updateLb(@PathParam("id") String id, String content) 
+	@Produces("application/json")
+	public String updateLb(@PathParam("id") String id, String content) 
 	{
 		logger.info("PUT loadbalancer : " + id);
-		LoadBalancerDataModel model = new LoadBalancerDataModel();
+		LoadBalancer lb=null;
 		
-		// attempt to read lb top be updated
+		// attempt to read lb to be updated
 		Integer lbId = new Integer(id);
-		LoadBalancer lb = model.getLoadBalancer(lbId);
+		
+		try {
+		   lb = model.getLoadBalancer(lbId);
+		}
+		catch ( DeviceModelAccessException dme) {
+	         throw new LBaaSException(dme.message, 500);
+	    }
+		
 		if ( lb == null) {
 			throw new LBaaSException("could not find id : " + id, 404);    //  not found			
 		}
@@ -282,7 +344,7 @@ public class LbaasHandler {
 		
 		// must have one of these fields
 		if ((name==null) && (algorithm==null)) {
-			throw new LBaaSException("name and algorithm missing", 400);    //  bad request				
+			throw new LBaaSException("name or algorithm must be specified", 400);    //  bad request				
 		}
 				
 		if (name !=null)
@@ -295,7 +357,12 @@ public class LbaasHandler {
 		lb.setStatus(LoadBalancer.STATUS_PENDING_UPDATE);		
 		
 		// write changes to DB
-		model.setLoadBalancer(lb);
+		try {
+		   model.setLoadBalancer(lb);
+		}
+		catch ( DeviceModelAccessException dme) {
+	         throw new LBaaSException(dme.message, 500);
+	    }
 		
 		// have the device process the job 
 		try {
@@ -306,29 +373,52 @@ public class LbaasHandler {
 		catch ( JSONException jsone) {
 			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);  //  internal error
 		} 
-										
+								
+		//respond with JSON
+		try {
+		   return LbToJson(lb);
+		}
+		catch ( JSONException jsone) {
+			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);  //  internal error
+		} 
 	}
 	
-	/*
-	 * Delete an LB
+	
+	/**
+	 * Delete a LoadBalancer
+	 * @param id
 	 */
 	@DELETE
 	@Path("/{id}")
 	@Produces("application/json")
 	public void deleteLb(@PathParam("id") String id) 
 	{
-		// delete the LB, send worker delete, finally clear device when worker responds ( not here )
-		
+		// delete the LB, send worker delete, finally clear device when worker responds ( not here )		
 		logger.info("DELETE loadbalancer : " + id);
-		LoadBalancerDataModel model = new LoadBalancerDataModel();
+		LoadBalancer lb=null;
+		
 		Integer lbId = new Integer(id);
-		LoadBalancer lb = model.getLoadBalancer(lbId);
-		if ( lb == null) {
-			throw new LBaaSException("could not find id : " + id, 404);              //  not found	
+		try {
+		   lb = model.getLoadBalancer(lbId);
 		}
-		int deleteCount = model.deleteLoadBalancer(lbId);
+		catch ( DeviceModelAccessException dme) {
+	          throw new LBaaSException(dme.message, 500);
+	    }
+		
+		if ( lb == null) {
+			throw new LBaaSException("could not find loadbalancer id : " + id, 404);              //  not found	
+		}
+		
+		int deleteCount=0;
+		try {
+		   deleteCount = model.deleteLoadBalancer(lbId);
+		}
+		catch ( DeviceModelAccessException dme) {
+	          throw new LBaaSException(dme.message, 500);
+	    }
+		
 		if (deleteCount==0) {
-			throw new LBaaSException("could not find id on delete: " + id, 404);    //  not found	
+			throw new LBaaSException("could not find loadbalancer id on delete: " + id, 404);    //  not found	
 		}
 		
 		// have the device process the job 
@@ -342,9 +432,8 @@ public class LbaasHandler {
 		} 
 	}
 	
-	/*
-	 * return Nodes for a specific LB 
-	 */
+	
+	
 	@GET
 	@Path("/{loadbalancerId}/nodes")
 	@Produces("application/json")
@@ -355,9 +444,7 @@ public class LbaasHandler {
 		throw new LBaaSException("not supported" , 501);  //  not implemented
 	}
 	
-	/*
-	 * Get specific node for an LB 
-	 */
+	
 	@GET
 	@Path("/{loadbalancerId}/nodes/{nodeId}")
 	@Produces("application/json")
@@ -368,9 +455,7 @@ public class LbaasHandler {
 		throw new LBaaSException("not supported" , 501);  //  not implemented
 	}
 	
-	/*
-	 * Add a new node to the LB.
-	 */
+	
 	@POST
 	@Path("/{loadbalancerId}/nodes")
 	@Consumes("application/json")
@@ -382,9 +467,7 @@ public class LbaasHandler {
 		throw new LBaaSException("not supported" , 501);  //  not implemented
 	}
 	
-	/*
-	 * modify an LBs Node
-	 */
+	
 	@PUT
 	@Path("/{loadbalancerId}/nodes/{nodeId}")
 	@Consumes("application/json")
@@ -397,9 +480,12 @@ public class LbaasHandler {
 	}
 	
 		
-	/*
-	 * Create a new LB
-	 */
+	
+    /**
+     * create a new LoadBalancer
+     * @param content, JSON encoded LoadBalancer for creation
+     * @return JSON encoded LoadBalancer which was created including new id
+     */
 	@POST
 	@Consumes("application/json")
 	@Produces("application/json")
@@ -408,8 +494,7 @@ public class LbaasHandler {
 		
 		Device device=null;
 		
-		// process POSTed body
-		LoadBalancerDataModel lbModel = new LoadBalancerDataModel();
+		// process POST'ed body
 		LoadBalancer lb = new LoadBalancer();
 		Integer lbId=0;
 		int x=0;
@@ -512,7 +597,7 @@ public class LbaasHandler {
 		   		   		   
 		   // create new LB
 		   lb.setDevice( device.getId());              // set lb device id
-		   lbId = lbModel.createLoadBalancer(lb);	   // write it to datamodel	   	
+		   lbId = model.createLoadBalancer(lb);	   // write it to datamodel	   	
 		   
 		   // set device lb and write it back to data model
 		   device.setLbId(lbId);
@@ -524,12 +609,21 @@ public class LbaasHandler {
          }
 		   
 		}
+		catch ( DeviceModelAccessException dme) {
+	         throw new LBaaSException(dme.message, 500);
+	      }
 		catch (JSONException e) {
 			return e.toString();
 		}
 						
 		// read LB back from data model, it will now have valid id
-		LoadBalancer lbResponse = lbModel.getLoadBalancer(lbId);
+		LoadBalancer lbResponse=null;
+		try {
+		   lbResponse = model.getLoadBalancer(lbId);
+		}
+		catch (DeviceModelAccessException dme) {
+            throw new LBaaSException(dme.message, 500);
+        }
  		
 		// have the device process the request
 		try {
