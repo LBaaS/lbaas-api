@@ -24,6 +24,8 @@ public class ProtocolHandler {
    private static Logger logger = Logger.getLogger(ProtocolHandler.class);
    private static String HTTP = "HTTP";
    private static String TCP = "TCP";
+   public  static String DEFAULT_PROTOCOL = HTTP;
+   public  static int    DEFAULT_PORT = 80;
    
    @SuppressWarnings("serial")
    static List<Protocol> protocols = new ArrayList<Protocol>() {{
