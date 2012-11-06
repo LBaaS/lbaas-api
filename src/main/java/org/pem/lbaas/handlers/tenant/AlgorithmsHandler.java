@@ -23,6 +23,7 @@ public class AlgorithmsHandler {
    private static Logger logger = Logger.getLogger(AlgorithmsHandler.class);
    private static String ROUND_ROBIN       = "ROUND_ROBIN";
    private static String LEAST_CONNECTIONS = "LEAST_CONNECTIONS";
+   public  static String DEFAULT_ALGO      = ROUND_ROBIN;
    
    @SuppressWarnings("serial")
    static List<String> algorithms = new ArrayList<String>() {{
