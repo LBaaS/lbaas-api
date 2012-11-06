@@ -40,6 +40,7 @@ import org.pem.lbaas.persistency.LoadBalancerDataModel;
 public class LbaasHandler {
 	private static Logger logger = Logger.getLogger(LbaasHandler.class);
 	private static LoadBalancerDataModel model = new LoadBalancerDataModel();
+	private static DeviceDataModel deviceModel = new DeviceDataModel();
     private static LBaaSTaskManager lbaasTaskManager = new LBaaSTaskManager();
     private static long requestId=0;
     
@@ -68,9 +69,14 @@ public class LbaasHandler {
     protected static String JSON_ADDRESS     = "address";
     protected static String JSON_TYPE        = "type";
     protected static String JSON_IPVER       = "ipVersion";
+    protected static String JSON_IPVER4      = "IPV4";
+    protected static String JSON_PUBLIC      = "public";
     protected static String JSON_VIPS        = "virtualIps";
     protected static String JSON_NODES       = "nodes";
     protected static String JSON_LBS         = "loadbalancers";
+    
+    // node info
+    public static String    NODE_ONLINE      = "online";
 
     
 	/**
@@ -202,8 +208,80 @@ public class LbaasHandler {
 		}
 		
 	}		
+	
+	
+	/**
+	 * Convert a JSONObject to Nodes
+	 * @param jsonNodesArray
+	 * @return Nodes
+	 */
+	Nodes jsonToNodes(JSONObject jsonObject) throws JSONException {
+	   if ( jsonObject.has(JSON_NODES) ) {			   
+		   Nodes nodes = new Nodes();
+		   try {
+			   JSONArray jsonNodesArray = (JSONArray) jsonObject.get(JSON_NODES);
+			   for ( int x=0;x<jsonNodesArray.length();x++) {
+				   Node node = new Node();
+				   JSONObject jsonNode = jsonNodesArray.getJSONObject(x);
+				   String address = (String) jsonNode.get(JSON_ADDRESS);
+				   node.setAddress(address);
+				   String port = (String) jsonNode.get(JSON_PORT);
+				   node.setPort(Integer.valueOf(port));
+				   node.setStatus(NODE_ONLINE);			   
+				   node.setId(new Integer(x+1));
+				   nodes.getNodes().add(node);			   
+			   }
+			   return nodes;
+		   }
+		   catch(JSONException jse) {
+			   logger.warn(jse.toString());
+			   throw jse;
+		   }			   
+	   }
+	   else {
+		   throw new LBaaSException("JSON 'nodes' not in request body", 400);
+	   }
+	}
+	
+	/**
+	 * Convert a JSONObject to VirtualIps
+	 * @param jsonObject
+	 * @return
+	 * @throws JSONException
+	 */
+	VirtualIps jsonToVips(JSONObject jsonObject) throws JSONException {		
+	   if ( jsonObject.has(JSON_VIPS) ) {
+		   VirtualIps virtualIps = new VirtualIps();
+		   try {
+			   JSONArray jsonVIPArray = (JSONArray) jsonObject.get(JSON_VIPS);
+			   for ( int x=0;x<jsonVIPArray.length();x++) {
+				   VirtualIp virtualIp = new VirtualIp();				   
+				   JSONObject jsonVip = jsonVIPArray.getJSONObject(x);				   
+				   String address = (String) jsonVip.get(JSON_ADDRESS);
+				   virtualIp.setAddress(address);				   
+				   if (jsonVip.get(JSON_IPVER).toString().equalsIgnoreCase(JSON_IPVER4))	
+				      virtualIp.setIpVersion(IpVersion.IPV_4);
+				   else
+					   virtualIp.setIpVersion(IpVersion.IPV_6);				   
+				   if ( jsonVip.get(JSON_TYPE).toString().equalsIgnoreCase(JSON_PUBLIC))
+				      virtualIp.setType(VipType.PUBLIC);
+				   else
+					   virtualIp.setType(VipType.PRIVATE);				   
+				   virtualIp.setId(new Integer(x+1));
+				   virtualIps.getVirtualIps().add(virtualIp);
+			   }
+		       return virtualIps;
+		   }
+		   catch(JSONException jse) {
+			   logger.warn(jse.toString());
+			   throw jse;
+		   }
+	   }
+	   else {
+		   return null;
+	   }
+	}
 		
-
 	
 	
     /**
@@ -268,8 +346,7 @@ public class LbaasHandler {
 		}
 		catch ( DeviceModelAccessException dme) {
 			throw new LBaaSException(dme.message, 500);                                     
-		}
-		
+		}		
 		if (lb == null) {
 			throw new LBaaSException("loadbalancer id:" + id + " not found", 404);  
 		}
@@ -298,15 +375,13 @@ public class LbaasHandler {
 		LoadBalancer lb=null;
 		
 		// attempt to read lb to be updated
-		Integer lbId = new Integer(id);
-		
+		Integer lbId = new Integer(id);		
 		try {
 		   lb = model.getLoadBalancer(lbId);
 		}
 		catch ( DeviceModelAccessException dme) {
 	         throw new LBaaSException(dme.message, 500);
-	    }
-		
+	    }		
 		if ( lb == null) {
 			throw new LBaaSException("could not find id : " + id, 404);    //  not found			
 		}
@@ -403,8 +478,7 @@ public class LbaasHandler {
 		}
 		catch ( DeviceModelAccessException dme) {
 	          throw new LBaaSException(dme.message, 500);
-	    }
-		
+	    }		
 		if ( lb == null) {
 			throw new LBaaSException("could not find loadbalancer id : " + id, 404);              //  not found	
 		}
@@ -497,105 +571,83 @@ public class LbaasHandler {
 		// process POST'ed body
 		LoadBalancer lb = new LoadBalancer();
 		Integer lbId=0;
-		int x=0;
 		try {
 		   JSONObject jsonObject=new JSONObject(content);
 		   
 		   // name
 	       if ( jsonObject.has(JSON_NAME)) {		   
-		      String name = (String) jsonObject.get("name");
+		      String name = (String) jsonObject.get(JSON_NAME);
 		      lb.setName(name);
 		      logger.info("   name = " + name);
 	       }
 	       else {
 	            throw new LBaaSException("POST requires 'name' in request body", 400);   
 	       }
-		   
-		   // minimally request needs nodes
-		   if ( !jsonObject.has("nodes") ) {
-			   throw new LBaaSException("nodes are required", 400);    //  bad request				   
-		   }
+		   		   
 		   
 		   // check to ensure protocol is supported
-		   if (jsonObject.has("protocol") ) {
-			   String protocol = (String) jsonObject.get("protocol");
+		   if (jsonObject.has(JSON_PROTOCOL) ) {
+			   String protocol = (String) jsonObject.get(JSON_PROTOCOL);
 			   if (! ProtocolHandler.exists(protocol)) {
-				   throw new LBaaSException("protocol specified not supported : " + protocol, 400);    //  bad request					   
+				   throw new LBaaSException("protocol specified not supported : " + protocol, 400); 					   
 			   }
-			   else {
-				   logger.info("   protocol = " + protocol);				   
+			   else {			   
 				   lb.setProtocol(protocol);
-				   lb.setPort(ProtocolHandler.getPort(protocol));
-				   logger.info("   port = " + lb.getPort());
+				   lb.setPort(ProtocolHandler.getPort(protocol));				   
 			   }
 		   }
-		   
-		   // nodes
-		   Nodes nodes = new Nodes();		   
-		   JSONArray jsonNodesArray = (JSONArray) jsonObject.get("nodes");
-		   for ( x=0;x<jsonNodesArray.length();x++) {
-			   Node node = new Node();
-			   //logger.info("node["+x+"] = "+ jsonNodesArray.getJSONObject(x));
-			   JSONObject jsonNode = jsonNodesArray.getJSONObject(x);
-			   String address = (String) jsonNode.get("address");
-			   node.setAddress(address);
-			   String port = (String) jsonNode.get("port");
-			   node.setPort(Integer.valueOf(port));
-			   node.setStatus("ONLINE");			   
-			   node.setId(new Integer(x+1));
-			   logger.info("   Node["+x+"]");
-			   logger.info("      address = " + address);
-			   logger.info("      port = " + port);
-			   logger.info("      status = " + node.getStatus());
-			   nodes.getNodes().add(node);			   
+		   else {
+			   lb.setProtocol(ProtocolHandler.DEFAULT_PROTOCOL);
+			   lb.setPort(ProtocolHandler.DEFAULT_PORT);
 		   }
-		   lb.setNodes(nodes);		 
+		   logger.info("   protocol = " + lb.getProtocol());
+		   logger.info("   port     = " + lb.getPort());
 		   
-		   // vips
-		   VirtualIps virtualIps = new VirtualIps();
-		   if ( jsonObject.has("virtualIps") ) {
-			   JSONArray jsonVIPArray = (JSONArray) jsonObject.get("virtualIps");
-			   for ( x=0;x<jsonVIPArray.length();x++) {
-				   VirtualIp virtualIp = new VirtualIp();
-				   //logger.info("vip["+x+"] = "+ jsonVIPArray.getJSONObject(x));
-				   JSONObject jsonVip = jsonVIPArray.getJSONObject(x);
-				   
-				   String address = (String) jsonVip.get("address");
-				   virtualIp.setAddress(address);
-				   
-				   if (jsonVip.get("ipVersion").toString().equalsIgnoreCase("IPV4"))	
-				      virtualIp.setIpVersion(IpVersion.IPV_4);
-				   else
-					   virtualIp.setIpVersion(IpVersion.IPV_6);
-				   
-				   if ( jsonVip.get("type").toString().equalsIgnoreCase("public"))
-				      virtualIp.setType(VipType.PUBLIC);
-				   else
-					   virtualIp.setType(VipType.PRIVATE);
-				   
-				   virtualIp.setId(new Integer(x+1));
-				   
-				   
-				   logger.info("   VIP["+x+"]");
-				   logger.info("      address = " + virtualIp.getAddress());
-				   logger.info("      ipversion = " + virtualIp.getIpVersion().toString());
-				   logger.info("      type = " + virtualIp.getType().toString());
-				   virtualIps.getVirtualIps().add(virtualIp);
+		   // check to see if algorithm us supported
+		   if (jsonObject.has(JSON_ALGORITHM) ) {
+			   String algorithm = (String) jsonObject.get(JSON_ALGORITHM);
+			   if (! AlgorithmsHandler.exists(algorithm)) {
+				   throw new LBaaSException("algorithm specified not supported : " + algorithm, 400); 					   
 			   }
+			   else {			   
+				   lb.setAlgorithm(algorithm);				   
+			   }
+		   }
+		   else {
+			   lb.setAlgorithm(AlgorithmsHandler.DEFAULT_ALGO);
+		   }
+		   logger.info("   algorithm = " + lb.getAlgorithm());
+		   
+		   
+		   
+		   //  nodes
+		   try {
+			   lb.setNodes(jsonToNodes(jsonObject));			   
+		   }
+		   catch ( JSONException jsone) {
+				throw new LBaaSException( jsone.toString(), 400);  
+		   } 
+		   
+		   //vips
+		   VirtualIps virtualIps = null;
+		   try {
+		      virtualIps = jsonToVips(jsonObject);
+		   }
+		   catch ( JSONException jsone) {
+				throw new LBaaSException( jsone.toString(), 400);  
+		   } 
+		   if ( virtualIps != null)
 			   lb.setVirtualIps(virtualIps);
-		   }
 		   
 		   
 		   // find free device to use
-		   DeviceDataModel deviceModel = new DeviceDataModel();
 		   try {
 		      device = deviceModel.findFreeDevice();
 		   }
 		   catch (DeviceModelAccessException dme) {
 	             throw new LBaaSException(dme.message, 500);
            }
-		   
-		   
+		   		   
 		   if ( device == null) {
 			   throw new LBaaSException("cannot find free device available" , 503);    //  not available
 		   }
