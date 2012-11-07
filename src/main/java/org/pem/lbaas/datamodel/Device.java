@@ -1,6 +1,7 @@
 package org.pem.lbaas.datamodel;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 
 public class Device implements Serializable {
@@ -13,7 +14,7 @@ public class Device implements Serializable {
 	 
 	 // PEM Added
 	 protected String lbType;  // type of LB, e.g. "HAProxy"
-	 protected Integer lbId;   // reference to loadbalancer or 0 means not yet assigned
+	 public ArrayList<Long> lbIds = new ArrayList<Long>();         // device can be used by more than one logical LB for single VIP / multi protocols same tenant
 	 public static String STATUS_OFFLINE    = "OFFLINE";           // device is offline not functioning as an LB
 	 public static String STATUS_ONLINE     = "ONLINE";            // device is online and functional as defined by associated LB
 	 public static String STATUS_ERROR      = "ERROR";             // device is in an error state and not functional
@@ -61,13 +62,6 @@ public class Device implements Serializable {
     	 return lbType;
      }
      
-     public void setLbId( Integer lbid) {
-    	 lbId = lbid;
-     }
-     
-     public Integer getLbId() {
-    	 return lbId;
-     }
      
      public String getCreated() {
     	 return created;    	     	 
