@@ -396,12 +396,14 @@ public class LoadBalancerDataModel {
 	 * @return List of LoadBalancer
 	 * @throws DeviceModelAccessException
 	 */
-	public  List<LoadBalancer> getLoadBalancers() throws DeviceModelAccessException {
+	public  List<LoadBalancer> getLoadBalancers(String condition) throws DeviceModelAccessException {
 		List<LoadBalancer> lbs = new  ArrayList<LoadBalancer>();
 		Connection conn = dbConnect();
 		Statement stmt=null;
 		if (conn!=null) {
 		   String query = "SELECT * FROM loadbalancers";
+		   if ( condition !=null)
+			   query = query + " WHERE " + condition;
 		   try {
 		      stmt=conn.createStatement();
 		      ResultSet rs=stmt.executeQuery(query);
@@ -417,6 +419,17 @@ public class LoadBalancerDataModel {
            }
 		}
 		return lbs;
+	}
+	
+	/**
+	 * Get a list of LoadBalancers which are using the same device
+	 * @param deviceId
+	 * @return
+	 * @throws DeviceModelAccessException
+	 */
+	public  List<LoadBalancer> getLoadBalancersWithDevice(Long deviceId) throws DeviceModelAccessException {
+		String condition = SQL_DEVICE + "=" + deviceId.toString();
+		return getLoadBalancers(condition);
 	}
 
 	
