@@ -345,6 +345,8 @@ public class DeviceHandler {
       // change the device name
       try {
          name = (String) jsonObject.get(JSON_NAME);
+         if ( name.length() > LimitsHandler.LIMIT_MAX_NAME_SIZE)
+         	throw new LBaaSException("'name' is over max allowed length of : " + LimitsHandler.LIMIT_MAX_NAME_SIZE, 400); 
          device.setName(name);
          logger.info("name = " + name);
          try {
@@ -363,6 +365,8 @@ public class DeviceHandler {
       // change the address
       try {
          address = (String) jsonObject.get(JSON_ADDRESS);
+         if ( address.length() > LimitsHandler.LIMIT_MAX_ADDR_SIZE)
+         	throw new LBaaSException("'address' is over max allowed length of : " + LimitsHandler.LIMIT_MAX_ADDR_SIZE, 400);
          device.setAddress(address);
          logger.info("address = " + address);
       }
