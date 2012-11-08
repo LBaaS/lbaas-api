@@ -91,7 +91,7 @@ public class DeviceHandler {
       List<Device> devices =null;
 		
       try {
-         devices = deviceModel.getDevices();
+         devices = deviceModel.getDevices(null);
       }
       catch ( DeviceModelAccessException dme) {
          throw new LBaaSException(dme.message, 500);                                   
