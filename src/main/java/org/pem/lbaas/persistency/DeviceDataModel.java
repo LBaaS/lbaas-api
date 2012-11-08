@@ -12,22 +12,29 @@ import java.util.List;
 import java.sql.*;
 
 import org.apache.log4j.Logger;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.pem.lbaas.Lbaas;
 import org.pem.lbaas.datamodel.Device;
 import org.pem.lbaas.datamodel.LoadBalancer;
+import org.pem.lbaas.datamodel.VirtualIp;
 
 public class DeviceDataModel {
    private static Logger logger       = Logger.getLogger(DeviceDataModel.class);
    protected Connection  dbConnection = null;
    
-   protected final static String SQL_ID            = "id";
-   protected final static String SQL_NAME          = "name";
-   protected final static String SQL_ADDRESS       = "address";
-   protected final static String SQL_LOADBALANCER  = "loadbalancer";
-   protected final static String SQL_TYPE          = "type";
-   protected final static String SQL_STATUS        = "status";
-   protected final static String SQL_CREATED       = "created";
-   protected final static String SQL_UPDATED       = "updated";
+   protected final static String SQL_ID             = "id";
+   protected final static String SQL_NAME           = "name";
+   protected final static String SQL_ADDRESS        = "address";
+   protected final static String SQL_LOADBALANCERS  = "loadbalancers";
+   protected final static String SQL_TYPE           = "type";
+   protected final static String SQL_STATUS         = "status";
+   protected final static String SQL_CREATED        = "created";
+   protected final static String SQL_UPDATED        = "updated";
+   protected final static String LBIDS              = "ids";
+   protected final static String LBID               = "id";
+   protected final static String EMPTY_LBIDS        = "'{\"ids\":[]}'";
 	
    /**
     * Get a connection to database
@@ -94,6 +101,40 @@ public class DeviceDataModel {
    protected void finalize ()  {
       dbClose();
    }
+   
+   /**
+    * Generate JSON array of loadbalancer references
+    * @param lbIds
+    * @return String format of JSON loadbalancer Ids
+    */
+   public static JSONObject lbIdsToJson( ArrayList<Long> lbIds) throws JSONException{
+	   JSONObject jsonObject = new JSONObject();
+	   JSONArray jsonArray = new JSONArray();
+	   for (int x=0;x<lbIds.size();x++) {
+           JSONObject jsonLBid=new JSONObject();
+           jsonLBid.put(LBID, lbIds.get(x));
+           jsonArray.put(jsonLBid);
+	   }	   
+	   jsonObject.put(LBIDS,jsonArray);	
+	   return jsonObject;
+   }
+   
+   /**
+    * Generate array of longs from JSON 
+    * @param lbIds
+    * @return ArrayList<Long>
+    */
+   protected ArrayList<Long> jsonToLbIds( String lbIds) throws JSONException {
+	  ArrayList<Long> values = new ArrayList<Long>();
+      JSONObject jsonObject=new JSONObject(lbIds);
+      JSONArray lbidArray = (JSONArray) jsonObject.get(LBIDS);
+      for ( int x=0;x<lbidArray.length();x++) {				   
+		   JSONObject jsonlbid = lbidArray.getJSONObject(x);
+		   values.add( new Long(jsonlbid.get(LBID).toString()));
+      }
+	  
+      return values;
+   }
 
    /**
     * Convert SQL result set to a Device object
@@ -102,13 +143,13 @@ public class DeviceDataModel {
     * @return Device
     * @throws SQLException
     */
-   protected Device rsToDevice(ResultSet rs) throws SQLException {
+   protected Device rsToDevice(ResultSet rs) throws SQLException, JSONException {
       Device device = new Device();
       try {
          device.setId(new Integer(rs.getInt(SQL_ID)));
          device.setName(rs.getString(SQL_NAME));
          device.setAddress(rs.getString(SQL_ADDRESS));
-         device.setLbId(new Integer (rs.getInt(SQL_LOADBALANCER)));
+         device.lbIds = jsonToLbIds( rs.getString(SQL_LOADBALANCERS));
          device.setLbType(rs.getString(SQL_TYPE));
          device.setStatus(rs.getString(SQL_STATUS));	
          device.setCreated(rs.getString(SQL_CREATED));
@@ -146,6 +187,9 @@ public class DeviceDataModel {
 	  catch (SQLException s) {                                              
          throw new DeviceModelAccessException("SQL Exception : " + s);
       }
+	  catch (JSONException jse) {
+    	  throw new DeviceModelAccessException("JSON Exception : " + jse);
+      }
       return devices;
    }
 	
@@ -157,7 +201,7 @@ public class DeviceDataModel {
     * @return Device or null if not found
     * @throws DeviceModelAccessException if internal database error
     */
-   public Device getDevice(Integer id) throws DeviceModelAccessException {
+   public Device getDevice(Long id) throws DeviceModelAccessException {
       Connection conn = dbConnect();
       Statement stmt=null;	
       String query = "SELECT * FROM devices WHERE id=" + id;
@@ -179,6 +223,9 @@ public class DeviceDataModel {
       catch (SQLException s) {                                              
     	  throw new DeviceModelAccessException("SQL Exception : " + s);
       }		
+      catch (JSONException jse) {
+    	  throw new DeviceModelAccessException("JSON Exception : " + jse);
+      }
 	}
 	
 	
@@ -193,7 +240,7 @@ public class DeviceDataModel {
    public Device findFreeDevice() throws DeviceModelAccessException {		
       Connection conn = dbConnect();
       Statement stmt=null;		
-      String query = "SELECT * FROM devices WHERE loadbalancer = 0";
+      String query = "SELECT * FROM devices WHERE loadbalancers = " + EMPTY_LBIDS;
       try {
          stmt=conn.createStatement();
          ResultSet rs=stmt.executeQuery(query);
@@ -212,6 +259,9 @@ public class DeviceDataModel {
       catch (SQLException s) {                                              
          throw new DeviceModelAccessException("SQL Exception : " + s);
       }		
+      catch (JSONException jse) {
+    	  throw new DeviceModelAccessException("JSON Exception : " + jse);
+      }
    }
 	
 
@@ -251,7 +301,7 @@ public class DeviceDataModel {
     * @return 1 if deleted or 0 if not ( delete count )
     * @throws DeviceModelAccessException if internal database error
     */
-   public int deleteDevice(Integer id) throws DeviceModelAccessException {
+   public int deleteDevice(Long id) throws DeviceModelAccessException {
       Connection conn = dbConnect();
       Statement stmt=null;		
       String query = "DELETE FROM devices WHERE id=" + id;
@@ -278,7 +328,7 @@ public class DeviceDataModel {
     * @return boolean
     * @throws DeviceModelAccessException if internal database error
     */
-   public boolean setStatus(String status, Integer id) throws DeviceModelAccessException {	
+   public boolean setStatus(String status, Long id) throws DeviceModelAccessException {	
       Device device = this.getDevice(id);
       if ( device == null)
     	  return false;                           // id not found
@@ -298,17 +348,18 @@ public class DeviceDataModel {
     * @throws DeviceModelAccessException if internal database error
     */
    public boolean setDevice(Device device) throws DeviceModelAccessException {
+	     
 	   
-	  if ( this.getDevice(device.getId())==null)
+	  if ( this.getDevice(new Long(device.getId()))==null)
 		  return false;                            // id not found
 	  
       Connection conn = dbConnect();
       try {
-			String query = "UPDATE devices SET name = ?, address = ?, loadbalancer = ?, status = ? WHERE id = ?";
+			String query = "UPDATE devices SET name = ?, address = ?, loadbalancers = ?, status = ? WHERE id = ?";
 			PreparedStatement statement = conn.prepareStatement(query);
 			statement.setString(1, device.getName());
 			statement.setString(2, device.getAddress());
-			statement.setInt(3, device.getLbId().intValue());
+			statement.setString(3, lbIdsToJson( device.lbIds).toString());
 			statement.setString(4, device.getStatus());
 			statement.setInt(5,device.getId().intValue());
 			statement.executeUpdate();
@@ -318,6 +369,9 @@ public class DeviceDataModel {
       catch (SQLException s) {
 	    	throw new DeviceModelAccessException("SQL Exception : " + s);   
 	  }
+      catch (JSONException jse) {
+    	  throw new DeviceModelAccessException("JSON Exception : " + jse);
+      }
 			
    }
    
@@ -331,11 +385,13 @@ public class DeviceDataModel {
     * @return boolean
     * @throws DeviceModelAccessException if internal database error
     */
-   public boolean markAsFree(int id) throws DeviceModelAccessException {
-      Device device = this.getDevice(id);
+   public boolean markAsFree(long deviceId, long lbId) throws DeviceModelAccessException {
+      Device device = this.getDevice(deviceId);
       if (device==null)
     	  return false;                        // id not found
-      device.setLbId(0);
+      
+      // TODO, just clear the lbid and leave the others!
+      device.lbIds.clear();
       this.setDevice(device);
       return true;
    }
@@ -351,7 +407,7 @@ public class DeviceDataModel {
       long count=0;
       long free=0;
       String queryCount = "SELECT COUNT(*) FROM devices";
-      String queryFree = "SELECT COUNT(*) FROM devices WHERE loadbalancer = 0";
+      String queryFree = "SELECT COUNT(*) FROM devices WHERE loadbalancers = " + EMPTY_LBIDS;
 	  try {
 		  stmt=conn.createStatement();
 		  ResultSet res = stmt.executeQuery(queryCount);
@@ -383,16 +439,16 @@ public class DeviceDataModel {
     * @return new device id
     * @throws DeviceModelAccessException if internal database error
     */
-   public Integer createDevice(Device device) throws DeviceModelAccessException {		
+   public Long createDevice(Device device) throws DeviceModelAccessException {		
 		
 		int val=0;				
 		Connection conn = dbConnect();
 		try {
-			String query = "insert into devices (name,address,loadbalancer,type,created, updated, status) values(?, ?, ?, ?, ?, ?, ?)";
+			String query = "insert into devices (name,address,loadbalancers,type,created, updated, status) values(?, ?, ?, ?, ?, ?, ?)";
 			PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);	
 			statement.setString(1,device.getName() );
 			statement.setString(2, device.getAddress());
-			statement.setInt(3,device.getLbId().intValue());
+			statement.setString(3,lbIdsToJson( device.lbIds).toString());
 			statement.setString(4,device.getLbType());
 			Date dNow = new Date();
 		    SimpleDateFormat ft = new SimpleDateFormat ("E yyyy.MM.dd 'at' hh:mm:ss a zzz");
@@ -418,8 +474,11 @@ public class DeviceDataModel {
 	    catch (SQLException s) {
 	    	throw new DeviceModelAccessException("SQL Exception : " + s);   
 		}
+	    catch (JSONException jse) {
+	    	  throw new DeviceModelAccessException("JSON Exception : " + jse);
+	    }
 				
-		return new Integer(val);
+		return new Long(val);
 	
 	}
 	
