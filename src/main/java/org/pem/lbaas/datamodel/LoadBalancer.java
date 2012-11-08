@@ -114,13 +114,13 @@ public class LoadBalancer
     private Map<QName, String> otherAttributes = new HashMap<QName, String>();
     
     // PEM
-    protected Integer device;
+    protected Long device;
 
-    public Integer getDevice() {
+    public Long getDevice() {
         return device;
     }
 
-    public void setDevice(Integer value) {
+    public void setDevice(Long value) {
         this.device = value;
     }
     
