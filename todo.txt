@@ -66,7 +66,7 @@ api and strategy for storage and applying customer certs   NOT IMPLEMENTED
 
 Custom Fault Body
 ---------------------------------------------------------------------------
-Fault body compliant with Atlas                            DONE
+Fault body like with Atlas                                 DONE
 
 
 Resource Limits
@@ -75,24 +75,20 @@ Default tenant limits on max # of LBs                      NOT IMPLEMENTED
 
 DB
 ---------------------------------------------------------------------------
-improved mysql connection pooling and mgmt                For Devices, not yet LBs
+improved mysql connection pooling and mgmt                DONE
 
 Pending state request blocking
 ---------------------------------------------------------------------------
 should requests be blocked when in BUILD or PENDING_UPDATE state ?
 
-
-Notes:
-node ids are only unique to the LB and not unique for all nodes across LBs, this should be ok.
-'condition' not in schema?, can we use 'extra' fields and then keep XSDs 100%?
-Do we need to lock db on reads and writes?
-How to handle gearman HA?
-
-
-Questions:
+Other:
 ---------------------------------------------------------------------------
-How many LBs and devices can we handle max?
-BIGINTS or UUIDs?
+* Make sure all ids are Longs, how many LBs and devices will this handle
+* need Junit tests for most everything
+
+
+
+
 
 
 
