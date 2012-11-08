@@ -332,7 +332,7 @@ public class DeviceDataModel {
          throw new DeviceModelAccessException("SQL Exception : " + s);
       }		
    }
-	
+   
    
    /**
     * Change the status on a Device
