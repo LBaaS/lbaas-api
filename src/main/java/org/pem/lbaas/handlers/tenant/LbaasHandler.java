@@ -39,7 +39,7 @@ import org.pem.lbaas.persistency.LoadBalancerDataModel;
 @Path("/loadbalancers")
 public class LbaasHandler {
 	private static Logger logger = Logger.getLogger(LbaasHandler.class);
-	private static LoadBalancerDataModel model = new LoadBalancerDataModel();
+	private static LoadBalancerDataModel lbModel = new LoadBalancerDataModel();
 	private static DeviceDataModel deviceModel = new DeviceDataModel();
     private static LBaaSTaskManager lbaasTaskManager = new LBaaSTaskManager();
     private static long requestId=0;
@@ -170,10 +170,10 @@ public class LbaasHandler {
 				   if ( vipslist!=null)
 					   for ( int y=0;y<vipslist.size();y++) {
 						   JSONObject jsonVIP=new JSONObject();
-						   jsonVIP.put(JSON_ADDRESS, vipslist.get(x).getAddress());
-						   jsonVIP.put(JSON_ID, vipslist.get(x).getId());
-						   jsonVIP.put(JSON_TYPE, vipslist.get(x).getType());
-						   jsonVIP.put(JSON_IPVER, vipslist.get(x).getIpVersion());
+						   jsonVIP.put(JSON_ADDRESS, vipslist.get(y).getAddress());
+						   jsonVIP.put(JSON_ID, vipslist.get(y).getId());
+						   jsonVIP.put(JSON_TYPE, vipslist.get(y).getType());
+						   jsonVIP.put(JSON_IPVER, vipslist.get(y).getIpVersion());
 						   jsonVipArray.put(jsonVIP);
 					   }
 			   }
@@ -312,7 +312,7 @@ public class LbaasHandler {
 		List<LoadBalancer> lbs=null;
 		
 		try {
-		   lbs = model.getLoadBalancers();
+		   lbs = lbModel.getLoadBalancers(null);
 		}
 		catch ( DeviceModelAccessException dme) {
 	         throw new LBaaSException(dme.message, 500);                                   
@@ -357,7 +357,7 @@ public class LbaasHandler {
 	
 		Long lbId = new Long(id);
 		try {
-		   lb = model.getLoadBalancer(lbId);
+		   lb = lbModel.getLoadBalancer(lbId);
 		}
 		catch ( DeviceModelAccessException dme) {
 			throw new LBaaSException(dme.message, 500);                                     
@@ -392,7 +392,7 @@ public class LbaasHandler {
 		// attempt to read lb to be updated
 		Long lbId = new Long(id);		
 		try {
-		   lb = model.getLoadBalancer(lbId);
+		   lb = lbModel.getLoadBalancer(lbId);
 		}
 		catch ( DeviceModelAccessException dme) {
 	         throw new LBaaSException(dme.message, 500);
@@ -448,7 +448,7 @@ public class LbaasHandler {
 		
 		// write changes to DB
 		try {
-		   model.setLoadBalancer(lb);
+			lbModel.setLoadBalancer(lb);
 		}
 		catch ( DeviceModelAccessException dme) {
 	         throw new LBaaSException(dme.message, 500);
@@ -456,8 +456,7 @@ public class LbaasHandler {
 		
 		// have the device process the job 
 		try {
-		   List<LoadBalancer> lbs = new  ArrayList<LoadBalancer>();
-		   lbs.add(lb);
+		   List<LoadBalancer> lbs = lbModel.getLoadBalancersWithDevice(lb.getDevice());
 		   lbaasTaskManager.sendJob( new Long(lb.getDevice()), LbToJsonArray(lbs, ACTION_UPDATE ));
 		}
 		catch ( JSONException jsone) {
@@ -495,7 +494,7 @@ public class LbaasHandler {
 		
 		Long lbId = new Long(id);
 		try {
-		   lb = model.getLoadBalancer(lbId);
+		   lb = lbModel.getLoadBalancer(lbId);
 		}
 		catch ( DeviceModelAccessException dme) {
 	          throw new LBaaSException(dme.message, 500);
@@ -506,7 +505,7 @@ public class LbaasHandler {
 		
 		int deleteCount=0;
 		try {
-		   deleteCount = model.deleteLoadBalancer(lbId);
+		   deleteCount = lbModel.deleteLoadBalancer(lbId);
 		}
 		catch ( DeviceModelAccessException dme) {
 	          throw new LBaaSException(dme.message, 500);
@@ -517,10 +516,19 @@ public class LbaasHandler {
 		}
 		
 		// have the device process the job 
+		// if there are remaining LBs on this device, send it as an Update with the remaining LB
+		// if there are no more LBs on this device, send it as a Delete with the deleted device
 		try {
-		   List<LoadBalancer> lbs = new  ArrayList<LoadBalancer>();
-		   lbs.add(lb);
-		   lbaasTaskManager.sendJob( new Long(lb.getDevice()), LbToJsonArray(lbs, ACTION_DELETE ));
+		   List<LoadBalancer> lbs = lbModel.getLoadBalancersWithDevice(lb.getDevice());
+		   String action=null;
+		   if ( lbs.size() == 0) {
+			   action = ACTION_DELETE;
+			   lbs.clear();
+			   lbs.add(lb);      // the deleted lb
+		   }
+		   else
+			   action = ACTION_UPDATE;
+		   lbaasTaskManager.sendJob( new Long(lb.getDevice()), LbToJsonArray(lbs, action ));
 		}
 		catch ( JSONException jsone) {
 			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);  //  internal error
@@ -594,6 +602,7 @@ public class LbaasHandler {
 		logger.info("POST loadbalancers");
 		
 		Device device=null;
+		List<LoadBalancer> lbs = new  ArrayList<LoadBalancer>();
 		
 		// process POST'ed body
 		LoadBalancer lb = new LoadBalancer();
@@ -654,23 +663,13 @@ public class LbaasHandler {
 		   catch ( JSONException jsone) {
 				throw new LBaaSException( jsone.toString(), 400);  
 		   } 
-		   		   		   
+		   		   		   		   
 		   
-		   // find free device to use
-		   try {
-		      device = deviceModel.findFreeDevice();
-		   }
-		   catch (DeviceModelAccessException dme) {
-	             throw new LBaaSException(dme.message, 500);
-           }
-		   		   
-		   if ( device == null) {
-			   throw new LBaaSException("cannot find free device available" , 503);    //  not available
-		   }
+		   // vips
+		   // vips control if an existing device is to be used or a new device is to be used
+		   // no vip = new device
+		   // yes vip = find and use but only for a new protocol
 		   
-		   logger.info("found free device at id : " + device.getId().toString());
-		   
-		   //vips
 		   VirtualIps virtualIps = null;
 		   try {
 		      virtualIps = jsonToVips(jsonObject);		      		      		      
@@ -679,26 +678,68 @@ public class LbaasHandler {
 				throw new LBaaSException( jsone.toString(), 400);  
 		   } 
 		   if ( virtualIps != null) {
+			    
 			   // check that only one vip can be specified for now
-			   
+			   List<VirtualIp> vipList = virtualIps.getVirtualIps();
+			   if ( vipList.size()!=1) {
+				   throw new LBaaSException("only one VIP can be specified" , 400);    //  not available
+			   }			   
 			   // check that vip is the same address as existing device and this is a new protocol not an existing one
+			   String address = vipList.get(0).getAddress();
+			   List<Device> devices = deviceModel.getDevicesWithAddr(address);
+			   if (devices.size()==0) {
+				   throw new LBaaSException("VIP specified does not exist" , 400);    //  not available
+			   }
 			   
+			    
+			   // use this device
+			   device = devices.get(0);
+			   
+			   // set the vip into the newly created lb
 			   lb.setVirtualIps(virtualIps);
+			   
+			    
+			   // get the other LBs used by this device to submit with the request
+			   //device.lbIds
+			   for (int z=0;z<device.lbIds.size();z++) {
+				   LoadBalancer existingLb = lbModel.getLoadBalancer(device.lbIds.get(z));
+				   lbs.add(existingLb);
+			   }
+			   
+			    
+			   lbs.add(lb);     // add this LB as as well			   
 		   }
 		   else {
-			   // make a vip to return to caller based on device
+			   // find free device to use
+			   try {
+			      device = deviceModel.findFreeDevice();
+			   }
+			   catch (DeviceModelAccessException dme) {
+		             throw new LBaaSException(dme.message, 500);
+	           }
+			   		   
+			   if ( device == null) {
+				   throw new LBaaSException("cannot find free device available" , 503);    //  not available
+			   }
+			   
+			   logger.info("found free device at id : " + device.getId().toString());
+			   
 			   virtualIps = deviceToVips( device);
 			   lb.setVirtualIps(virtualIps);
+			   lbs.add(lb);     // only a single LB in this update
 		   }
 		   		   		   		   
+		     	   
 		   // mark lb as using found device
 		   lb.setDevice( new Long(device.getId()));              
 		   
 		   // write it to datamodel
-		   lbId = model.createLoadBalancer(lb);	       	   	
+		   lbId = lbModel.createLoadBalancer(lb);	       	   	
+		   
+		   	
 		   
 		   // set device lb and write it back to data model
-		   device.lbIds.add( lbId);
+		   device.lbIds.add(lbId);
 		   try {
 		      deviceModel.setDevice(device);
 		   }
@@ -713,21 +754,19 @@ public class LbaasHandler {
 		catch (JSONException e) {
 			return e.toString();
 		}
-						
+		 							
 		// read LB back from data model, it will now have valid id
 		LoadBalancer lbResponse=null;
 		try {
-		   lbResponse = model.getLoadBalancer(lbId);
+		   lbResponse = lbModel.getLoadBalancer(lbId);
 		}
 		catch (DeviceModelAccessException dme) {
             throw new LBaaSException(dme.message, 500);
         }
  		
 		// have the device process the request
-		try {
-           List<LoadBalancer> lbs = new  ArrayList<LoadBalancer>();
-		   lbs.add(lb);
-		   lbaasTaskManager.sendJob( lbResponse.getDevice(), LbToJsonArray(lbs, ACTION_UPDATE ));
+		try {           			   
+		   lbaasTaskManager.sendJob( lbResponse.getDevice(), LbToJsonArray(lbs, ACTION_UPDATE ));		    	
 		}
 		catch ( JSONException jsone) {
 			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);  //  internal error
