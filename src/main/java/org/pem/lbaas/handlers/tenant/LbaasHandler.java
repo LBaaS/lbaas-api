@@ -51,15 +51,14 @@ public class LbaasHandler {
     public static String HPCS_DEVICE         = "hpcs_device";
     public static String HPCS_RESPONSE_PASS  = "PASS";
     public static String HPCS_RESPONSE_FAIL  = "FAIL";
-    public static String ACTION_CREATE       = "CREATE";
     public static String ACTION_UPDATE       = "UPDATE";
     public static String ACTION_SUSPEND      = "SUSPEND";
     public static String ACTION_ENABLE       = "ENABLE";
     public static String ACTION_DELETE       = "DELETE";
     
     // JSON names
-    protected static String JSON_NAME        = "name";
-    protected static String JSON_ID          = "id";	
+    public    static String JSON_NAME        = "name";
+    public    static String JSON_ID          = "id";	
     protected static String JSON_PROTOCOL    = "protocol";
     protected static String JSON_PORT        = "port";
     protected static String JSON_ALGORITHM   = "algorithm";
@@ -73,7 +72,7 @@ public class LbaasHandler {
     protected static String JSON_PUBLIC      = "public";
     protected static String JSON_VIPS        = "virtualIps";
     protected static String JSON_NODES       = "nodes";
-    protected static String JSON_LBS         = "loadbalancers";
+    public    static String JSON_LBS         = "loadbalancers";
     
     // node info
     public static String    NODE_ONLINE      = "online";
@@ -356,7 +355,7 @@ public class LbaasHandler {
 		logger.info("GET loadbalancer : " + id);
 		LoadBalancer lb = null;
 	
-		Integer lbId = new Integer(id);
+		Long lbId = new Long(id);
 		try {
 		   lb = model.getLoadBalancer(lbId);
 		}
@@ -391,7 +390,7 @@ public class LbaasHandler {
 		LoadBalancer lb=null;
 		
 		// attempt to read lb to be updated
-		Integer lbId = new Integer(id);		
+		Long lbId = new Long(id);		
 		try {
 		   lb = model.getLoadBalancer(lbId);
 		}
@@ -459,11 +458,17 @@ public class LbaasHandler {
 		try {
 		   List<LoadBalancer> lbs = new  ArrayList<LoadBalancer>();
 		   lbs.add(lb);
-		   lbaasTaskManager.sendJob( lb.getDevice(), LbToJsonArray(lbs, ACTION_UPDATE ));
+		   lbaasTaskManager.sendJob( new Long(lb.getDevice()), LbToJsonArray(lbs, ACTION_UPDATE ));
 		}
 		catch ( JSONException jsone) {
 			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);  //  internal error
 		} 
+		catch ( InterruptedException ie) {
+			throw new LBaaSException("internal server error JSON exception :" + ie.toString(), 500);  //  internal error
+		}
+		catch ( DeviceModelAccessException dme) {
+			throw new LBaaSException("internal server error JSON exception :" + dme.toString(), 500);  //  internal error
+		}
 								
 		//respond with JSON
 		try {
@@ -488,7 +493,7 @@ public class LbaasHandler {
 		logger.info("DELETE loadbalancer : " + id);
 		LoadBalancer lb=null;
 		
-		Integer lbId = new Integer(id);
+		Long lbId = new Long(id);
 		try {
 		   lb = model.getLoadBalancer(lbId);
 		}
@@ -515,11 +520,17 @@ public class LbaasHandler {
 		try {
 		   List<LoadBalancer> lbs = new  ArrayList<LoadBalancer>();
 		   lbs.add(lb);
-		   lbaasTaskManager.sendJob( lb.getDevice(), LbToJsonArray(lbs, ACTION_DELETE ));
+		   lbaasTaskManager.sendJob( new Long(lb.getDevice()), LbToJsonArray(lbs, ACTION_DELETE ));
 		}
 		catch ( JSONException jsone) {
 			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);  //  internal error
 		} 
+		catch ( InterruptedException ie) {
+			throw new LBaaSException("internal server error JSON exception :" + ie.toString(), 500);  //  internal error
+		}
+		catch ( DeviceModelAccessException dme) {
+			throw new LBaaSException("internal server error JSON exception :" + dme.toString(), 500);  //  internal error
+		}
 	}
 	
 	
@@ -586,7 +597,7 @@ public class LbaasHandler {
 		
 		// process POST'ed body
 		LoadBalancer lb = new LoadBalancer();
-		Integer lbId=0;
+		Long lbId=new Long(0);
 		try {
 		   JSONObject jsonObject=new JSONObject(content);
 		   
@@ -668,6 +679,10 @@ public class LbaasHandler {
 				throw new LBaaSException( jsone.toString(), 400);  
 		   } 
 		   if ( virtualIps != null) {
+			   // check that only one vip can be specified for now
+			   
+			   // check that vip is the same address as existing device and this is a new protocol not an existing one
+			   
 			   lb.setVirtualIps(virtualIps);
 		   }
 		   else {
@@ -677,13 +692,13 @@ public class LbaasHandler {
 		   }
 		   		   		   		   
 		   // mark lb as using found device
-		   lb.setDevice( device.getId());              
+		   lb.setDevice( new Long(device.getId()));              
 		   
 		   // write it to datamodel
 		   lbId = model.createLoadBalancer(lb);	       	   	
 		   
 		   // set device lb and write it back to data model
-		   device.setLbId(lbId);
+		   device.lbIds.add( lbId);
 		   try {
 		      deviceModel.setDevice(device);
 		   }
@@ -712,11 +727,17 @@ public class LbaasHandler {
 		try {
            List<LoadBalancer> lbs = new  ArrayList<LoadBalancer>();
 		   lbs.add(lb);
-		   lbaasTaskManager.sendJob( lbResponse.getDevice(), LbToJsonArray(lbs, ACTION_CREATE ));
+		   lbaasTaskManager.sendJob( lbResponse.getDevice(), LbToJsonArray(lbs, ACTION_UPDATE ));
 		}
 		catch ( JSONException jsone) {
 			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);  //  internal error
 		} 
+		catch ( InterruptedException ie) {
+			throw new LBaaSException("internal server error JSON exception :" + ie.toString(), 500);  //  internal error
+		}
+		catch ( DeviceModelAccessException dme) {
+			throw new LBaaSException("internal server error JSON exception :" + dme.toString(), 500);  //  internal error
+		}
 		
 		//respond with JSON
 		try {
