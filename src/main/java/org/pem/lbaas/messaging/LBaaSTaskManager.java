@@ -149,8 +149,7 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String> {
 				   if ( action.equalsIgnoreCase(LbaasHandler.ACTION_DELETE)) {
 					    // update Device status to free, putting it back in the pool as free
 					    // LB has already been deleted in API thread	
-					    try {
-					    	deviceModel.markAsFree(deviceId,lbId);			
+					    try {					    			
 					    	deviceModel.setStatus(Device.STATUS_OFFLINE, deviceId);
 					    }
 					    catch (DeviceModelAccessException dme) {
