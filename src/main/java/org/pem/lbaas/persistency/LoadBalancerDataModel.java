@@ -179,7 +179,7 @@ public class LoadBalancerDataModel {
 		   lb.setAlgorithm(rs.getString(SQL_ALGORITHM));
 		   lb.setCreated(rs.getString(SQL_CREATED));
 		   lb.setUpdated(rs.getString(SQL_UPDATED));
-		   lb.setDevice(new Integer(rs.getInt(SQL_DEVICE)));
+		   lb.setDevice(new Long(rs.getInt(SQL_DEVICE)));
 		  
 		   // nodes
 		   Nodes nodes = new Nodes();
@@ -256,7 +256,7 @@ public class LoadBalancerDataModel {
 	    * @return boolean
 	    * @throws DeviceModelAccessException if internal database error
 	    */
-	public boolean setStatus( String status, Integer id) throws DeviceModelAccessException {			
+	public boolean setStatus( String status, Long id) throws DeviceModelAccessException {			
 	   LoadBalancer lb = this.getLoadBalancer(id);
 	   if (lb == null)
 	      return false;     
@@ -273,7 +273,7 @@ public class LoadBalancerDataModel {
 	    * @return Device or null if not found
 	    * @throws DeviceModelAccessException if internal database error
 	    */
-	public LoadBalancer getLoadBalancer( Integer lbId) throws DeviceModelAccessException {
+	public LoadBalancer getLoadBalancer( Long lbId) throws DeviceModelAccessException {
 		Connection conn = dbConnect();
 		Statement stmt=null;
 		if (conn!=null) {
@@ -311,7 +311,7 @@ public class LoadBalancerDataModel {
 	    */
 	public boolean setLoadBalancer(LoadBalancer lb)  throws DeviceModelAccessException {
 		
-		if ( this.getLoadBalancer(lb.getId())==null)
+		if ( this.getLoadBalancer(new Long(lb.getId()))==null)
 			  return false;   
 		
 		Connection conn = dbConnect();
@@ -340,7 +340,7 @@ public class LoadBalancerDataModel {
 	 * @return new id for LoadBalancer
 	 * @throws DeviceModelAccessException
 	 */
-	public Integer createLoadBalancer( LoadBalancer lb) throws DeviceModelAccessException {	
+	public Long createLoadBalancer( LoadBalancer lb) throws DeviceModelAccessException {	
 				
 		int val=0;
 		
@@ -367,7 +367,7 @@ public class LoadBalancerDataModel {
 			statement.setString(8, encodeNodeDBFields(lb));
 			statement.setString(9,lb.getCreated());
 			statement.setString(10,lb.getUpdated());
-			statement.setInt(11,lb.getDevice());         
+			statement.setLong(11,lb.getDevice());         
 			
 			int affectedRows = statement.executeUpdate();
 			if (affectedRows == 0) {
@@ -387,7 +387,7 @@ public class LoadBalancerDataModel {
 	    	throw new DeviceModelAccessException("SQL Exception : " + s);   
 		}
 				
-		return new Integer(val);
+		return new Long(val);
 	
 	}
 	
@@ -426,7 +426,7 @@ public class LoadBalancerDataModel {
 	 * @return number deleted, should be 1 or 0 if not found
 	 * @throws DeviceModelAccessException
 	 */
-	public int deleteLoadBalancer( Integer lbId) throws DeviceModelAccessException {
+	public int deleteLoadBalancer( Long lbId) throws DeviceModelAccessException {
 		Connection conn = dbConnect();
 		Statement stmt=null;
 		if (conn!=null) {
