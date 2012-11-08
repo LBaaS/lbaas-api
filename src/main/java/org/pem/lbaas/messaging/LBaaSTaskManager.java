@@ -19,16 +19,24 @@ import org.pem.lbaas.persistency.DeviceDataModel;
 import org.pem.lbaas.persistency.DeviceModelAccessException;
 import org.pem.lbaas.persistency.LoadBalancerDataModel;
 
-public class LBaaSTaskManager implements GearmanJobEventCallback<String> {
-	
-	// TODO: make models static for better perf
-	
+/**
+ * LBaaSTaskManager manages asynchronous tasks from the API server to the device workers using gearman.
+ * @author peter
+ *
+ */
+public class LBaaSTaskManager implements GearmanJobEventCallback<String> {	
 	private static Logger logger = Logger.getLogger(LBaaSTaskManager.class);
+	private static DeviceDataModel deviceModel = new DeviceDataModel();
+	private static LoadBalancerDataModel loadbalancerModel = new LoadBalancerDataModel();
 	
+	// gearman
 	Gearman gearman=null;
 	GearmanClient gearmanClient=null;
 	GearmanServer gearmanServer=null;
 	
+	/**
+	 * Constructor sets up gearman for client behavior
+	 */
 	public LBaaSTaskManager() {
 	   gearman = Gearman.createGearman();
        gearmanClient = gearman.createGearmanClient();
@@ -37,136 +45,169 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String> {
        logger.info("LBaaSTaskManager constructor");
 	}
 	
-	public boolean sendJob( String workerName, String message ) throws InterruptedException {
+	/**
+	 * Send a gearman job to a worker, response is asynchronous to callback
+	 * @param workerName is the unique name for the worker
+	 * @param message to send is the LBaaS job encoded in JSON
+	 * @return
+	 * @throws InterruptedException
+	 */
+	public void sendJob( String workerName, String message ) throws InterruptedException {
        logger.info("gearman client submitting job to :" + workerName);	
        logger.info("gearman client job request msg : " + message);
        GearmanJoin<String> join = gearmanClient.submitJob( workerName, message.getBytes(), workerName, this);            
        join.join();		
        logger.info("gearman job submitted");
-       return true;
 	}
 	
-	public boolean sendJob( Integer deviceId, String job) {
+	/**
+	 * Send a gearman job using the device ID as the destination which is resolved to actual gearman worker name
+	 * @param deviceId to send to
+	 * @param job to send is the LBaaS job encoded in JSON
+	 * @return
+	 */
+	public void sendJob( Long deviceId, String job) throws DeviceModelAccessException, InterruptedException {
 		DeviceDataModel deviceModel = new DeviceDataModel();
 		Device device = null;
 		try {
 		   device = deviceModel.getDevice(deviceId);
 		}
 		catch (DeviceModelAccessException dme) {
-            logger.error(dme.message);
+            throw dme;
         }
 		try {
-		    return this.sendJob( device.getName() ,job);
+		    this.sendJob( device.getName() ,job);
 		}
 		catch ( InterruptedException ie)
 		{
 			logger.error("sendjob interrupted : " + ie);
+			throw ie;
 		}		
-		return true;
 	}
 	
+	/**
+	 * finalize'r cleans everything up
+	 */
 	protected void finalize ()  {
        logger.info("gearman shutting down .. "); 
        gearman.shutdown();
 	}
 	
+	/**
+	 * Process Gearman job success. Response from worker has status, loadbalancer and device information which
+	 * is extracted and used to update database for loadlancer and device.
+	 * @param message
+	 */
 	public void processLoadBalancerSuccess( String message) {
-		logger.info("gearman job sucess");
-		LoadBalancerDataModel lbModel = new LoadBalancerDataModel();
-		DeviceDataModel devModel = new DeviceDataModel();
+		logger.info("gearman job sucess");		
 		try {
-		    JSONObject jsonObject=new JSONObject(message);
-			   
+		    JSONObject jsonObject=new JSONObject(message);			   
 		   
-		    Integer deviceId = (Integer) jsonObject.getInt(LbaasHandler.HPCS_DEVICE);
+		    Long deviceId = (Long) jsonObject.getLong(LbaasHandler.HPCS_DEVICE);
 		    String action = (String) jsonObject.get(LbaasHandler.HPCS_ACTION);
-		    Integer requestId = (Integer) jsonObject.getInt(LbaasHandler.HPCS_REQUESTID);
+		    Long requestId = (Long) jsonObject.getLong(LbaasHandler.HPCS_REQUESTID);
 		    String response = (String) jsonObject.get(LbaasHandler.HPCS_RESPONSE);
-		    
-		    // temp hack, just grabs the first one for now
-		    JSONArray jsonLbs = (JSONArray) jsonObject.get("loadbalancers");
-		    JSONObject jsonlb = jsonLbs.getJSONObject(0);
-		    String lbname = (String) jsonlb.get("name");
-		    Integer id = (Integer) jsonlb.getInt("id");
-		    
-		    
-		    logger.info("LB        : " + lbname);
-		    logger.info("LB ID     : " + id );
 		    logger.info("Device ID : " + deviceId);
 		    logger.info("requestID : " + requestId);
 		    logger.info("action    : " + action);
 		    logger.info("response  : " + response);
 		    
-		    if ( response.equalsIgnoreCase(LbaasHandler.HPCS_RESPONSE_PASS)) {
-		    	logger.info("worker response : PASS");
-			    if ( action.equalsIgnoreCase(LbaasHandler.ACTION_CREATE) ||  action.equalsIgnoreCase(LbaasHandler.ACTION_UPDATE)) {	
-			    	// move lb to active state
-			    	try {
-			    	   lbModel.setStatus(LoadBalancer.STATUS_ACTIVE, id);
-			    	}
-			    	catch (DeviceModelAccessException dme) {
-			             logger.error(dme.message);
-		            }
-			    	
-			    	// move device status to online
-			    	try {
-			    	   devModel.setStatus(Device.STATUS_ONLINE, deviceId);
-			    	}
-			    	catch (DeviceModelAccessException dme) {
-			             logger.error(dme.message);
-		           }
-			    }
-			    else
-			    if ( action.equalsIgnoreCase(LbaasHandler.ACTION_DELETE)) {
-			    	// update Device status to free, putting it back in the pool as free
-			    	// LB has already been deleted in API thread	
-			    	try {
-			    	   devModel.markAsFree(deviceId);			
-			    	   devModel.setStatus(Device.STATUS_OFFLINE, deviceId);
-			    	}
-			    	catch (DeviceModelAccessException dme) {
-			             logger.error(dme.message);
-		           }
-			    }
+		    // must have array of lbs
+		    if ( !jsonObject.has(LbaasHandler.JSON_LBS) ) {
+		    	logger.error("gearman worker response does not have array of " + LbaasHandler.JSON_LBS + " unable to process response!");
+		    	return;
 		    }
-		    else {
-		    	logger.info("worker response not PASS value : " + response + " marking LB and device as ERROR");
-		    	logger.info("message : " + message);
-		    	
-		    	// move lb to error state
-		    	if ( !action.equalsIgnoreCase(LbaasHandler.ACTION_DELETE)) {
-		    	   try {			    	
-		    	      lbModel.setStatus(LoadBalancer.STATUS_ERROR, id);
-		    	   }
-		    	   catch (DeviceModelAccessException dme) {
+		    
+		    // loop through all LBs
+		    JSONArray jsonLbArray = (JSONArray) jsonObject.get(LbaasHandler.JSON_LBS);
+			for ( int x=0;x<jsonLbArray.length();x++) {
+				JSONObject jsonLb = jsonLbArray.getJSONObject(x);						    		    
+		        String lbName = (String) jsonLb.get(LbaasHandler.JSON_NAME);
+		        Long lbId = (Long) jsonLb.getLong(LbaasHandler.JSON_ID);		    		    
+		        logger.info("Loadbalancer : " + lbName + " (" + lbId + ")");
+		        
+		        if ( response.equalsIgnoreCase(LbaasHandler.HPCS_RESPONSE_PASS)) {
+		    	   logger.info("worker response : PASS");
+			       if ( action.equalsIgnoreCase(LbaasHandler.ACTION_UPDATE)) {	
+				    	// move lb to active state
+				    	try {
+				    		loadbalancerModel.setStatus(LoadBalancer.STATUS_ACTIVE, lbId);
+				    	}
+				    	catch (DeviceModelAccessException dme) {
+				             logger.error(dme.message);
+			            }
+				    	
+				    	// move device status to online
+				    	try {
+				    		deviceModel.setStatus(Device.STATUS_ONLINE, deviceId);
+				    	}
+				    	catch (DeviceModelAccessException dme) {
+				             logger.error(dme.message);
+			           }
+			       }
+			       else
+				   if ( action.equalsIgnoreCase(LbaasHandler.ACTION_DELETE)) {
+					    // update Device status to free, putting it back in the pool as free
+					    // LB has already been deleted in API thread	
+					    try {
+					    	deviceModel.markAsFree(deviceId,lbId);			
+					    	deviceModel.setStatus(Device.STATUS_OFFLINE, deviceId);
+					    }
+					    catch (DeviceModelAccessException dme) {
+					       logger.error(dme.message);
+				        }
+				   }
+		        }
+		        else {
+			    	logger.info("worker response not PASS value : " + response + " marking LB and device as ERROR");
+			    	logger.info("message : " + message);
+			    	
+			    	// move lb to error state
+			    	if ( !action.equalsIgnoreCase(LbaasHandler.ACTION_DELETE)) {
+			    	   try {			    	
+			    		   loadbalancerModel.setStatus(LoadBalancer.STATUS_ERROR, lbId);
+			    	   }
+			    	   catch (DeviceModelAccessException dme) {
+				             logger.error(dme.message);
+			           }
+			    	}
+			    	
+			    	// move device to error state
+			    	try {
+			    		deviceModel.setStatus(Device.STATUS_ERROR, deviceId);
+			    	}
+			    	catch (DeviceModelAccessException dme) {
 			             logger.error(dme.message);
 		           }
-		    	}
-		    	
-		    	// move device to error state
-		    	try {
-		    	   devModel.setStatus(Device.STATUS_ERROR, deviceId);
-		    	}
-		    	catch (DeviceModelAccessException dme) {
-		             logger.error(dme.message);
-	           }
-		    }		    			    
+		        }	
+			}
 		}
 		catch (JSONException e) {
 			logger.error("JSON error in gearman job response : " + e.toString());
 		}
 	}
 	
+	/**
+     * process a worker submit failure, not much to do other than log it out
+     * @param message
+     */
     public void processLoadBalancerSubmitFail( String message) {
     	logger.error("gearman job submit failure message :" + message);
     	
 	}
     
+    /**
+     * process a worker failure, not much to do other than log it out
+     * @param message
+     */
     public void processLoadBalancerWorkerFail( String message) {
     	logger.error("gearman job worker failure message :" + message);    	    	
 	}
 	
-				          
+	
+    /**
+     * Gearman asynch callback for processing worker responses
+     */
      @Override
      public void onEvent(String attachment, GearmanJobEvent event) {
              switch (event.getEventType()) {
