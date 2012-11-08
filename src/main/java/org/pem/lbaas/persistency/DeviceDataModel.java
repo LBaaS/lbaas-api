@@ -169,11 +169,14 @@ public class DeviceDataModel {
     * @return List of Device objects
     * @throws DeviceModelAccessException if internal database error
     */
-   public  List<Device> getDevices() throws DeviceModelAccessException {
+   public  List<Device> getDevices( String condition) throws DeviceModelAccessException {
       List<Device> devices = new  ArrayList<Device>();		
 	  Connection conn = dbConnect();
 	  Statement stmt=null;
 	  String query = "SELECT * FROM devices";
+	  if (condition!=null) {
+		  query = query + " WHERE " + condition;
+	  }
 	  try {
          stmt=conn.createStatement();
 		 ResultSet rs=stmt.executeQuery(query);
@@ -192,12 +195,22 @@ public class DeviceDataModel {
       }
       return devices;
    }
+   
+   /**
+    * get all devices with a specified address
+    * @param address
+    * @return List of Devices
+    */
+   public  List<Device> getDevicesWithAddr( String address) throws DeviceModelAccessException {
+	   String condition = " address =  '" + address + "'";
+	   return getDevices(condition); 
+   }
 	
 	
    /**
-    * Get a Device based on its id
+    * Get a Device based on some condition
     * 
-    * @param id
+    * @param  id
     * @return Device or null if not found
     * @throws DeviceModelAccessException if internal database error
     */
@@ -228,6 +241,9 @@ public class DeviceDataModel {
       }
 	}
 	
+   
+   
+   
 	
    /**
     * Find a free Device 
@@ -379,7 +395,7 @@ public class DeviceDataModel {
    /**
     * Mark a Device as no longer being used by a Loadbalancer
     * 
-    * sets the loadbalancer reference value to zero meaning no longer in use.
+    * remove the specified loadbalancer id from the device list
     * 
     * @param id
     * @return boolean
@@ -390,8 +406,11 @@ public class DeviceDataModel {
       if (device==null)
     	  return false;                        // id not found
       
-      // TODO, just clear the lbid and leave the others!
-      device.lbIds.clear();
+      // remove referenced LB
+      for (int x=0;x<device.lbIds.size();x++) 
+         if (device.lbIds.get(x) == lbId)
+        	 device.lbIds.remove(x);
+      
       this.setDevice(device);
       return true;
    }
