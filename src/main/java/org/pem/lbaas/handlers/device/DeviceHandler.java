@@ -42,7 +42,7 @@ public class DeviceHandler {
    protected final String JSON_ID            = "id";
    protected final String JSON_NAME          = "name";
    protected final String JSON_ADDRESS       = "address";
-   protected final String JSON_LOADBALANCER  = "loadbalancer";
+   protected final String JSON_LOADBALANCERS = "loadbalancers";
    protected final String JSON_CREATED       = "created";
    protected final String JSON_UPDATED       = "updated";
    protected final String JSON_TYPE          = "type";
@@ -64,7 +64,7 @@ public class DeviceHandler {
          jsonDevice.put(JSON_ID, device.getId());
          jsonDevice.put(JSON_NAME, device.getName());
          jsonDevice.put(JSON_ADDRESS, device.getAddress());
-         jsonDevice.put(JSON_LOADBALANCER, device.getLbId());
+         jsonDevice.put(JSON_LOADBALANCERS, DeviceDataModel.lbIdsToJson(device.lbIds));
          jsonDevice.put(JSON_TYPE, device.getLbType());
          jsonDevice.put(JSON_STATUS, device.getStatus());	
          jsonDevice.put(JSON_CREATED, device.getCreated());
@@ -103,7 +103,7 @@ public class DeviceHandler {
             jsonDevice.put(JSON_ID, devices.get(x).getId());
             jsonDevice.put(JSON_NAME, devices.get(x).getName());
             jsonDevice.put(JSON_ADDRESS, devices.get(x).getAddress());
-            jsonDevice.put(JSON_LOADBALANCER, devices.get(x).getLbId());
+            jsonDevice.put(JSON_LOADBALANCERS, DeviceDataModel.lbIdsToJson(devices.get(x).lbIds));
             jsonDevice.put(JSON_TYPE, devices.get(x).getLbType());
             jsonDevice.put(JSON_STATUS, devices.get(x).getStatus());
             jsonDevice.put(JSON_CREATED, devices.get(x).getCreated());
@@ -133,7 +133,7 @@ public class DeviceHandler {
 		logger.info("GET device : " + id);
 		Device device = null;
 		
-		Integer devId = new Integer(id);
+		Long devId = new Long(id);
 		try {
 		   device = deviceModel.getDevice(devId);
 		}
@@ -199,7 +199,7 @@ public class DeviceHandler {
 		
       // process POSTed body		
       Device device = new Device();
-	  Integer id=0;
+	  Long id= new Long(0);
       try {
          JSONObject jsonObject=new JSONObject(content);
 		   
@@ -230,7 +230,7 @@ public class DeviceHandler {
             throw new LBaaSException("POST requires 'address' in request body", 400);   
          }
 		   		  	    
-         device.setLbId(new Integer(LB_UNASSIGNED));		   
+         device.lbIds.clear();	   
 		     
          device.setLbType(DEFAULT_TYPE);
 		   
@@ -272,7 +272,7 @@ public class DeviceHandler {
    {
       logger.info("DELETE device : " + id);
 		
-      Integer devId = new Integer(id);
+      Long devId = new Long(id);
       Device device = null;
       
       try {
@@ -286,9 +286,10 @@ public class DeviceHandler {
           throw new LBaaSException("could not find id : " + id + " on put : " + id, 404);
        }
        
-       if ( device.getLbId() != LB_UNASSIGNED) {
-    	   throw new LBaaSException("can not delete, device still in use by loadbalancer : " + device.getLbId(), 403);
+       if ( !device.lbIds.isEmpty()) {
+    	   throw new LBaaSException("can not delete, device still in use by loadbalancer : " + device.lbIds, 403);
        }
+       
       
       int deleteCount=0;
       try {
@@ -319,7 +320,7 @@ public class DeviceHandler {
       logger.info("PUT devices : " + id);
       Device device = null;
 		
-      Integer devId = new Integer(id);
+      Long devId = new Long(id);
       try {
          device = deviceModel.getDevice(devId);
       }
@@ -383,7 +384,7 @@ public class DeviceHandler {
       // return back entire device with changes
       Device deviceResponse = null;
       try {
-         deviceResponse = deviceModel.getDevice(device.getId());	
+         deviceResponse = deviceModel.getDevice(new Long(device.getId()));	
          return deviceToJson(deviceResponse);
       }
       catch ( DeviceModelAccessException dme) {
