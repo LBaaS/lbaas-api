@@ -88,6 +88,7 @@ public class LbaasHandler {
 		
 		JSONObject jsonResponseObject=new JSONObject();
 		try {	
+		   // base fields
 		   jsonResponseObject.put(JSON_NAME,lb.getName());	
 		   jsonResponseObject.put(JSON_ID,lb.getId());
 		   jsonResponseObject.put(JSON_PROTOCOL,lb.getProtocol());
@@ -154,6 +155,7 @@ public class LbaasHandler {
 		try {
 		   for (int x=0;x<lbs.size();x++) {
 			   JSONObject jsonLb=new JSONObject();
+			   // base fields
 			   jsonLb.put(JSON_NAME,lbs.get(x).getName());	
 			   jsonLb.put(JSON_ID,lbs.get(x).getId());
 			   jsonLb.put(JSON_PROTOCOL,lbs.get(x).getProtocol());
@@ -163,6 +165,7 @@ public class LbaasHandler {
 			   jsonLb.put(JSON_CREATED,lbs.get(x).getCreated());
 			   jsonLb.put(JSON_UPDATED,lbs.get(x).getUpdated());
 			   
+			   // vips
 			   JSONArray jsonVipArray = new JSONArray();		   
 			   VirtualIps vips = lbs.get(x).getVirtualIps();
 			   if ( vips != null) {
@@ -179,6 +182,7 @@ public class LbaasHandler {
 			   }
 			   jsonLb.put(JSON_VIPS, jsonVipArray);
 			   			
+			   // nodes
 			   JSONArray jsonNodeArray = new JSONArray();
 			   Nodes nodes = lbs.get(x).getNodes();
 			   if (nodes != null) {
@@ -196,6 +200,8 @@ public class LbaasHandler {
 			   
 			   jsonArray.put(jsonLb);
 		   }
+		   
+		   // HPCS specific fields
 		   jsonObject.put(HPCS_REQUESTID,++requestId);
 		   jsonObject.put(HPCS_ACTION, action);
 		   jsonObject.put(HPCS_DEVICE,lbs.get(0).getDevice()); 
@@ -311,6 +317,7 @@ public class LbaasHandler {
 		JSONArray jsonArray = new JSONArray();		
 		List<LoadBalancer> lbs=null;
 		
+		// get all load balancers
 		try {
 		   lbs = lbModel.getLoadBalancers(null);
 		}
@@ -318,6 +325,7 @@ public class LbaasHandler {
 	         throw new LBaaSException(dme.message, 500);                                   
 	    }
 		
+		// format JSON response
 		try {	
 		   for (int x=0;x<lbs.size();x++) {
 			   JSONObject jsonLb=new JSONObject();
@@ -355,6 +363,7 @@ public class LbaasHandler {
 		logger.info("GET loadbalancer : " + id);
 		LoadBalancer lb = null;
 	
+		// read LB
 		Long lbId = new Long(id);
 		try {
 		   lb = lbModel.getLoadBalancer(lbId);
@@ -366,6 +375,7 @@ public class LbaasHandler {
 			throw new LBaaSException("loadbalancer id:" + id + " not found", 404);  
 		}
 		
+		// return JSON formatted response
 		try {
 			return LbToJson(lb);
 		}
@@ -376,7 +386,7 @@ public class LbaasHandler {
 	
 	
 	/**
-	 * Update a specific LoadBalancer
+	 * Update a specific LoadBalancer, only allows change of name or algorithm
 	 * @param id of LoadBalancer
 	 * @param content JSON put body
 	 */
@@ -415,6 +425,8 @@ public class LbaasHandler {
 		// look for name
 		try {
 		   name = (String) jsonObject.get("name");
+		   if ( name.length() > LimitsHandler.LIMIT_MAX_NAME_SIZE)
+	         	throw new LBaaSException("'name' is over max allowed length of : " + LimitsHandler.LIMIT_MAX_NAME_SIZE, 400); 
 		   lb.setName(name);
 		   logger.info("   name = " + name);
 		}
@@ -425,7 +437,11 @@ public class LbaasHandler {
 		// look for algorithm
 		try {
 			   algorithm = (String) jsonObject.get("algorithm");
-			   lb.setName(name);
+			   if ( algorithm.length() > LimitsHandler.LIMIT_MAX_NAME_SIZE)
+		         	throw new LBaaSException("'algorithm' is over max allowed length of : " + LimitsHandler.LIMIT_MAX_NAME_SIZE, 400); 
+			   if (! AlgorithmsHandler.exists(algorithm)) 
+				   throw new LBaaSException("algorithm specified not supported : " + algorithm, 400); 	
+			   lb.setAlgorithm(algorithm);
 			   logger.info("   algorithm = " + algorithm);
 		}
 		catch (JSONException e) {
@@ -492,6 +508,7 @@ public class LbaasHandler {
 		logger.info("DELETE loadbalancer : " + id);
 		LoadBalancer lb=null;
 		
+		// need the device object from the LB to be deleted, so get it
 		Long lbId = new Long(id);
 		try {
 		   lb = lbModel.getLoadBalancer(lbId);
@@ -503,17 +520,20 @@ public class LbaasHandler {
 			throw new LBaaSException("could not find loadbalancer id : " + id, 404);              //  not found	
 		}
 		
+		// delete LB
 		int deleteCount=0;
 		try {
-		   deleteCount = lbModel.deleteLoadBalancer(lbId);
+		   deleteCount = lbModel.deleteLoadBalancer(lbId);    // delete the lb
+		   deviceModel.markAsFree(lb.getDevice(),lbId);	      // delete the reference from the device
 		}
 		catch ( DeviceModelAccessException dme) {
 	          throw new LBaaSException(dme.message, 500);
-	    }
-		
+	    }		
 		if (deleteCount==0) {
 			throw new LBaaSException("could not find loadbalancer id on delete: " + id, 404);    //  not found	
 		}
+				
+		
 		
 		// have the device process the job 
 		// if there are remaining LBs on this device, send it as an Update with the remaining LB
@@ -703,6 +723,11 @@ public class LbaasHandler {
 			   //device.lbIds
 			   for (int z=0;z<device.lbIds.size();z++) {
 				   LoadBalancer existingLb = lbModel.getLoadBalancer(device.lbIds.get(z));
+				   
+				   if (existingLb.getProtocol().equalsIgnoreCase(lb.getProtocol())) {
+					   throw new LBaaSException("VIP already has loabalancer with this protoocol" , 400);    //  not available
+				   }
+				   
 				   lbs.add(existingLb);
 			   }
 			   
