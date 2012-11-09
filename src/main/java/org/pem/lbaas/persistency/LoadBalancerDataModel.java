@@ -40,7 +40,7 @@ public class LoadBalancerDataModel {
 	protected final static String SQL_NODES         = "nodes";
 	protected final static String SQL_VIPS          = "vips";
 	
-	static final protected String DEFAULT_ALGO             = "ROUND_ROBIN";
+	static final protected String DEFAULT_ALGO      = "ROUND_ROBIN";
 	
    /**
     * Get a connection to database
