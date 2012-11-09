@@ -205,16 +205,41 @@ public class LbaasHandler {
        JSONArray jsonNodeArray = new JSONArray();
 	   if (nodes != null) {
 		   List<Node> nodeList = nodes.getNodes();
-		   for ( int y=0;y<nodeList.size();y++) {
-			   JSONObject jsonNode=new JSONObject();
-			   jsonNode.put(JSON_ADDRESS, nodeList.get(y).getAddress());
-			   jsonNode.put(JSON_ID,nodeList.get(y).getId()); 			   
-			   jsonNode.put(JSON_PORT ,nodeList.get(y).getPort());
-			   jsonNode.put(JSON_STATUS, nodeList.get(y).getStatus());
-			   jsonNodeArray.put(jsonNode);
-		   }		   		   
+		   for ( int x=0;x<nodeList.size();x++) 
+			   jsonNodeArray.put(nodeToJSON(nodeList.get(x)));		   		   		   
 	   }
 	   return jsonNodeArray;
+	}
+	
+	/**
+	 * Convert a Node to a JSON Object
+	 * @param node
+	 * @return
+	 * @throws JSONException
+	 */
+	protected JSONObject nodeToJSON( Node node) throws JSONException {
+	   JSONObject jsonNode=new JSONObject();
+	   jsonNode.put(JSON_ADDRESS, node.getAddress());
+	   jsonNode.put(JSON_ID,node.getId()); 			   
+	   jsonNode.put(JSON_PORT ,node.getPort());
+	   jsonNode.put(JSON_STATUS, node.getStatus());
+	   return jsonNode;
+	}
+	
+	/**
+	 * return a node based on its id from a loadbalancer or null if not found
+	 * @param lb
+	 * @param nodeId
+	 * @return
+	 */
+	protected Node getNodeInLb(LoadBalancer lb, Integer nodeId) {				
+		Nodes nodes = lb.getNodes();
+		List<Node> nodeList = nodes.getNodes();
+		for (int x=0;x<nodeList.size();x++) {
+			if ( nodeList.get(x).getId().equals(nodeId))
+				return nodeList.get(x);
+		}		
+		return null;          // not found
 	}
 	
 	/** 
@@ -557,24 +582,73 @@ public class LbaasHandler {
 	
 	
 	@GET
-	@Path("/{loadbalancerId}/nodes")
+	@Path("/{id}/nodes")
 	@Produces("application/json")
-	public String getLbNodes(@PathParam("loadbalancerId") String loadbalancerId) 
+	public String getLbNodes(@PathParam("id") String id) 
 	{
-		logger.info("GET loadbalancer nodes : " + loadbalancerId);
+		logger.info("GET loadbalancer nodes : " + id);
 		
-		throw new LBaaSException("not supported" , 501);  //  not implemented
+		LoadBalancer lb = null;
+		
+		// read LB
+		Long lbId = new Long(id);
+		try {
+		   lb = lbModel.getLoadBalancer(lbId);
+		}
+		catch ( DeviceModelAccessException dme) {
+			throw new LBaaSException(dme.message, 500);                                     
+		}		
+		if (lb == null) {
+			throw new LBaaSException("loadbalancer id:" + id + " not found", 404);  
+		}
+		
+		// return JSON formatted response
+		try {
+			JSONObject nodes = new JSONObject();
+			nodes.put(JSON_NODES, nodesToJSON(lb.getNodes()));
+			return nodes.toString();
+		}
+		catch (JSONException jsone) {
+			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);  //  internal error
+		} 
 	}
 	
 	
 	@GET
-	@Path("/{loadbalancerId}/nodes/{nodeId}")
+	@Path("/{id}/nodes/{nodeId}")
 	@Produces("application/json")
-	public String getLbNode(@PathParam("loadbalancerId") String loadbalancerId, @PathParam("nodeId") String nodeId) 
+	public String getLbNode(@PathParam("id") String id, @PathParam("nodeId") String nodeId) 
 	{
-		logger.info("GET loadbalancer node : " + loadbalancerId + ":" + nodeId);
+		logger.info("GET loadbalancer node : " + id + ":" + nodeId);
 		
-		throw new LBaaSException("not supported" , 501);  //  not implemented
+        LoadBalancer lb = null;
+		
+		// read LB
+		Long lbId = new Long(id);
+		try {
+		   lb = lbModel.getLoadBalancer(lbId);
+		}
+		catch ( DeviceModelAccessException dme) {
+			throw new LBaaSException(dme.message, 500);                                     
+		}		
+		if (lb == null) {
+			throw new LBaaSException("loadbalancer id:" + id + " not found", 404);  
+		}
+				
+		// find the node
+		Integer intNodeId = new Integer(nodeId);
+		Node node = getNodeInLb( lb, intNodeId);		
+		if (node == null) {
+			throw new LBaaSException("node id: " + nodeId + " not found", 404);  
+		}
+		
+		// return JSON formatted response
+		try {			
+			return nodeToJSON(node).toString();
+		}
+		catch (JSONException jsone) {
+			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);  //  internal error
+		} 
 	}
 	
 	
