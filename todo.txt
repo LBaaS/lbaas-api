@@ -5,8 +5,8 @@ GET     /loadbalancers/{loadBalancerId}                     DONE
 POST    /loadbalancers                                      DONE
 PUT     /loadbalancers/{loadBalancerId}                     DONE  
 DELETE  /loadbalancers/{loadBalancerId}                     DONE
-GET     /loadbalancers/{loadBalancerId}/nodes               NOT IMPLEMENTED
-GET     /loadbalancers/{loadBalancerId}/nodes/{nodeId}      NOT IMPLEMENTED
+GET     /loadbalancers/{loadBalancerId}/nodes               DONE
+GET     /loadbalancers/{loadBalancerId}/nodes/{nodeId}      DONE
 POST    /loadbalancers/{loadBalancerId}/nodes               NOT IMPLEMENTED
 PUT     /loadbalancers/{loadBalancerId}/nodes/{nodeId}      NOT IMPLEMENTED
 DELETE  /loadbalancers/{loadBalancerId}/nodes/{nodeId}      NOT IMPLEMENTED
