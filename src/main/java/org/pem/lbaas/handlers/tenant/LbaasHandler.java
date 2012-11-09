@@ -75,7 +75,8 @@ public class LbaasHandler {
     public    static String JSON_LBS         = "loadbalancers";
     
     // node info
-    public static String    NODE_ONLINE      = "online";
+    public static String    NODE_ONLINE      = "ONLINE";
+    public static String    NODE_OFFLINE     = "OFFLINE";
 
     
 	/**
@@ -99,37 +100,10 @@ public class LbaasHandler {
 		   jsonResponseObject.put(JSON_UPDATED,lb.getUpdated());
 		   
 		   // vips
-		   JSONArray jsonVipArray = new JSONArray();		   
-		   VirtualIps vips = lb.getVirtualIps();
-		   if ( vips != null) {
-			   List<VirtualIp> vipslist = vips.getVirtualIps();
-			   if ( vipslist!=null)
-				   for ( int x=0;x<vipslist.size();x++) {
-					   JSONObject jsonVIP=new JSONObject();
-					   jsonVIP.put(JSON_ADDRESS, vipslist.get(x).getAddress());
-					   jsonVIP.put(JSON_ID, vipslist.get(x).getId());
-					   jsonVIP.put(JSON_TYPE, vipslist.get(x).getType());
-					   jsonVIP.put(JSON_IPVER, vipslist.get(x).getIpVersion());
-					   jsonVipArray.put(jsonVIP);
-				   }
-		   }
-		   jsonResponseObject.put(JSON_VIPS, jsonVipArray);
-		   
+		   jsonResponseObject.put(JSON_VIPS, vipsToJSON(lb.getVirtualIps()));
+
 		   // nodes
-		   JSONArray jsonNodeArray = new JSONArray();
-		   Nodes nodes = lb.getNodes();
-		   if (nodes != null) {
-			   List<Node> nodeList = nodes.getNodes();
-			   for ( int y=0;y<nodeList.size();y++) {
-				   JSONObject jsonNode=new JSONObject();
-				   jsonNode.put(JSON_ADDRESS, nodeList.get(y).getAddress());
-				   jsonNode.put(JSON_ID,nodeList.get(y).getId()); 			   
-				   jsonNode.put(JSON_PORT ,nodeList.get(y).getPort());
-				   jsonNode.put(JSON_STATUS, nodeList.get(y).getStatus());
-				   jsonNodeArray.put(jsonNode);
-			   }		   		   
-		   }		   
-		   jsonResponseObject.put(JSON_NODES, jsonNodeArray);
+		   jsonResponseObject.put(JSON_NODES, nodesToJSON(lb.getNodes()));
 		   		   
 		   return jsonResponseObject.toString();
 		}
@@ -164,39 +138,12 @@ public class LbaasHandler {
 			   jsonLb.put(JSON_STATUS, lbs.get(x).getStatus());
 			   jsonLb.put(JSON_CREATED,lbs.get(x).getCreated());
 			   jsonLb.put(JSON_UPDATED,lbs.get(x).getUpdated());
-			   
+
 			   // vips
-			   JSONArray jsonVipArray = new JSONArray();		   
-			   VirtualIps vips = lbs.get(x).getVirtualIps();
-			   if ( vips != null) {
-				   List<VirtualIp> vipslist = vips.getVirtualIps();
-				   if ( vipslist!=null)
-					   for ( int y=0;y<vipslist.size();y++) {
-						   JSONObject jsonVIP=new JSONObject();
-						   jsonVIP.put(JSON_ADDRESS, vipslist.get(y).getAddress());
-						   jsonVIP.put(JSON_ID, vipslist.get(y).getId());
-						   jsonVIP.put(JSON_TYPE, vipslist.get(y).getType());
-						   jsonVIP.put(JSON_IPVER, vipslist.get(y).getIpVersion());
-						   jsonVipArray.put(jsonVIP);
-					   }
-			   }
-			   jsonLb.put(JSON_VIPS, jsonVipArray);
-			   			
+			   jsonLb.put(JSON_VIPS,vipsToJSON(lbs.get(x).getVirtualIps()));
+	   
 			   // nodes
-			   JSONArray jsonNodeArray = new JSONArray();
-			   Nodes nodes = lbs.get(x).getNodes();
-			   if (nodes != null) {
-				   List<Node> nodeList = nodes.getNodes();
-				   for ( int y=0;y<nodeList.size();y++) {
-					   JSONObject jsonNode=new JSONObject();
-					   jsonNode.put(JSON_ADDRESS, nodeList.get(y).getAddress());
-					   jsonNode.put(JSON_ID,nodeList.get(y).getId()); 			   
-					   jsonNode.put(JSON_PORT ,nodeList.get(y).getPort());
-					   jsonNode.put(JSON_STATUS, nodeList.get(y).getStatus());
-					   jsonNodeArray.put(jsonNode);
-				   }		   		   
-			   }		   
-			   jsonLb.put(JSON_NODES, jsonNodeArray);
+			   jsonLb.put(JSON_NODES, nodesToJSON(lbs.get(x).getNodes()));
 			   
 			   jsonArray.put(jsonLb);
 		   }
@@ -244,9 +191,55 @@ public class LbaasHandler {
 		   }			   
 	   }
 	   else {
-		   throw new LBaaSException("JSON 'nodes' not in request body", 400);
+		   throw new JSONException("JSON 'nodes' not in request body");
 	   }
 	}
+	
+	/**
+	 * Convert Nodes to a JSONArray
+	 * @param nodes
+	 * @return
+	 * @throws JSONException
+	 */
+	protected JSONArray nodesToJSON( Nodes nodes) throws JSONException {		
+       JSONArray jsonNodeArray = new JSONArray();
+	   if (nodes != null) {
+		   List<Node> nodeList = nodes.getNodes();
+		   for ( int y=0;y<nodeList.size();y++) {
+			   JSONObject jsonNode=new JSONObject();
+			   jsonNode.put(JSON_ADDRESS, nodeList.get(y).getAddress());
+			   jsonNode.put(JSON_ID,nodeList.get(y).getId()); 			   
+			   jsonNode.put(JSON_PORT ,nodeList.get(y).getPort());
+			   jsonNode.put(JSON_STATUS, nodeList.get(y).getStatus());
+			   jsonNodeArray.put(jsonNode);
+		   }		   		   
+	   }
+	   return jsonNodeArray;
+	}
+	
+	/** 
+	 * Convert VirtualIps to JSONArray
+	 * @param vips
+	 * @return
+	 * @throws JSONException
+	 */
+	protected JSONArray vipsToJSON(VirtualIps vips ) throws JSONException {
+	   JSONArray jsonVipArray = new JSONArray();		   
+	   if ( vips != null) {
+	   List<VirtualIp> vipslist = vips.getVirtualIps();
+	   if ( vipslist!=null)
+		   for ( int y=0;y<vipslist.size();y++) {
+			   JSONObject jsonVIP=new JSONObject();
+			   jsonVIP.put(JSON_ADDRESS, vipslist.get(y).getAddress());
+			   jsonVIP.put(JSON_ID, vipslist.get(y).getId());
+			   jsonVIP.put(JSON_TYPE, vipslist.get(y).getType());
+			   jsonVIP.put(JSON_IPVER, vipslist.get(y).getIpVersion());
+			   jsonVipArray.put(jsonVIP);
+		   }
+	   }	
+	   return jsonVipArray;
+	}
+	
 	
 	/**
 	 * Convert a JSONObject to VirtualIps
