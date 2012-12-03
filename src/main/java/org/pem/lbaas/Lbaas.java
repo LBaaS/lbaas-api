@@ -4,13 +4,25 @@ package org.pem.lbaas;
  * pemellquist@gmail.com
  */
 
+import java.util.EnumSet;
+
+import javax.servlet.DispatcherType;
+
 import org.apache.log4j.Logger;
+
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.server.ssl.SslSocketConnector;
+import org.eclipse.jetty.servlet.FilterHolder;
+import org.eclipse.jetty.servlet.FilterMapping;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.pem.lbaas.security.KeystoneAuthFilter;
+
+import com.hp.csbu.cc.middleware.*;
+
+
 
 public class Lbaas 
 {
@@ -22,6 +34,7 @@ public class Lbaas
 	{
 		logger.info("LBaaS API Server");
 	}
+		
 	
 	@SuppressWarnings("deprecation")
 	public void run( String[] args)
@@ -36,7 +49,7 @@ public class Lbaas
 		
 		 try {	    	  
             Server server = new Server();  
-				      			   			
+            				      			   			
 			SslSocketConnector sslConnector = new SslSocketConnector();
 			sslConnector.setPort(lbaasConfig.apiPort);
 			sslConnector.setKeyPassword(lbaasConfig.keystorePwd);
@@ -48,14 +61,18 @@ public class Lbaas
 			sh.setClassName("com.sun.jersey.spi.container.servlet.ServletContainer");
 			sh.setInitParameter("com.sun.jersey.config.property.packages", "org.pem.lbaas.handlers.tenant");
 			ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+			
+			
 			context.setContextPath("/");
+			KeystoneAuthFilter.setupAuthFilter(context,lbaasConfig);
+			context.addServlet(sh, "/v1/*");
 			server.setHandler(context); 
-			context.addServlet(sh, "/v1/*");	
+				
 			
 		    DeviceThread deviceThread = new DeviceThread(lbaasConfig);
 		    deviceThread.start();
 			    				   
-		    server.start();
+		    server.start();  
 		    server.join();
 		  }
 		  catch ( Exception e) {			 
