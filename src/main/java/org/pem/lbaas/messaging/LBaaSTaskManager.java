@@ -123,15 +123,16 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String> {
 			for ( int x=0;x<jsonLbArray.length();x++) {
 				JSONObject jsonLb = jsonLbArray.getJSONObject(x);						    		    
 		        String lbName = (String) jsonLb.get(LbaasHandler.JSON_NAME);
-		        Long lbId = (Long) jsonLb.getLong(LbaasHandler.JSON_ID);		    		    
-		        logger.info("Loadbalancer : " + lbName + " (" + lbId + ")");
+		        Long lbId = (Long) jsonLb.getLong(LbaasHandler.JSON_ID);
+		        String tenantId = (String) jsonLb.get(LbaasHandler.HPCS_TENANTID);
+		        logger.info("Loadbalancer : " + lbName + " (" + lbId + ")" + "tenant id :" + tenantId);
 		        
 		        if ( response.equalsIgnoreCase(LbaasHandler.HPCS_RESPONSE_PASS)) {
 		    	   logger.info("worker response : PASS");
 			       if ( action.equalsIgnoreCase(LbaasHandler.ACTION_UPDATE)) {	
 				    	// move lb to active state
 				    	try {
-				    		loadbalancerModel.setStatus(LoadBalancer.STATUS_ACTIVE, lbId);
+				    		loadbalancerModel.setStatus(LoadBalancer.STATUS_ACTIVE, lbId,tenantId);
 				    	}
 				    	catch (DeviceModelAccessException dme) {
 				             logger.error(dme.message);
@@ -164,7 +165,7 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String> {
 			    	// move lb to error state
 			    	if ( !action.equalsIgnoreCase(LbaasHandler.ACTION_DELETE)) {
 			    	   try {			    	
-			    		   loadbalancerModel.setStatus(LoadBalancer.STATUS_ERROR, lbId);
+			    		   loadbalancerModel.setStatus(LoadBalancer.STATUS_ERROR, lbId, tenantId);
 			    	   }
 			    	   catch (DeviceModelAccessException dme) {
 				             logger.error(dme.message);
