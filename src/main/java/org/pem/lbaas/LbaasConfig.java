@@ -23,6 +23,13 @@ public class LbaasConfig {
 	public static String DB_VALID_TO    = "db-valid-to";
 	public static String GEARMAN_JOB_SERVER_ADDR = "gearman-job-server-addr";
 	public static String GEARMAN_JOB_SERVER_PORT = "gearman-job-server-port";
+	public static String KEYSTONE_SERVICE_ID     = "keystone-service-id";
+	public static String KEYSTONE_SERVER_VIP     = "keystone-server-vip";	
+	public static String KEYSTONE_KEYSTORE       = "keystone-keystore";
+	public static String KEYSTONE_KEYSTOREPWD    = "keystone-keystorepwd";
+	public static String KEYSTONE_TRUSTSTORE     = "keystone-truststore";
+	public static String KEYSTONE_TRUSTSTOREPWD  = "keystone-truststorepwd";
+	public static String KEYSTONE_SERVER_PORT     = "keystone-server-port"; 
 		
 	
 	public int apiPort;
@@ -36,6 +43,13 @@ public class LbaasConfig {
 	public int dbValidTimeOut;
 	public String gearmanServerAddr;
 	public int gearmanServerPort;
+	public String keystoneServiceId;
+	public String keystoneServerVIP;	
+	public String keystoneServerPort;
+	public String keystoneKeystore;
+	public String keystoneKeystorePwd;
+	public String keystoneTruststore;
+	public String keystoneTruststorePwd;
 	
 	
 	public boolean load(String filename) {		
@@ -55,6 +69,15 @@ public class LbaasConfig {
 	           
 	           gearmanServerAddr = serviceConfig.getString(GEARMAN_JOB_SERVER_ADDR);
 	           gearmanServerPort = serviceConfig.getInt(GEARMAN_JOB_SERVER_PORT);
+	           
+	           keystoneServiceId = serviceConfig.getString(KEYSTONE_SERVICE_ID);
+	           keystoneServerVIP = serviceConfig.getString(KEYSTONE_SERVER_VIP);
+	           keystoneServerPort = serviceConfig.getString(KEYSTONE_SERVER_PORT);
+	           keystoneKeystore = serviceConfig.getString(KEYSTONE_KEYSTORE);
+        	   keystoneKeystorePwd = serviceConfig.getString(KEYSTONE_KEYSTOREPWD);
+        	   keystoneTruststore = serviceConfig.getString(KEYSTONE_TRUSTSTORE);
+       		   keystoneTruststorePwd = serviceConfig.getString(KEYSTONE_TRUSTSTOREPWD);
+	        	   
 		}  
 	    catch(ConfigurationException cex) {
 	       logger.error(cex + "failure to open:" + filename);
@@ -74,6 +97,11 @@ public class LbaasConfig {
 	   logger.info("DB Valid Time Out      : " + dbValidTimeOut);
 	   logger.info("Gearman Server Address : " + gearmanServerAddr);
 	   logger.info("Gearman Server Port    : " + gearmanServerPort);
+	   logger.info("Keystone Service Id    : " + keystoneServiceId);
+	   logger.info("Keystone Server VIP    : " + keystoneServerVIP);
+	   logger.info("Keystone Server Port   : " + keystoneServerPort);
+	   logger.info("Keystone Keystore      : " + keystoneKeystore);
+	   logger.info("Keystone Truststore    : " + keystoneTruststore);
 	      
 	}
 
