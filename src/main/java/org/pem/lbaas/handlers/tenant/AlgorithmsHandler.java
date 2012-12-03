@@ -7,15 +7,18 @@ package org.pem.lbaas.handlers.tenant;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.pem.lbaas.security.KeystoneAuthFilter;
 
 
 @Path("/algorithms")
@@ -43,8 +46,14 @@ public class AlgorithmsHandler {
       
    @GET
    @Produces("application/json")
-   public String get() {
-	   logger.info("GET algorithms");
+   public String get(@Context HttpServletRequest request ) {
+	   
+	   if (!KeystoneAuthFilter.authenticated(request)) {
+	    	throw new LBaaSException("Get /algorithms request cannot be authenticated", 401);  //  bad auth
+	    }
+	    
+	    logger.info("Get /algorithms " + KeystoneAuthFilter.toString(request));
+	    
 		JSONObject jsonObject = new JSONObject();
 		JSONArray jsonArray = new JSONArray();
 		try {	
