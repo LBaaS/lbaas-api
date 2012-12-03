@@ -31,6 +31,7 @@ public class LoadBalancerDataModel {
 	protected final static String SQL_ID            = "id";
 	protected final static String SQL_NAME          = "name";	
 	protected final static String SQL_PROTOCOL      = "protocol";	
+	public    final static String SQL_TENANTID      = "tenantid";
 	protected final static String SQL_PORT          = "port";
 	protected final static String SQL_STATUS        = "status";	
 	protected final static String SQL_ALGORITHM     = "algorithm";	
@@ -173,6 +174,7 @@ public class LoadBalancerDataModel {
 	   try {
 		   lb.setId(new Integer(rs.getInt(SQL_ID)));
 		   lb.setName(rs.getString(SQL_NAME));
+		   lb.setTenantId(rs.getString(SQL_TENANTID));
 		   lb.setProtocol(rs.getString(SQL_PROTOCOL));
 		   lb.setPort(rs.getInt(SQL_PORT));
 		   lb.setStatus(rs.getString(SQL_STATUS));
@@ -256,10 +258,12 @@ public class LoadBalancerDataModel {
 	    * @return boolean
 	    * @throws DeviceModelAccessException if internal database error
 	    */
-	public boolean setStatus( String status, Long id) throws DeviceModelAccessException {			
-	   LoadBalancer lb = this.getLoadBalancer(id);
-	   if (lb == null)
-	      return false;     
+	public boolean setStatus( String status, Long id, String tenantId) throws DeviceModelAccessException {	
+	   logger.info("setStatus : " + status + "lbID: " + id + " tenantId: " + tenantId);
+	   LoadBalancer lb = this.getLoadBalancer(id,tenantId);
+	   if (lb == null) {
+		   throw new DeviceModelAccessException("Could not find loadbalancer id: " + id + " tenantid: " +  tenantId);
+	   }
 	   lb.setStatus( status);
 	   this.setLoadBalancer(lb);	
 	   return true;	
@@ -273,11 +277,12 @@ public class LoadBalancerDataModel {
 	    * @return Device or null if not found
 	    * @throws DeviceModelAccessException if internal database error
 	    */
-	public LoadBalancer getLoadBalancer( Long lbId) throws DeviceModelAccessException {
+	public LoadBalancer getLoadBalancer( Long lbId, String tenantId) throws DeviceModelAccessException {
+		logger.info("getLoadBalancer");
 		Connection conn = dbConnect();
 		Statement stmt=null;
 		if (conn!=null) {
-		   String query = "SELECT * FROM loadbalancers WHERE id=" + lbId;
+		   String query = "SELECT * FROM loadbalancers WHERE " + SQL_ID + "=" + lbId +" AND " + SQL_TENANTID + "=\'" + tenantId + "\'";
 		   try {
 		      stmt=conn.createStatement();
 		      ResultSet rs=stmt.executeQuery(query);
@@ -311,18 +316,17 @@ public class LoadBalancerDataModel {
 	    */
 	public boolean setLoadBalancer(LoadBalancer lb)  throws DeviceModelAccessException {
 		
-		if ( this.getLoadBalancer(new Long(lb.getId()))==null)
-			  return false;   
-		
+		logger.info("setLoadBalancer name: " + lb.getName() + " alogorithm: " + lb.getAlgorithm() + " status: " + lb.getStatus() + " for lbid: " + lb.getId() + " tenantid: " + lb.getTenantId());
 		Connection conn = dbConnect();
 		
 		try {
-			String query = "UPDATE loadbalancers SET name = ?, algorithm = ?, status = ? WHERE id = ?";			
+			String query = "UPDATE loadbalancers SET name = ?, algorithm = ?, status = ? WHERE id = ? AND tenantid = ?";			
 			PreparedStatement statement = conn.prepareStatement(query);
 			statement.setString(1,lb.getName());
 			statement.setString(2,lb.getAlgorithm());
 			statement.setString(3,lb.getStatus());
 			statement.setInt(4,lb.getId().intValue());
+			statement.setString(5,lb.getTenantId());
 			statement.executeUpdate();
 			statement.close();
 			return true;
@@ -342,6 +346,7 @@ public class LoadBalancerDataModel {
 	 */
 	public Long createLoadBalancer( LoadBalancer lb) throws DeviceModelAccessException {	
 				
+		logger.info("createLoadBalancer");
 		int val=0;
 		
 		// status
@@ -358,7 +363,7 @@ public class LoadBalancerDataModel {
 			String query = "insert into loadbalancers (name,tenantid, protocol,port,status,algorithm,vips,nodes,created,updated,device ) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 			PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);	
 			statement.setString(1,lb.getName() );
-			statement.setString(2,"0");
+			statement.setString(2,lb.getTenantId());
 			statement.setString(3,lb.getProtocol());
 			statement.setInt(4,lb.getPort());
 			statement.setString(5,lb.getStatus());
@@ -397,6 +402,8 @@ public class LoadBalancerDataModel {
 	 * @throws DeviceModelAccessException
 	 */
 	public  List<LoadBalancer> getLoadBalancers(String condition) throws DeviceModelAccessException {
+		
+		logger.info("getLoadBalancers");
 		List<LoadBalancer> lbs = new  ArrayList<LoadBalancer>();
 		Connection conn = dbConnect();
 		Statement stmt=null;
@@ -428,6 +435,7 @@ public class LoadBalancerDataModel {
 	 * @throws DeviceModelAccessException
 	 */
 	public  List<LoadBalancer> getLoadBalancersWithDevice(Long deviceId) throws DeviceModelAccessException {
+		logger.info("getLoadBalancersWithDevice");
 		String condition = SQL_DEVICE + "=" + deviceId.toString();
 		return getLoadBalancers(condition);
 	}
@@ -439,11 +447,12 @@ public class LoadBalancerDataModel {
 	 * @return number deleted, should be 1 or 0 if not found
 	 * @throws DeviceModelAccessException
 	 */
-	public int deleteLoadBalancer( Long lbId) throws DeviceModelAccessException {
+	public int deleteLoadBalancer( Long lbId, String tenantId) throws DeviceModelAccessException {
+		logger.info("deleteLoadBalancer");
 		Connection conn = dbConnect();
 		Statement stmt=null;
 		if (conn!=null) {
-		   String query = "DELETE FROM loadbalancers WHERE id=" + lbId;
+		   String query = "DELETE FROM loadbalancers WHERE " + SQL_ID + "=" + lbId +" AND " + SQL_TENANTID + "=\'" + tenantId + "\'";
 		   try {
 		      stmt=conn.createStatement();
 		      int deleteCount = stmt.executeUpdate(query);
