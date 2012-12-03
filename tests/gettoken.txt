@@ -1,0 +1,1 @@
+curl -X POST -H "Content-type:application/json" --data-binary "@gettoken.json" https://region-a.geo-1.identity.hpcloudsvc.com:35357/v2.0/tokens

@@ -1,0 +1,9 @@
+{
+    "auth":{
+        "passwordCredentials":{
+            "username":"peter.mellquist@hp.com",
+            "password":"XXXXXXXXX"
+        },
+        "tenantId":"44210151105895"
+    }
+}
