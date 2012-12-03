@@ -124,7 +124,16 @@ public class LoadBalancer
         this.device = value;
     }
     
+    protected String tenantId;
     
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(String id) {
+        this.tenantId = id;
+    }
+        
 
 	/**
      * Gets the value of the virtualIps property.
