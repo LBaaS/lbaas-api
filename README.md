@@ -7,7 +7,7 @@ LBaaS API server environment and build information ( what's needed for developme
 git clone https://github.com/LBaaS/lbaas-api.git lbaas-directory 
 
 3) Install maven, needed to building
-sudo apt-get install maven
+sudo apt-get install maven2 ( Note maven 2 is required )
 
 4) Install java 7, needed for gearman java
 sudo add-apt-repository ppa:webupd8team/java -y
