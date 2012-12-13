@@ -4,7 +4,7 @@ PACKAGE_VERSION=1.0
 PACKAGE_OWNER=pemellquist@gmail.com
 PACKAGE_CONTROL=debian/DEBIAN/control
 PACKAGE_DESCRIPT="LBaaS API server binaries"
-PACKAGE_LOCATION="opt/lbaas"
+PACKAGE_LOCATION="opt/lbaasapi"
 PACKAGE_JAR="target/lbaas-0.0.1-jar-with-dependencies.jar"
 
 # create debian package directory and initialize
@@ -16,6 +16,7 @@ rm debian/README* debian/*.ex debian/*.EX debian/copyright debian/docs debian/co
 mkdir debian/DEBIAN
 mkdir debian/opt
 mkdir -p debian/var/log/lbaasapi
+mkdir -p debian/etc/init.d
 mkdir debian/$PACKAGE_LOCATION
 
 # create control file
@@ -35,11 +36,12 @@ cp ../lbaas.config debian/$PACKAGE_LOCATION
 cp ../log4j.properties debian/$PACKAGE_LOCATION
 cp ../lbaas.sh debian/$PACKAGE_LOCATION
 cp ../$PACKAGE_JAR debian/$PACKAGE_LOCATION
+cp ../lbaasapi.initd debian/etc/init.d/lbaasapi
 
 # make the package
 dpkg --build debian >> dh_make.txt
 mv debian.deb $PACKAGE_NAME-$PACKAGE_VERSION.deb
-echo "LBaaS Debian Package Created in : "$PACKAGE_NAME-$PACKAGE_VERSION/$PACKAGE_NAME-$PACKAGE_VERSION.deb
+echo "LBaaS API server Debian Package Created in : "$PACKAGE_NAME-$PACKAGE_VERSION/$PACKAGE_NAME-$PACKAGE_VERSION.deb
 
 cd ..
 
