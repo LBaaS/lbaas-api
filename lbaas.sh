@@ -1,6 +1,6 @@
 #!/bin/bash
-JAR="lbaas-0.0.1-jar-with-dependencies.jar"
-LOGCFG="file:/opt/lbaas/log4j.properties"
+JAR="/opt/lbaasapi/lbaas-0.0.1-jar-with-dependencies.jar"
+LOGCFG="file:/opt/lbaasapi/log4j.properties"
 CONFIG="./lbaas.config"
 
 if [ $# -lt 1 ]
@@ -21,7 +21,7 @@ then
 		echo "started"
 		exit 0
 	else
-		echo "crudservice already running!"
+		echo "lbaasapi already running!"
 		exit 0
 	fi
 fi
@@ -32,7 +32,7 @@ then
 	RPID=$(ps -ef | grep $JAR | grep java | awk '{print $2}' | head -1)
 	if [ -z $RPID ]
 	then
-		echo "lbaas does not appear to be running!"
+		echo "lbaasapi does not appear to be running!"
 		exit 0
 	fi
 	echo "stopping pid " $RPID
@@ -41,5 +41,5 @@ then
 	exit 0
 fi
 
-echo "lbaas unknown option" $1
+echo "lbaasapi unknown option" $1
 exit 0 
