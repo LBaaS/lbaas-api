@@ -1,0 +1,27 @@
+#!/bin/sh
+# Starts and stops lbaas api server 
+#
+
+
+case "$1" in
+start)
+	cd /opt/lbaasapi
+	./lbaas.sh start	
+;;
+
+stop)
+	cd /opt/lbaasapi
+	./lbaas.sh stop
+;;
+
+restart)
+	cd /opt/lbaasapi
+	./lbaas.sh stop
+	./lbaas.sh start
+;;
+
+
+*)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+esac
