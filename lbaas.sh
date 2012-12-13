@@ -1,6 +1,6 @@
 #!/bin/bash
-JAR="./target/lbaas-0.0.1-jar-with-dependencies.jar"
-LOGCFG="file:/home/ubuntu/lbaas/lbaas-10-24-2012/log4j.properties"
+JAR="lbaas-0.0.1-jar-with-dependencies.jar"
+LOGCFG="file:/opt/lbaas/log4j.properties"
 CONFIG="./lbaas.config"
 
 if [ $# -lt 1 ]
@@ -17,7 +17,7 @@ then
 	then
 		echo "application :" $JAR
 		echo "logging cfg :" $LOGCFG
-		java -Dlog4j.configuration=$LOGCFG -jar $JAR $CONFIG > logs/launch.log 2>&1 & 
+		java -Dlog4j.configuration=$LOGCFG -jar $JAR $CONFIG > /var/log/lbaasapi/launch.log 2>&1 & 
 		echo "started"
 		exit 0
 	else
