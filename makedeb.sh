@@ -33,6 +33,8 @@ cp ../keystore.jks debian/$PACKAGE_LOCATION
 cp ../keystone-keystore.jks debian/$PACKAGE_LOCATION
 cp ../keystone-truststore.jks debian/$PACKAGE_LOCATION
 cp ../lbaas.config debian/$PACKAGE_LOCATION
+cp ../mysql/lbaas.sql debian/$PACKAGE_LOCATION
+cp ../README.md debian/$PACKAGE_LOCATION
 cp ../log4j.properties debian/$PACKAGE_LOCATION
 cp ../lbaas.sh debian/$PACKAGE_LOCATION
 cp ../$PACKAGE_JAR debian/$PACKAGE_LOCATION
