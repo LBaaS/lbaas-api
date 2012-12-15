@@ -49,7 +49,7 @@ devices and web ui on different port than tenant API        DONE
 
 Keystone integration 
 ---------------------------------------------------------------------------
-CS auth filter                                              NOT IMPLEMENTED
+CS auth filter                                              DONE
 only allow access to your own tenant via tenant port 
 admin port allows access to all tenants
 
