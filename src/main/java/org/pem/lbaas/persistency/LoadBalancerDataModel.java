@@ -320,13 +320,16 @@ public class LoadBalancerDataModel {
 		Connection conn = dbConnect();
 		
 		try {
-			String query = "UPDATE loadbalancers SET name = ?, algorithm = ?, status = ? WHERE id = ? AND tenantid = ?";			
+			String query = "UPDATE loadbalancers SET name = ?, algorithm = ?, status = ?, updated = ? WHERE id = ? AND tenantid = ?";			
 			PreparedStatement statement = conn.prepareStatement(query);
 			statement.setString(1,lb.getName());
 			statement.setString(2,lb.getAlgorithm());
 			statement.setString(3,lb.getStatus());
-			statement.setInt(4,lb.getId().intValue());
-			statement.setString(5,lb.getTenantId());
+			Date dNow = new Date();
+		    SimpleDateFormat ft = new SimpleDateFormat ("yyyy-MM-dd'T'HH:mm'Z'");
+			statement.setString(4,ft.format(dNow));
+			statement.setInt(5,lb.getId().intValue());
+			statement.setString(6,lb.getTenantId());
 			statement.executeUpdate();
 			statement.close();
 			return true;
@@ -354,7 +357,7 @@ public class LoadBalancerDataModel {
 		
 		// created and updated
 		Date dNow = new Date();
-	    SimpleDateFormat ft = new SimpleDateFormat ("E yyyy.MM.dd 'at' hh:mm:ss a zzz");
+	    SimpleDateFormat ft = new SimpleDateFormat ("yyyy-MM-dd'T'HH:mm'Z'");
 		lb.setCreated(ft.format(dNow));
 		lb.setUpdated(ft.format(dNow));
 		
