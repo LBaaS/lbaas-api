@@ -33,7 +33,9 @@ public class ProtocolHandler {
    private static String TCP = "TCP";
    public  static String DEFAULT_PROTOCOL = HTTP;
    public  static int    DEFAULT_PORT = 80;
-   
+   private static int    MIN_PORT = 1;
+   private static int    MAX_PORT = 65535;
+	   
    @SuppressWarnings("serial")
    static List<Protocol> protocols = new ArrayList<Protocol>() {{
 	     add( new Protocol(HTTP, 80));
@@ -55,6 +57,32 @@ public class ProtocolHandler {
 			   return protocols.get(x).getPort();
 	   }
 	   return 0;
+   }
+   
+   public static int toPort(String port) {
+	   int value=-1;
+	   
+	   try {
+	      value = Integer.parseInt(port);
+	      if ((value>=MIN_PORT)&&(value<=MAX_PORT))
+	    	  return value;
+	      else
+	    	  return -1;
+	   }
+	   catch (NumberFormatException nfe) {
+	      return -1;
+	   }
+   }
+   
+   public static boolean supports( String protocol, int port ) {
+	   for (int x=0;x<protocols.size();x++) {
+		   if (protocols.get(x).getName().equalsIgnoreCase(protocol))
+			   if (protocols.get(x).getPort().intValue() == port)
+				   return true;
+			   else
+				   return false;
+	   }
+	   return false;
    }
       
    @GET
