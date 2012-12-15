@@ -371,13 +371,16 @@ public class DeviceDataModel {
 	  
       Connection conn = dbConnect();
       try {
-			String query = "UPDATE devices SET name = ?, address = ?, loadbalancers = ?, status = ? WHERE id = ?";
+			String query = "UPDATE devices SET name = ?, address = ?, loadbalancers = ?, status = ? , updated = ? WHERE id = ?";
 			PreparedStatement statement = conn.prepareStatement(query);
 			statement.setString(1, device.getName());
 			statement.setString(2, device.getAddress());
 			statement.setString(3, lbIdsToJson( device.lbIds).toString());
 			statement.setString(4, device.getStatus());
-			statement.setInt(5,device.getId().intValue());
+			Date dNow = new Date();
+		    SimpleDateFormat ft = new SimpleDateFormat ("yyyy-MM-dd'T'HH:mm'Z'");
+			statement.setString(5,ft.format(dNow));
+			statement.setInt(6,device.getId().intValue());
 			statement.executeUpdate();
 			statement.close();
 			return true;
@@ -470,7 +473,7 @@ public class DeviceDataModel {
 			statement.setString(3,lbIdsToJson( device.lbIds).toString());
 			statement.setString(4,device.getLbType());
 			Date dNow = new Date();
-		    SimpleDateFormat ft = new SimpleDateFormat ("E yyyy.MM.dd 'at' hh:mm:ss a zzz");
+		    SimpleDateFormat ft = new SimpleDateFormat ("yyyy-MM-dd'T'HH:mm'Z'");
 			statement.setString(5,ft.format(dNow));	
 			statement.setString(6,ft.format(dNow));	
 			statement.setString(7,device.getStatus());			
