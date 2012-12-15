@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.pem.lbaas.Lbaas;
 import org.pem.lbaas.datamodel.Device;
 import org.pem.lbaas.datamodel.IpVersion;
 import org.pem.lbaas.datamodel.LoadBalancer;
@@ -78,7 +79,7 @@ public class LbaasHandler {
     protected static String JSON_PUBLIC      = "public";
     protected static String JSON_VIPS        = "virtualIps";
     protected static String JSON_NODES       = "nodes";
-    public    static String JSON_LBS         = "loadbalancers";
+    public    static String JSON_LBS         = "loadBalancers";
     
     // node info
     public static String    NODE_ONLINE      = "ONLINE";
@@ -177,7 +178,7 @@ public class LbaasHandler {
 	 * @param jsonNodesArray
 	 * @return Nodes
 	 */
-	protected Nodes jsonToNodes(JSONObject jsonObject) throws JSONException {
+	protected Nodes jsonToNodes(JSONObject jsonObject) throws JSONException, ProtocolPortException, ProtocolAddressException {
 	   if ( jsonObject.has(JSON_NODES) ) {			   
 		   Nodes nodes = new Nodes();
 		   try {
@@ -186,8 +187,15 @@ public class LbaasHandler {
 				   Node node = new Node();
 				   JSONObject jsonNode = jsonNodesArray.getJSONObject(x);
 				   String address = (String) jsonNode.get(JSON_ADDRESS);
+				   if ( address.length()>LimitsHandler.LIMIT_MAX_ADDR_SIZE) {
+					   throw new ProtocolAddressException("address too long : " + address + "for node definition");
+				   }
 				   node.setAddress(address);
-				   String port = (String) jsonNode.get(JSON_PORT);
+				   String strPort = (String) jsonNode.get(JSON_PORT);
+				   int port = ProtocolHandler.toPort(strPort);
+				   if(port <0) {
+					   throw new ProtocolPortException("illegal port: " + strPort + " defined for node address: " + address);
+				   }
 				   node.setPort(Integer.valueOf(port));
 				   node.setStatus(NODE_ONLINE);			   
 				   node.setId(new Integer(x+1));
@@ -285,7 +293,7 @@ public class LbaasHandler {
 	 * @return
 	 * @throws JSONException
 	 */
-	protected VirtualIps jsonToVips(JSONObject jsonObject) throws JSONException {		
+	protected VirtualIps jsonToVips(JSONObject jsonObject) throws JSONException, ProtocolAddressException {		
 	   if ( jsonObject.has(JSON_VIPS) ) {
 		   VirtualIps virtualIps = new VirtualIps();
 		   try {
@@ -294,6 +302,9 @@ public class LbaasHandler {
 				   VirtualIp virtualIp = new VirtualIp();				   
 				   JSONObject jsonVip = jsonVIPArray.getJSONObject(x);				   
 				   String address = (String) jsonVip.get(JSON_ADDRESS);
+				   if ( address.length()>LimitsHandler.LIMIT_MAX_ADDR_SIZE) {
+					   throw new ProtocolAddressException("address too long : " + address + "for VIP definition");
+				   }
 				   virtualIp.setAddress(address);				   
 				   if (jsonVip.get(JSON_IPVER).toString().equalsIgnoreCase(JSON_IPVER4))	
 				      virtualIp.setIpVersion(IpVersion.IPV_4);
@@ -782,6 +793,18 @@ public class LbaasHandler {
 			throw new LBaaSException("token and/or tenant id was not specified", 401);  //  bad auth
 		}
 		
+		// check if tenant has not exceeded their limit
+		try {
+			List<LoadBalancer> currentLbs = lbModel.getLoadBalancers(LoadBalancerDataModel.SQL_TENANTID + "= \'" + tenantId + "\'");
+			if (currentLbs.size() > Lbaas.lbaasConfig.maxLbs) {
+				throw new LBaaSException( "maximum number of allowed loadbalancers for this tenant has been reached : " +  Lbaas.lbaasConfig.maxLbs, 400); 
+			}
+		}
+		catch ( DeviceModelAccessException dme) {
+		    throw new LBaaSException(dme.message, 500);                                   
+		}
+		
+		
 		Device device=null;
 		List<LoadBalancer> lbs = new  ArrayList<LoadBalancer>();
 		
@@ -817,6 +840,22 @@ public class LbaasHandler {
 			   lb.setProtocol(ProtocolHandler.DEFAULT_PROTOCOL);
 			   lb.setPort(ProtocolHandler.DEFAULT_PORT);
 		   }
+		   
+		   // if port is specified should match what protocol supports
+		   if (jsonObject.has(JSON_PORT) ) {
+			   String strPort = (String) jsonObject.get(JSON_PORT);			   
+			   int port = ProtocolHandler.toPort(strPort);
+			   if (port <0 ) {
+				   throw new LBaaSException("illegal port value specified for load balancer : " + strPort, 400); 
+			   }
+			   
+			   if ( !ProtocolHandler.supports( lb.getProtocol(), port )) {
+				   throw new LBaaSException("port number :" + port + " is not supported for protocol : " + lb.getProtocol() + " see /protocols for supported protocold and ports", 400); 
+			   }
+			   lb.setPort(port);
+		   }
+		   
+		   
 		   logger.info("   protocol = " + lb.getProtocol());
 		   logger.info("   port     = " + lb.getPort());
 		   
@@ -839,12 +878,23 @@ public class LbaasHandler {
 		   
 		   //  nodes
 		   try {
-			   lb.setNodes(jsonToNodes(jsonObject));			   
+			   Nodes nodes = jsonToNodes(jsonObject);
+			   if (nodes.getNodes().size() > Lbaas.lbaasConfig.maxNodesperLb) {
+				   logger.warn("attempt to create an LB with more than " + Lbaas.lbaasConfig.maxNodesperLb + " nodes");
+				   throw new LBaaSException( "attempt to create an LB with more than " + Lbaas.lbaasConfig.maxNodesperLb + " nodes", 400); 
+			   }
+			   lb.setNodes(nodes);			   
 		   }
 		   catch ( JSONException jsone) {
 				throw new LBaaSException( jsone.toString(), 400);  
 		   } 
-		   		   		   		   
+		   catch ( ProtocolPortException ppe) {
+				throw new LBaaSException( ppe.message, 400);  
+		   } 	
+		   catch ( ProtocolAddressException pae) {
+				throw new LBaaSException( pae.message, 400);  
+		   } 
+		   
 		   
 		   // vips
 		   // vips control if an existing device is to be used or a new device is to be used
@@ -858,12 +908,18 @@ public class LbaasHandler {
 		   catch ( JSONException jsone) {
 				throw new LBaaSException( jsone.toString(), 400);  
 		   } 
+		   catch ( ProtocolAddressException pae) {
+				throw new LBaaSException( pae.message, 400);  
+		   } 
+		   
+		   
+		   
 		   if ( virtualIps != null) {
 			    
 			   // check that only one vip can be specified for now
 			   List<VirtualIp> vipList = virtualIps.getVirtualIps();
-			   if ( vipList.size()!=1) {
-				   throw new LBaaSException("only one VIP can be specified" , 400);    //  not available
+			   if ( vipList.size() > Lbaas.lbaasConfig.maxVipsPerLb) {
+				   throw new LBaaSException("maximum number of VIPs allowed is " + Lbaas.lbaasConfig.maxVipsPerLb , 400);    //  not available
 			   }			   
 			   // check that vip is the same address as existing device and this is a new protocol not an existing one
 			   String address = vipList.get(0).getAddress();
