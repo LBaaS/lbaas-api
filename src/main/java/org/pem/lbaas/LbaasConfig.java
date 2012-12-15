@@ -29,7 +29,11 @@ public class LbaasConfig {
 	public static String KEYSTONE_KEYSTOREPWD    = "keystone-keystorepwd";
 	public static String KEYSTONE_TRUSTSTORE     = "keystone-truststore";
 	public static String KEYSTONE_TRUSTSTOREPWD  = "keystone-truststorepwd";
-	public static String KEYSTONE_SERVER_PORT     = "keystone-server-port"; 
+	public static String KEYSTONE_SERVER_PORT    = "keystone-server-port"; 
+	public static String LIMITS_MAX_LBS          = "max-lbs"; 
+	public static String LIMITS_MAX_VIPS_PER_LB  = "max-vips-per-lb";
+	public static String LIMITS_MAX_NODES_PER_LB = "max-nodes-per-lb";
+	
 		
 	
 	public int apiPort;
@@ -50,6 +54,9 @@ public class LbaasConfig {
 	public String keystoneKeystorePwd;
 	public String keystoneTruststore;
 	public String keystoneTruststorePwd;
+	public int maxLbs;
+	public int maxVipsPerLb;
+	public int maxNodesperLb;
 	
 	
 	public boolean load(String filename) {		
@@ -77,6 +84,10 @@ public class LbaasConfig {
         	   keystoneKeystorePwd = serviceConfig.getString(KEYSTONE_KEYSTOREPWD);
         	   keystoneTruststore = serviceConfig.getString(KEYSTONE_TRUSTSTORE);
        		   keystoneTruststorePwd = serviceConfig.getString(KEYSTONE_TRUSTSTOREPWD);
+       		   
+       		   maxLbs = serviceConfig.getInt(LIMITS_MAX_LBS);
+       		   maxVipsPerLb = serviceConfig.getInt(LIMITS_MAX_VIPS_PER_LB);
+       		   maxNodesperLb = serviceConfig.getInt(LIMITS_MAX_NODES_PER_LB);
 	        	   
 		}  
 	    catch(ConfigurationException cex) {
@@ -102,6 +113,9 @@ public class LbaasConfig {
 	   logger.info("Keystone Server Port   : " + keystoneServerPort);
 	   logger.info("Keystone Keystore      : " + keystoneKeystore);
 	   logger.info("Keystone Truststore    : " + keystoneTruststore);
+	   logger.info("Max LBs Per Tenant     : " + maxLbs);
+	   logger.info("Max VIPs Per LB        : " + maxVipsPerLb);
+	   logger.info("Max Nodes Per LB       : " + maxNodesperLb);	   
 	      
 	}
 
