@@ -188,8 +188,13 @@ public class LbaasHandler {
 				   JSONObject jsonNode = jsonNodesArray.getJSONObject(x);
 				   String address = (String) jsonNode.get(JSON_ADDRESS);
 				   if ( address.length()>LimitsHandler.LIMIT_MAX_ADDR_SIZE) {
-					   throw new ProtocolAddressException("address too long : " + address + "for node definition");
+					   throw new ProtocolAddressException("address too long : " + address + " for node definition");
 				   }
+				   
+				   if ( ! ProtocolHandler.validateIPv4Address(address)) {
+					   throw new ProtocolAddressException("not a valid IPV4 address : " + address + " for node definition");
+				   }
+				   
 				   node.setAddress(address);
 				   String strPort = (String) jsonNode.get(JSON_PORT);
 				   int port = ProtocolHandler.toPort(strPort);
