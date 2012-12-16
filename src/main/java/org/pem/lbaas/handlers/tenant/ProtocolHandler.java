@@ -6,6 +6,8 @@ package org.pem.lbaas.handlers.tenant;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
@@ -35,6 +37,12 @@ public class ProtocolHandler {
    public  static int    DEFAULT_PORT = 80;
    private static int    MIN_PORT = 1;
    private static int    MAX_PORT = 65535;
+   private static final String IPV4_PATTERN = 
+       "^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\." +
+       "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\." +
+       "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\." +
+       "([01]?\\d\\d?|2[0-4]\\d|25[0-5])$";
+   
 	   
    @SuppressWarnings("serial")
    static List<Protocol> protocols = new ArrayList<Protocol>() {{
@@ -83,6 +91,13 @@ public class ProtocolHandler {
 				   return false;
 	   }
 	   return false;
+   }
+   
+   public final static boolean validateIPv4Address(String  ipAddress)
+   {
+      Pattern pattern = Pattern.compile(IPV4_PATTERN);
+	  Matcher matcher = pattern.matcher(ipAddress);
+	  return matcher.matches();           
    }
       
    @GET
