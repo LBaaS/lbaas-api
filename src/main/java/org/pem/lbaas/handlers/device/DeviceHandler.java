@@ -20,6 +20,8 @@ import org.pem.lbaas.persistency.DeviceModelAccessException;
 import org.pem.lbaas.persistency.DeviceUsage;
 import org.pem.lbaas.handlers.tenant.LBaaSException;
 import org.pem.lbaas.handlers.tenant.LimitsHandler;
+import org.pem.lbaas.handlers.tenant.ProtocolAddressException;
+import org.pem.lbaas.handlers.tenant.ProtocolHandler;
 
 import javax.ws.rs.WebApplicationException;
 
@@ -221,6 +223,9 @@ public class DeviceHandler {
          // adddress
          if ( jsonObject.has(JSON_ADDRESS)) {
             String address = (String) jsonObject.get(JSON_ADDRESS);
+            if ( ! ProtocolHandler.validateIPv4Address(address)) 
+				throw new LBaaSException("not a valid IPV4 address : " + address + " for node definition",400);			   
+            
             if ( address.length() > LimitsHandler.LIMIT_MAX_ADDR_SIZE)
             	throw new LBaaSException("'address' is over max allowed length of : " + LimitsHandler.LIMIT_MAX_ADDR_SIZE, 400);
             device.setAddress(address);
@@ -365,6 +370,10 @@ public class DeviceHandler {
       // change the address
       try {
          address = (String) jsonObject.get(JSON_ADDRESS);
+         
+         if ( ! ProtocolHandler.validateIPv4Address(address)) 
+				throw new LBaaSException("not a valid IPV4 address : " + address + " for node definition",400);
+         
          if ( address.length() > LimitsHandler.LIMIT_MAX_ADDR_SIZE)
          	throw new LBaaSException("'address' is over max allowed length of : " + LimitsHandler.LIMIT_MAX_ADDR_SIZE, 400);
          device.setAddress(address);
