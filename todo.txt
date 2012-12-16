@@ -71,7 +71,7 @@ Fault body like with Atlas                                 DONE
 
 Resource Limits
 ---------------------------------------------------------------------------
-Default tenant limits on max # of LBs                      NOT IMPLEMENTED
+Default tenant limits on max # of LBs                      DONE
 
 DB
 ---------------------------------------------------------------------------
