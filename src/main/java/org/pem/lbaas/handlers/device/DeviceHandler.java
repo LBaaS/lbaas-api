@@ -40,18 +40,20 @@ public class DeviceHandler {
    public final int    LB_UNASSIGNED      = 0;
 	
    // JSON names
-   protected final String JSON_DEVICES       = "devices";
-   protected final String JSON_ID            = "id";
-   protected final String JSON_NAME          = "name";
-   protected final String JSON_ADDRESS       = "address";
-   protected final String JSON_LOADBALANCERS = "loadbalancers";
-   protected final String JSON_CREATED       = "created";
-   protected final String JSON_UPDATED       = "updated";
-   protected final String JSON_TYPE          = "type";
-   protected final String JSON_STATUS        = "status";
-   protected final String JSON_TOTAL_DEVICES = "total";
-   protected final String JSON_FREE_DEVICES  = "free";
-   protected final String JSON_TAKEN_DEVICES = "taken";
+   protected final String JSON_DEVICES        = "devices";
+   protected final String JSON_ID             = "id";
+   protected final String JSON_NAME           = "name";
+   protected final String JSON_FLOAT_ADDRESS  = "floatingIpAddr";
+   protected final String JSON_PUBLIC_ADDRESS = "publicIpAddr";
+   protected final String JSON_AZ              = "az";
+   protected final String JSON_LOADBALANCERS  = "loadbalancers";
+   protected final String JSON_CREATED        = "created";
+   protected final String JSON_UPDATED        = "updated";
+   protected final String JSON_TYPE           = "type";
+   protected final String JSON_STATUS         = "status";
+   protected final String JSON_TOTAL_DEVICES  = "total";
+   protected final String JSON_FREE_DEVICES   = "free";
+   protected final String JSON_TAKEN_DEVICES  = "taken";
 	
 	
    /**
@@ -65,7 +67,9 @@ public class DeviceHandler {
       try {		  				
          jsonDevice.put(JSON_ID, device.getId());
          jsonDevice.put(JSON_NAME, device.getName());
-         jsonDevice.put(JSON_ADDRESS, device.getAddress());
+         jsonDevice.put(JSON_FLOAT_ADDRESS, device.getAddress());
+         jsonDevice.put(JSON_PUBLIC_ADDRESS, device.getPublicIP());
+         jsonDevice.put(JSON_AZ, device.getAz());
          jsonDevice.put(JSON_LOADBALANCERS, DeviceDataModel.lbIdsToJson(device.lbIds));
          jsonDevice.put(JSON_TYPE, device.getLbType());
          jsonDevice.put(JSON_STATUS, device.getStatus());	
@@ -104,7 +108,9 @@ public class DeviceHandler {
             JSONObject jsonDevice=new JSONObject();
             jsonDevice.put(JSON_ID, devices.get(x).getId());
             jsonDevice.put(JSON_NAME, devices.get(x).getName());
-            jsonDevice.put(JSON_ADDRESS, devices.get(x).getAddress());
+            jsonDevice.put(JSON_FLOAT_ADDRESS, devices.get(x).getAddress());
+            jsonDevice.put(JSON_PUBLIC_ADDRESS, devices.get(x).getPublicIP());
+            jsonDevice.put(JSON_AZ, devices.get(x).getAz());
             jsonDevice.put(JSON_LOADBALANCERS, DeviceDataModel.lbIdsToJson(devices.get(x).lbIds));
             jsonDevice.put(JSON_TYPE, devices.get(x).getLbType());
             jsonDevice.put(JSON_STATUS, devices.get(x).getStatus());
@@ -220,11 +226,11 @@ public class DeviceHandler {
             throw new LBaaSException("POST requires 'name' in request body", 400);   
          }
                   		   
-         // adddress
-         if ( jsonObject.has(JSON_ADDRESS)) {
-            String address = (String) jsonObject.get(JSON_ADDRESS);
+         // floating IP adddress
+         if ( jsonObject.has(JSON_FLOAT_ADDRESS)) {
+            String address = (String) jsonObject.get(JSON_FLOAT_ADDRESS);
             if ( ! ProtocolHandler.validateIPv4Address(address)) 
-				throw new LBaaSException("not a valid IPV4 address : " + address + " for node definition",400);			   
+				throw new LBaaSException("not a valid IPV4 floating address : " + address + " for node definition",400);			   
             
             if ( address.length() > LimitsHandler.LIMIT_MAX_ADDR_SIZE)
             	throw new LBaaSException("'address' is over max allowed length of : " + LimitsHandler.LIMIT_MAX_ADDR_SIZE, 400);
@@ -232,12 +238,49 @@ public class DeviceHandler {
             logger.info("   address : " + address); 
          }
          else {
-            throw new LBaaSException("POST requires 'address' in request body", 400);   
+            throw new LBaaSException("POST requires 'floatingIpAddr' in request body", 400);   
          }
+         
+         // public IP adddress
+         if ( jsonObject.has(JSON_PUBLIC_ADDRESS)) {
+            String address = (String) jsonObject.get(JSON_PUBLIC_ADDRESS);
+            if ( ! ProtocolHandler.validateIPv4Address(address)) 
+				throw new LBaaSException("not a valid IPV4 public address : " + address + " for node definition",400);			   
+            
+            if ( address.length() > LimitsHandler.LIMIT_MAX_ADDR_SIZE)
+            	throw new LBaaSException("'address' is over max allowed length of : " + LimitsHandler.LIMIT_MAX_ADDR_SIZE, 400);
+            device.setPublicIP(address);
+            logger.info("   address : " + address); 
+         }
+         else {
+            throw new LBaaSException("POST requires 'publicIpAddr' in request body", 400);   
+         }
+         
+         // AZ
+         if ( jsonObject.has(JSON_AZ)) {
+            int az = jsonObject.getInt(JSON_AZ);       	 
+        	logger.info("   AZ : " + az); 
+        	device.setAz(az);        	              	           	 
+         }
+         else {
+            throw new LBaaSException("POST requires 'az' in request body", 400);   
+         }
+         
+         
+         // Type
+         if ( jsonObject.has(JSON_TYPE)) {
+            String type = (String) jsonObject.get(JSON_TYPE);  
+            if (type.length() > LimitsHandler.LIMIT_MAX_NAME_SIZE)
+            	throw new LBaaSException("type string exceeds limit of :" + LimitsHandler.LIMIT_MAX_NAME_SIZE, 400); 
+            device.setLbType(type);
+            logger.info("   type : " + type); 
+         }
+         else {
+            throw new LBaaSException("POST requires 'type' in request body", 400);   
+         }
+                  
 		   		  	    
          device.lbIds.clear();	   
-		     
-         device.setLbType(DEFAULT_TYPE);
 		   
          device.setStatus(Device.STATUS_OFFLINE);		   
 		  		   
@@ -367,9 +410,9 @@ public class DeviceHandler {
          name =null;
       }
 		
-      // change the address
+      // change the floating IP address
       try {
-         address = (String) jsonObject.get(JSON_ADDRESS);
+         address = (String) jsonObject.get(JSON_FLOAT_ADDRESS);
          
          if ( ! ProtocolHandler.validateIPv4Address(address)) 
 				throw new LBaaSException("not a valid IPV4 address : " + address + " for node definition",400);
