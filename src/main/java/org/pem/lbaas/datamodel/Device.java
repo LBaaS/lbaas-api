@@ -20,6 +20,8 @@ public class Device implements Serializable {
 	 public static String STATUS_ERROR      = "ERROR";             // device is in an error state and not functional
 	 protected String created;
 	 protected String updated;
+	 protected Integer az;                                         // availability zone
+	 protected String  publicIPAddress;                            // public IP addr ( for reference only, VIP is based on floating IP in address
 	 
 	 public Integer getId() {
 	    return id;
@@ -79,5 +81,20 @@ public class Device implements Serializable {
     	 updated = time;    	 
      }
      
+     public Integer getAz() {
+    	 return az;
+     }
+     
+     public void setAz( Integer aZ) {
+    	 az = aZ;
+     }
+     
+     public String getPublicIP() {
+    	 return publicIPAddress;
+     }
+     
+     public void setPublicIP( String ip) {
+    	 publicIPAddress = ip;
+     }
      
 }
