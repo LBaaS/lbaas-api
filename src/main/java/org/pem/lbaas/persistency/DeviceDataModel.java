@@ -26,12 +26,14 @@ public class DeviceDataModel {
    
    protected final static String SQL_ID             = "id";
    protected final static String SQL_NAME           = "name";
-   protected final static String SQL_ADDRESS        = "address";
+   protected final static String SQL_FLOAT_ADDRESS  = "floatingIpAddr";
+   protected final static String SQL_PUBLIC_ADDRESS = "publicIpAddr";
    protected final static String SQL_LOADBALANCERS  = "loadbalancers";
    protected final static String SQL_TYPE           = "type";
    protected final static String SQL_STATUS         = "status";
    protected final static String SQL_CREATED        = "created";
    protected final static String SQL_UPDATED        = "updated";
+   protected final static String SQL_AZ             = "az";
    protected final static String LBIDS              = "ids";
    protected final static String LBID               = "id";
    protected final static String EMPTY_LBIDS        = "'{\"ids\":[]}'";
@@ -148,7 +150,9 @@ public class DeviceDataModel {
       try {
          device.setId(new Integer(rs.getInt(SQL_ID)));
          device.setName(rs.getString(SQL_NAME));
-         device.setAddress(rs.getString(SQL_ADDRESS));
+         device.setAddress(rs.getString(SQL_FLOAT_ADDRESS));
+         device.setAz(rs.getInt(SQL_AZ));
+         device.setPublicIP(rs.getString(SQL_PUBLIC_ADDRESS));
          device.lbIds = jsonToLbIds( rs.getString(SQL_LOADBALANCERS));
          device.setLbType(rs.getString(SQL_TYPE));
          device.setStatus(rs.getString(SQL_STATUS));	
@@ -202,7 +206,7 @@ public class DeviceDataModel {
     * @return List of Devices
     */
    public  List<Device> getDevicesWithAddr( String address) throws DeviceModelAccessException {
-	   String condition = " address =  '" + address + "'";
+	   String condition = " floatingIpAddr =  '" + address + "'";
 	   return getDevices(condition); 
    }
 	
@@ -371,7 +375,7 @@ public class DeviceDataModel {
 	  
       Connection conn = dbConnect();
       try {
-			String query = "UPDATE devices SET name = ?, address = ?, loadbalancers = ?, status = ? , updated = ? WHERE id = ?";
+			String query = "UPDATE devices SET name = ?, floatingIpAddr = ?, loadbalancers = ?, status = ? , updated = ? WHERE id = ?";
 			PreparedStatement statement = conn.prepareStatement(query);
 			statement.setString(1, device.getName());
 			statement.setString(2, device.getAddress());
@@ -466,17 +470,19 @@ public class DeviceDataModel {
 		int val=0;				
 		Connection conn = dbConnect();
 		try {
-			String query = "insert into devices (name,address,loadbalancers,type,created, updated, status) values(?, ?, ?, ?, ?, ?, ?)";
+			String query = "insert into devices (name,floatingIpAddr,publicIpAddr,loadbalancers,type,created, updated, status, az) values(?, ?, ?, ?, ?, ?, ?, ?, ?)";
 			PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);	
 			statement.setString(1,device.getName() );
 			statement.setString(2, device.getAddress());
-			statement.setString(3,lbIdsToJson( device.lbIds).toString());
-			statement.setString(4,device.getLbType());
+			statement.setString(3, device.getPublicIP());			
+			statement.setString(4,lbIdsToJson( device.lbIds).toString());
+			statement.setString(5,device.getLbType());
 			Date dNow = new Date();
 		    SimpleDateFormat ft = new SimpleDateFormat ("yyyy-MM-dd'T'HH:mm'Z'");
-			statement.setString(5,ft.format(dNow));	
 			statement.setString(6,ft.format(dNow));	
-			statement.setString(7,device.getStatus());			
+			statement.setString(7,ft.format(dNow));	
+			statement.setString(8,device.getStatus());	
+			statement.setInt(9,device.getAz());
 			
 			int affectedRows = statement.executeUpdate();
 			if (affectedRows == 0) {
