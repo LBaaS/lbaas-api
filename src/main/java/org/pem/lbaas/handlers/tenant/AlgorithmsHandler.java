@@ -21,7 +21,7 @@ import org.json.JSONObject;
 import org.pem.lbaas.security.KeystoneAuthFilter;
 
 
-@Path("/algorithms")
+@Path("/v1.1/algorithms")
 public class AlgorithmsHandler {
    private static Logger logger = Logger.getLogger(AlgorithmsHandler.class);
    private static String ROUND_ROBIN       = "ROUND_ROBIN";
