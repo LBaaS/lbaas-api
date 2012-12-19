@@ -65,7 +65,7 @@ public class Lbaas
 			
 			context.setContextPath("/");
 			KeystoneAuthFilter.setupAuthFilter(context,lbaasConfig);
-			context.addServlet(sh, "/v1/*");
+			context.addServlet(sh, "/*");
 			server.setHandler(context); 
 				
 			
