@@ -13,7 +13,7 @@ import org.pem.lbaas.Lbaas;
 import org.pem.lbaas.security.KeystoneAuthFilter;
 
 	
-@Path("/limits")
+@Path("/v1.1/limits")
 public class LimitsHandler {
    public static final int LIMIT_MAX_NAME_SIZE = 128;
    public static final int LIMIT_MAX_ADDR_SIZE = 128;
