@@ -28,7 +28,7 @@ import org.pem.lbaas.datamodel.Protocol;
 import org.pem.lbaas.security.KeystoneAuthFilter;
 
 	
-@Path("/protocols")
+@Path("/v1.1/protocols")
 public class ProtocolHandler {
    private static Logger logger = Logger.getLogger(ProtocolHandler.class);
    private static String HTTP = "HTTP";
