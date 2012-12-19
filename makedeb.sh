@@ -1,6 +1,6 @@
 # build debian package for binaries and related files
 PACKAGE_NAME=lbaasapi
-PACKAGE_VERSION=1.1
+PACKAGE_VERSION=1.2
 PACKAGE_OWNER=pemellquist@gmail.com
 PACKAGE_CONTROL=debian/DEBIAN/control
 PACKAGE_DESCRIPT="LBaaS API server binaries"
