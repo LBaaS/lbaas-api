@@ -41,7 +41,7 @@ import org.pem.lbaas.security.KeystoneAuthFilter;
  *
  */
 
-@Path("/loadbalancers")
+@Path("/v1.1/loadbalancers")
 public class LbaasHandler {
 	private static Logger logger = Logger.getLogger(LbaasHandler.class);
 	private static LoadBalancerDataModel lbModel = new LoadBalancerDataModel();
