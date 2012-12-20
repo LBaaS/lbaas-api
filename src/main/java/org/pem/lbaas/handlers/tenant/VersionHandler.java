@@ -43,7 +43,7 @@ public class VersionHandler {
    public String limits(@Context HttpServletRequest request) {
 	   	  	   
 	   if (!KeystoneAuthFilter.authenticated(request)) {
-	    	throw new LBaaSException("Get /limits request cannot be authenticated", 401);  //  bad auth
+	    	throw new LBaaSException("Get / request cannot be authenticated", 401);  //  bad auth
 	    }
 	    
 	   logger.info("Get / " + KeystoneAuthFilter.toString(request));
