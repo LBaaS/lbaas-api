@@ -45,6 +45,10 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String> {
        logger.info("LBaaSTaskManager constructor");
 	}
 	
+	public int serverCount() {
+		return gearmanClient.getServerCount();	
+	}
+	
 	/**
 	 * Send a gearman job to a worker, response is asynchronous to callback
 	 * @param workerName is the unique name for the worker
