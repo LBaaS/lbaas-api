@@ -3,11 +3,11 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.pem.lbaas</groupId>
-  <artifactId>lbaas</artifactId>
-  <version>0.0.1</version>
+  <artifactId>lbaasapi</artifactId>
+  <version>0.1.0</version>
   <packaging>jar</packaging>
 
-  <name>lbaas</name>
+  <name>lbaasapi</name>
   <url>http://maven.apache.org</url>
   
 
