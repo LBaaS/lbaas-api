@@ -122,7 +122,7 @@ public class DeviceDataModel {
    }
    
    /**
-    * Generate array of longs from JSON 
+    * Generate array of Longs from JSON 
     * @param lbIds
     * @return ArrayList<Long>
     */
@@ -148,7 +148,7 @@ public class DeviceDataModel {
    protected Device rsToDevice(ResultSet rs) throws SQLException, JSONException {
       Device device = new Device();
       try {
-         device.setId(new Integer(rs.getInt(SQL_ID)));
+         device.setId(new Long(rs.getLong(SQL_ID)));
          device.setName(rs.getString(SQL_NAME));
          device.setAddress(rs.getString(SQL_FLOAT_ADDRESS));
          device.setAz(rs.getInt(SQL_AZ));
@@ -218,7 +218,7 @@ public class DeviceDataModel {
     * @return Device or null if not found
     * @throws DeviceModelAccessException if internal database error
     */
-   public Device getDevice(Long id) throws DeviceModelAccessException {
+   public Device getDevice(long id) throws DeviceModelAccessException {
       Connection conn = dbConnect();
       Statement stmt=null;	
       String query = "SELECT * FROM devices WHERE id=" + id;
@@ -321,7 +321,7 @@ public class DeviceDataModel {
     * @return 1 if deleted or 0 if not ( delete count )
     * @throws DeviceModelAccessException if internal database error
     */
-   public int deleteDevice(Long id) throws DeviceModelAccessException {
+   public int deleteDevice(long id) throws DeviceModelAccessException {
       Connection conn = dbConnect();
       Statement stmt=null;		
       String query = "DELETE FROM devices WHERE id=" + id;
@@ -348,7 +348,7 @@ public class DeviceDataModel {
     * @return boolean
     * @throws DeviceModelAccessException if internal database error
     */
-   public boolean setStatus(String status, Long id) throws DeviceModelAccessException {	
+   public boolean setStatus(String status, long id) throws DeviceModelAccessException {	
       Device device = this.getDevice(id);
       if ( device == null)
     	  return false;                           // id not found
@@ -370,7 +370,7 @@ public class DeviceDataModel {
    public boolean setDevice(Device device) throws DeviceModelAccessException {
 	     
 	   
-	  if ( this.getDevice(new Long(device.getId()))==null)
+	  if ( this.getDevice(device.getId())==null)
 		  return false;                            // id not found
 	  
       Connection conn = dbConnect();
@@ -465,9 +465,9 @@ public class DeviceDataModel {
     * @return new device id
     * @throws DeviceModelAccessException if internal database error
     */
-   public Long createDevice(Device device) throws DeviceModelAccessException {		
+   public long createDevice(Device device) throws DeviceModelAccessException {		
 		
-		int val=0;				
+		long val=0;				
 		Connection conn = dbConnect();
 		try {
 			String query = "insert into devices (name,floatingIpAddr,publicIpAddr,loadbalancers,type,created, updated, status, az) values(?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -491,13 +491,13 @@ public class DeviceDataModel {
 
 	        ResultSet generatedKeys = statement.getGeneratedKeys();
 	        if (generatedKeys.next()) {
-	            val = generatedKeys.getInt(1);
+	            val = generatedKeys.getLong(1);
 	        } else {
 	            throw new DeviceModelAccessException("Creating device failed, no generated key obtained.");
 	        }
 			
 			
-	       device.setId(new Integer(val));
+	       device.setId(val);
 	    }
 	    catch (SQLException s) {
 	    	throw new DeviceModelAccessException("SQL Exception : " + s);   
@@ -506,7 +506,7 @@ public class DeviceDataModel {
 	    	  throw new DeviceModelAccessException("JSON Exception : " + jse);
 	    }
 				
-		return new Long(val);
+		return val;
 	
 	}
 	
