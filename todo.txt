@@ -83,7 +83,7 @@ should requests be blocked when in BUILD or PENDING_UPDATE state ?
 
 Other:
 ---------------------------------------------------------------------------
-* Make sure all ids are Longs, how many LBs and devices will this handle
+* Make sure all ids are Longs, how many LBs and devices will this handle?
 * need Junit tests for most everything
 
 
