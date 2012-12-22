@@ -83,7 +83,7 @@ public class LoadBalancer
     @XmlAnyElement(lax = true)
     protected List<Object> anies;
     @XmlAttribute
-    protected Integer id;
+    protected Long id;
     @XmlAttribute
     protected String name;
     @XmlAttribute
@@ -292,7 +292,7 @@ public class LoadBalancer
      *     {@link Integer }
      *     
      */
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
@@ -304,7 +304,7 @@ public class LoadBalancer
      *     {@link Integer }
      *     
      */
-    public void setId(Integer value) {
+    public void setId(Long value) {
         this.id = value;
     }
 
