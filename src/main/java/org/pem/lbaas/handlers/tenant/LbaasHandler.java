@@ -33,6 +33,8 @@ import org.pem.lbaas.messaging.LBaaSTaskManager;
 import org.pem.lbaas.persistency.DeviceDataModel;
 import org.pem.lbaas.persistency.DeviceModelAccessException;
 import org.pem.lbaas.persistency.LoadBalancerDataModel;
+import org.pem.lbaas.persistency.NodeDataModel;
+import org.pem.lbaas.persistency.NodeModelAccessException;
 import org.pem.lbaas.security.KeystoneAuthFilter;
 
 /**
@@ -46,6 +48,7 @@ public class LbaasHandler {
 	private static Logger logger = Logger.getLogger(LbaasHandler.class);
 	private static LoadBalancerDataModel lbModel = new LoadBalancerDataModel();
 	private static DeviceDataModel deviceModel = new DeviceDataModel();
+	private static NodeDataModel nodeModel = new NodeDataModel();
     private static LBaaSTaskManager lbaasTaskManager = new LBaaSTaskManager();
     private static long requestId=0;
     
@@ -100,9 +103,9 @@ public class LbaasHandler {
 		try {	
 		   // base fields
 		   jsonResponseObject.put(JSON_NAME,lb.getName());	
-		   jsonResponseObject.put(JSON_ID,lb.getId());
+		   jsonResponseObject.put(JSON_ID,lb.getId().toString());
 		   jsonResponseObject.put(JSON_PROTOCOL,lb.getProtocol());
-		   jsonResponseObject.put(JSON_PORT, lb.getPort());
+		   jsonResponseObject.put(JSON_PORT, lb.getPort().toString());
 		   jsonResponseObject.put(JSON_ALGORITHM,lb.getAlgorithm());
 		   jsonResponseObject.put(JSON_STATUS,lb.getStatus());
 		   jsonResponseObject.put(JSON_CREATED,lb.getCreated());
@@ -140,9 +143,9 @@ public class LbaasHandler {
 			   JSONObject jsonLb=new JSONObject();
 			   // base fields
 			   jsonLb.put(JSON_NAME,lbs.get(x).getName());	
-			   jsonLb.put(JSON_ID,lbs.get(x).getId());
+			   jsonLb.put(JSON_ID,lbs.get(x).getId().toString());
 			   jsonLb.put(JSON_PROTOCOL,lbs.get(x).getProtocol());
-			   jsonLb.put(JSON_PORT, lbs.get(x).getPort());
+			   jsonLb.put(JSON_PORT, lbs.get(x).getPort().toString());
 			   jsonLb.put(JSON_ALGORITHM,lbs.get(x).getAlgorithm());
 			   jsonLb.put(JSON_STATUS, lbs.get(x).getStatus());
 			   jsonLb.put(JSON_CREATED,lbs.get(x).getCreated());
@@ -183,28 +186,32 @@ public class LbaasHandler {
 		   Nodes nodes = new Nodes();
 		   try {
 			   JSONArray jsonNodesArray = (JSONArray) jsonObject.get(JSON_NODES);
-			   for ( int x=0;x<jsonNodesArray.length();x++) {
+			   for ( int x=0;x<jsonNodesArray.length();x++) {				   				   				   
 				   Node node = new Node();
 				   JSONObject jsonNode = jsonNodesArray.getJSONObject(x);
-				   String address = (String) jsonNode.get(JSON_ADDRESS);
-				   if ( address.length()>LimitsHandler.LIMIT_MAX_ADDR_SIZE) {
-					   throw new ProtocolAddressException("address too long : " + address + " for node definition");
-				   }
 				   
+				   // address
+				   if (!jsonNode.has(JSON_ADDRESS))
+					   throw new ProtocolAddressException("node definition requires address");				   				   				  
+				   String address = (String) jsonNode.get(JSON_ADDRESS);				  				   
 				   if ( ! ProtocolHandler.validateIPv4Address(address)) {
 					   throw new ProtocolAddressException("not a valid IPV4 address : " + address + " for node definition");
-				   }
-				   
+				   }				   
 				   node.setAddress(address);
+				   
+				   // port
+				   if (!jsonNode.has(JSON_PORT))
+					   throw new ProtocolAddressException("node definition requires port");				  				   
 				   String strPort = (String) jsonNode.get(JSON_PORT);
 				   int port = ProtocolHandler.toPort(strPort);
 				   if(port <0) {
 					   throw new ProtocolPortException("illegal port: " + strPort + " defined for node address: " + address);
 				   }
 				   node.setPort(Integer.valueOf(port));
-				   node.setStatus(NODE_ONLINE);			   
-				   node.setId(new Integer(x+1));
-				   node.setEnabled(true);
+				   
+				   node.setWeight(0);                // currently not used				   
+				   node.setStatus(NODE_ONLINE);	     // currently only support ONLINE state
+				   node.setEnabled(true);            // currently only support ENABLED state
 				   nodes.getNodes().add(node);			   
 			   }
 			   return nodes;
@@ -244,8 +251,8 @@ public class LbaasHandler {
 	protected JSONObject nodeToJSON( Node node) throws JSONException {
 	   JSONObject jsonNode=new JSONObject();
 	   jsonNode.put(JSON_ADDRESS, node.getAddress());
-	   jsonNode.put(JSON_ID,node.getId()); 			   
-	   jsonNode.put(JSON_PORT ,node.getPort());
+	   jsonNode.put(JSON_ID,node.getId().toString()); 			   
+	   jsonNode.put(JSON_PORT ,node.getPort().toString());
 	   jsonNode.put(JSON_STATUS, node.getStatus());	   
        jsonNode.put(JSON_CONDITION, NODE_ENABLED);
 
@@ -258,11 +265,11 @@ public class LbaasHandler {
 	 * @param nodeId
 	 * @return
 	 */
-	protected Node getNodeInLb(LoadBalancer lb, Integer nodeId) {				
+	protected Node getNodeInLb(LoadBalancer lb, long nodeId) {				
 		Nodes nodes = lb.getNodes();
 		List<Node> nodeList = nodes.getNodes();
 		for (int x=0;x<nodeList.size();x++) {
-			if ( nodeList.get(x).getId().equals(nodeId))
+			if ( nodeList.get(x).getId() == nodeId)
 				return nodeList.get(x);
 		}		
 		return null;          // not found
@@ -390,9 +397,9 @@ public class LbaasHandler {
 		   for (int x=0;x<lbs.size();x++) {
 			   JSONObject jsonLb=new JSONObject();
 			   jsonLb.put(JSON_NAME, lbs.get(x).getName());
-			   jsonLb.put(JSON_ID, lbs.get(x).getId());
+			   jsonLb.put(JSON_ID, lbs.get(x).getId().toString());
 			   jsonLb.put(JSON_PROTOCOL,lbs.get(x).getProtocol());
-			   jsonLb.put(JSON_PORT,lbs.get(x).getPort());
+			   jsonLb.put(JSON_PORT,lbs.get(x).getPort().toString());
 			   jsonLb.put(JSON_ALGORITHM, lbs.get(x).getAlgorithm());
 			   jsonLb.put(JSON_STATUS,lbs.get(x).getStatus());
 			   jsonLb.put(JSON_CREATED, lbs.get(x).getCreated());
@@ -727,8 +734,8 @@ public class LbaasHandler {
 		}
 				
 		// find the node
-		Integer intNodeId = new Integer(nodeId);
-		Node node = getNodeInLb( lb, intNodeId);		
+		Long longNodeId = new Long(nodeId);
+		Node node = getNodeInLb( lb, longNodeId);		
 		if (node == null) {
 			throw new LBaaSException("node id: " + nodeId + " not found", 404);  
 		}
@@ -744,18 +751,85 @@ public class LbaasHandler {
 	
 	
 	@POST
-	@Path("/{loadbalancerId}/nodes")
+	@Path("/{lbid}/nodes")
 	@Consumes("application/json")
 	@Produces("application/json")
-	public String addLbNodes(@Context HttpServletRequest request, @PathParam("loadbalancerId") String loadbalancerId) 
+	public String addLbNodes(@Context HttpServletRequest request, @PathParam("lbid") String lbid, String content) 
 	{
 		if (!KeystoneAuthFilter.authenticated(request)) {
-	    	throw new LBaaSException("Get /loadbalancers/{id}/nodes/{nodeid} request cannot be authenticated", 401);  //  bad auth
+	    	throw new LBaaSException("POST /loadbalancers/{id}/nodes request cannot be authenticated", 401);  //  bad auth
 	    }
 		
-		logger.info("POST loadbalancer nodes : " + loadbalancerId);
+		logger.info("POST loadbalancer nodes lbid: " + lbid );
+        String tenantId = KeystoneAuthFilter.getTenantId(request);
 		
-		throw new LBaaSException("not supported" , 501);  //  not implemented
+		// must have tenant id
+		if ((tenantId == null) || ( tenantId.isEmpty())) {
+			throw new LBaaSException("token and/or tenant id was not specified", 401);  //  bad auth
+		}
+		
+		LoadBalancer lb = null;
+		
+		// read LB and check total # of nodes present
+		Long lbId = new Long(lbid);
+		try {
+		   lb = lbModel.getLoadBalancer(lbId,tenantId);
+		}
+		catch ( DeviceModelAccessException dme) {
+			throw new LBaaSException(dme.message, 500);                                     
+		}		
+		if (lb == null) {
+			throw new LBaaSException("loadbalancer id:" + lbid + " not found for tenant :" + tenantId, 404);  
+		}
+		
+		int currentNodeSize = lb.getNodes().getNodes().size();
+						
+	    //  extract nodes from content, check for errors and over limits
+		Nodes nodes = null;
+		try {
+		   JSONObject jsonObject=new JSONObject(content);	
+		   nodes = jsonToNodes(jsonObject);
+		   if ( (nodes.getNodes().size() + currentNodeSize) > Lbaas.lbaasConfig.maxNodesperLb)  {
+			   logger.warn("attempt to create update an LB with more than " + Lbaas.lbaasConfig.maxNodesperLb + " nodes");
+	           throw new LBaaSException( "attempt to update an LB with more than " + Lbaas.lbaasConfig.maxNodesperLb + " nodes. LB already has " + currentNodeSize + " nodes", 413); 
+		   }
+			  		   
+		}         
+		catch ( JSONException jsone) {
+		   throw new LBaaSException( jsone.toString(), 400);  
+        } 
+		catch ( ProtocolPortException ppe) {
+		   throw new LBaaSException( ppe.message, 400);  
+        } 	
+		catch ( ProtocolAddressException pae) {
+		   throw new LBaaSException( pae.message, 400);  
+        } 
+		
+		// update Node model with new nodes
+		try {
+		   nodeModel.createNodes(nodes, lbId.longValue());
+		   }
+		catch (NodeModelAccessException nme) {
+			throw new LBaaSException(nme.getMessage(),500);
+		}
+				
+		// have the device process the job 
+		try {
+		   List<LoadBalancer> lbs = lbModel.getLoadBalancersWithDevice(lb.getDevice());
+		   lbaasTaskManager.sendJob( new Long(lb.getDevice()), LbToJsonArray(lbs, ACTION_UPDATE ));
+		}
+		catch ( JSONException jsone) {
+			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);  //  internal error
+		} 
+		catch ( InterruptedException ie) {
+			throw new LBaaSException("internal server error exception :" + ie.toString(), 500);  //  internal error
+		}
+		catch ( DeviceModelAccessException dme) {
+			throw new LBaaSException("internal server error exception :" + dme.toString(), 500);  //  internal error
+		}
+		
+		return content;
+		
 	}
 	
 	
@@ -773,6 +847,9 @@ public class LbaasHandler {
 		
 		throw new LBaaSException("not supported" , 501);  //  not implemented
 	}
+	
+	
+	// delete a node
 	
 		
 	
@@ -802,7 +879,7 @@ public class LbaasHandler {
 		try {
 			List<LoadBalancer> currentLbs = lbModel.getLoadBalancers(LoadBalancerDataModel.SQL_TENANTID + "= \'" + tenantId + "\'");
 			if (currentLbs.size() > Lbaas.lbaasConfig.maxLbs) {
-				throw new LBaaSException( "maximum number of allowed loadbalancers for this tenant has been reached : " +  Lbaas.lbaasConfig.maxLbs, 400); 
+				throw new LBaaSException( "maximum number of allowed loadbalancers for this tenant has been reached : " +  Lbaas.lbaasConfig.maxLbs, 413); 
 			}
 		}
 		catch ( DeviceModelAccessException dme) {
@@ -886,7 +963,7 @@ public class LbaasHandler {
 			   Nodes nodes = jsonToNodes(jsonObject);
 			   if (nodes.getNodes().size() > Lbaas.lbaasConfig.maxNodesperLb) {
 				   logger.warn("attempt to create an LB with more than " + Lbaas.lbaasConfig.maxNodesperLb + " nodes");
-				   throw new LBaaSException( "attempt to create an LB with more than " + Lbaas.lbaasConfig.maxNodesperLb + " nodes", 400); 
+				   throw new LBaaSException( "attempt to create an LB with more than " + Lbaas.lbaasConfig.maxNodesperLb + " nodes", 413); 
 			   }
 			   lb.setNodes(nodes);			   
 		   }
