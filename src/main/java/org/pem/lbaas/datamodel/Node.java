@@ -52,7 +52,7 @@ public class Node
 
     private final static long serialVersionUID = 532512316L;
     @XmlAttribute
-    protected Integer id;
+    protected Long id;
     @XmlAttribute
     protected String address;
     @XmlAttribute
@@ -65,6 +65,17 @@ public class Node
     protected String status;
     @XmlAnyAttribute
     private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+    
+    // pem
+    protected Long lbId;                        // LB who owns this Node
+    
+    public Long getLbId() {
+        return lbId;
+    }
+    
+    public void setLbId(Long value) {
+        this.lbId = value;
+    }
 
     /**
      * Gets the value of the id property.
@@ -74,7 +85,7 @@ public class Node
      *     {@link Integer }
      *     
      */
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
@@ -86,7 +97,7 @@ public class Node
      *     {@link Integer }
      *     
      */
-    public void setId(Integer value) {
+    public void setId(Long value) {
         this.id = value;
     }
 
