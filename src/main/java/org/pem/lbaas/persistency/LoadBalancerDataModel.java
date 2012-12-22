@@ -26,6 +26,7 @@ import org.pem.lbaas.handlers.tenant.ProtocolHandler;
 public class LoadBalancerDataModel {
 	
 	private static Logger logger = Logger.getLogger(LoadBalancerDataModel.class);
+	private static NodeDataModel nodeModel = new NodeDataModel();
 	protected Connection  dbConnection = null;
 	
 	protected final static String SQL_ID            = "id";
@@ -38,7 +39,6 @@ public class LoadBalancerDataModel {
 	protected final static String SQL_CREATED       = "created";
 	protected final static String SQL_UPDATED       = "updated";
 	protected final static String SQL_DEVICE        = "device";
-	protected final static String SQL_NODES         = "nodes";
 	protected final static String SQL_VIPS          = "vips";
 	
 	static final protected String DEFAULT_ALGO      = "ROUND_ROBIN";
@@ -109,32 +109,6 @@ public class LoadBalancerDataModel {
       dbClose();
    }
 	
-   /**
-    * encode the node fields
-    * @param lb
-    * @return an encoded node string
-    */
-	protected String encodeNodeDBFields( LoadBalancer lb) {
-		String nodesString = new String();
-		Nodes nodes = lb.getNodes();
-		   if (nodes != null) {
-			   List<Node> nodeList = nodes.getNodes();
-			   for ( int y=0;y<nodeList.size();y++) {
-				   nodesString += nodeList.get(y).getAddress();
-				   nodesString += ":";
-				   nodesString += nodeList.get(y).getPort().toString();
-				   nodesString += ":";
-				   nodesString += nodeList.get(y).getStatus();
-				   nodesString += ":";
-				   nodesString += nodeList.get(y).getId().toString();
-				   nodesString += ",";
-				   
-			   }	
-			   nodesString = nodesString.substring(0, nodesString.length()-1);
-		   }		   		
-		
-		return nodesString;
-	}
 	
 	/**
 	 * encode VIP fields
@@ -172,7 +146,7 @@ public class LoadBalancerDataModel {
 	public LoadBalancer rsToLb( ResultSet rs ) throws SQLException {
 	   LoadBalancer lb = new LoadBalancer();
 	   try {
-		   lb.setId(new Integer(rs.getInt(SQL_ID)));
+		   lb.setId(rs.getLong(SQL_ID));
 		   lb.setName(rs.getString(SQL_NAME));
 		   lb.setTenantId(rs.getString(SQL_TENANTID));
 		   lb.setProtocol(rs.getString(SQL_PROTOCOL));
@@ -183,28 +157,6 @@ public class LoadBalancerDataModel {
 		   lb.setUpdated(rs.getString(SQL_UPDATED));
 		   lb.setDevice(new Long(rs.getInt(SQL_DEVICE)));
 		  
-		   // nodes
-		   Nodes nodes = new Nodes();
-		   String nodeString = rs.getString(SQL_NODES);
-		   StringTokenizer stNodes = new StringTokenizer(nodeString, ",");
-		   while(stNodes.hasMoreTokens()) { 
-		      String fields = stNodes.nextToken(); 
-		      //logger.info("node fields :" + fields);
-		      StringTokenizer stNodeFields = new StringTokenizer(fields, ":");
-		      while(stNodeFields.hasMoreTokens()) { 
-			     String address = stNodeFields.nextToken();
-			     String port = stNodeFields.nextToken();
-			     String status = stNodeFields.nextToken();
-			     String id = stNodeFields.nextToken();			     
-			     Node node = new Node();
-			     node.setAddress(address);
-			     node.setPort(Integer.parseInt(port));
-			     node.setStatus(status);
-			     node.setId(new Integer(id));
-			     nodes.getNodes().add(node);
-		      }
-		   }
-		   lb.setNodes(nodes);	
 		   
 		   // vips
 		   VirtualIps virtualIps = new VirtualIps();
@@ -258,7 +210,7 @@ public class LoadBalancerDataModel {
 	    * @return boolean
 	    * @throws DeviceModelAccessException if internal database error
 	    */
-	public boolean setStatus( String status, Long id, String tenantId) throws DeviceModelAccessException {	
+	public boolean setStatus( String status, long id, String tenantId) throws DeviceModelAccessException {	
 	   logger.info("setStatus : " + status + "lbID: " + id + " tenantId: " + tenantId);
 	   LoadBalancer lb = this.getLoadBalancer(id,tenantId);
 	   if (lb == null) {
@@ -277,7 +229,7 @@ public class LoadBalancerDataModel {
 	    * @return Device or null if not found
 	    * @throws DeviceModelAccessException if internal database error
 	    */
-	public LoadBalancer getLoadBalancer( Long lbId, String tenantId) throws DeviceModelAccessException {
+	public LoadBalancer getLoadBalancer( long lbId, String tenantId) throws DeviceModelAccessException {
 		logger.info("getLoadBalancer");
 		Connection conn = dbConnect();
 		Statement stmt=null;
@@ -290,7 +242,21 @@ public class LoadBalancerDataModel {
 			      LoadBalancer lb = rsToLb(rs);
 			      rs.close();
 			      stmt.close();
-			      return lb;
+			      
+			      // get the nodes
+			      try {
+			        List<Node> listOfNodes = nodeModel.getNodesForLb(lb.getId().longValue());			      
+			        Nodes nodes = new Nodes();
+			  		for ( int z=0;z<listOfNodes.size();z++)
+			  			nodes.getNodes().add(listOfNodes.get(z));
+			        lb.setNodes(nodes);			      
+			        return lb;			      
+			      }
+			      catch ( NodeModelAccessException nme) {
+			    	  throw new DeviceModelAccessException("SQL Exception : " + nme);
+			      }
+			      
+			      
 		      }
 		      else {
 		         rs.close();
@@ -328,7 +294,7 @@ public class LoadBalancerDataModel {
 			Date dNow = new Date();
 		    SimpleDateFormat ft = new SimpleDateFormat ("yyyy-MM-dd'T'HH:mm'Z'");
 			statement.setString(4,ft.format(dNow));
-			statement.setInt(5,lb.getId().intValue());
+			statement.setLong(5,lb.getId());
 			statement.setString(6,lb.getTenantId());
 			statement.executeUpdate();
 			statement.close();
@@ -350,7 +316,7 @@ public class LoadBalancerDataModel {
 	public Long createLoadBalancer( LoadBalancer lb) throws DeviceModelAccessException {	
 				
 		logger.info("createLoadBalancer");
-		int val=0;
+		long val=0;
 		
 		// status
 		lb.setStatus(LoadBalancer.STATUS_BUILD);
@@ -363,7 +329,7 @@ public class LoadBalancerDataModel {
 		
 		Connection conn = dbConnect();
 		try {
-			String query = "insert into loadbalancers (name,tenantid, protocol,port,status,algorithm,vips,nodes,created,updated,device ) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			String query = "insert into loadbalancers (name,tenantid, protocol,port,status,algorithm,vips,created,updated,device ) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 			PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);	
 			statement.setString(1,lb.getName() );
 			statement.setString(2,lb.getTenantId());
@@ -372,10 +338,9 @@ public class LoadBalancerDataModel {
 			statement.setString(5,lb.getStatus());
 			statement.setString(6,lb.getAlgorithm());
 			statement.setString(7,encodeVIPDBFields(lb));   
-			statement.setString(8, encodeNodeDBFields(lb));
-			statement.setString(9,lb.getCreated());
-			statement.setString(10,lb.getUpdated());
-			statement.setLong(11,lb.getDevice());         
+			statement.setString(8,lb.getCreated());
+			statement.setString(9,lb.getUpdated());
+			statement.setLong(10,lb.getDevice());         
 			
 			int affectedRows = statement.executeUpdate();
 			if (affectedRows == 0) {
@@ -388,8 +353,18 @@ public class LoadBalancerDataModel {
 	        } else {
 	            throw new DeviceModelAccessException("Creating loadbalancer failed, no generated key obtained.");
 	        }
+	        	        
+	        lb.setId(val);
+	        
+	        // create the nodes
+	        try {
+	        	nodeModel.createNodes( lb.getNodes(), lb.getId());	
+	        }
+	        catch(NodeModelAccessException nme) {
+	        	throw new DeviceModelAccessException("SQL Exception : " + nme);  
+	        }
 						
-		    lb.setId(new Integer(val));
+		   
 	    }
 	    catch (SQLException s){
 	    	throw new DeviceModelAccessException("SQL Exception : " + s);   
@@ -419,6 +394,19 @@ public class LoadBalancerDataModel {
 		      ResultSet rs=stmt.executeQuery(query);
 		      while (rs.next()) {
 		         LoadBalancer lb = rsToLb(rs);
+		         
+		         // get the nodes		      
+			     try {
+			        List<Node> listOfNodes = nodeModel.getNodesForLb(lb.getId().longValue());			      
+			        Nodes nodes = new Nodes();
+			  		for ( int z=0;z<listOfNodes.size();z++)
+			  		   nodes.getNodes().add(listOfNodes.get(z));
+			        lb.setNodes(nodes);			      			      
+			      }
+			      catch ( NodeModelAccessException nme) {
+			    	  throw new DeviceModelAccessException("SQL Exception : " + nme);
+			      }
+		         
 		         lbs.add(lb);
 		      }
 		      rs.close();
@@ -450,7 +438,7 @@ public class LoadBalancerDataModel {
 	 * @return number deleted, should be 1 or 0 if not found
 	 * @throws DeviceModelAccessException
 	 */
-	public int deleteLoadBalancer( Long lbId, String tenantId) throws DeviceModelAccessException {
+	public int deleteLoadBalancer( long lbId, String tenantId) throws DeviceModelAccessException {
 		logger.info("deleteLoadBalancer");
 		Connection conn = dbConnect();
 		Statement stmt=null;
@@ -461,6 +449,15 @@ public class LoadBalancerDataModel {
 		      int deleteCount = stmt.executeUpdate(query);
 		      logger.info("deleted " + deleteCount + " records");		    	  
 		      stmt.close();		      
+		      
+		      try {
+		         nodeModel.deleteNodes(lbId);
+		      }
+		      catch ( NodeModelAccessException nme) {
+		    	  throw new DeviceModelAccessException("SQL Exception : " + nme);
+		      }
+		      
+		      
 		      return deleteCount;
 		   }
 		   catch (SQLException s){                                              
