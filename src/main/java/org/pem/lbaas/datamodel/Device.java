@@ -7,7 +7,7 @@ import java.util.ArrayList;
 public class Device implements Serializable {
 
 	 private final static long serialVersionUID = 532511515L;
-	 protected Integer id;
+	 protected Long id;
 	 protected String name;
 	 protected String address;
 	 protected String status;
@@ -23,11 +23,11 @@ public class Device implements Serializable {
 	 protected Integer az;                                         // availability zone
 	 protected String  publicIPAddress;                            // public IP addr ( for reference only, VIP is based on floating IP in address
 	 
-	 public Integer getId() {
+	 public Long getId() {
 	    return id;
 	 }
 	   
-     public void setId(Integer value) {
+     public void setId(Long value) {
 	    this.id = value;
 	 }
 	      
