@@ -7,9 +7,9 @@ PUT     /loadbalancers/{loadBalancerId}                     DONE
 DELETE  /loadbalancers/{loadBalancerId}                     DONE
 GET     /loadbalancers/{loadBalancerId}/nodes               DONE
 GET     /loadbalancers/{loadBalancerId}/nodes/{nodeId}      DONE
-POST    /loadbalancers/{loadBalancerId}/nodes               NOT IMPLEMENTED
-PUT     /loadbalancers/{loadBalancerId}/nodes/{nodeId}      NOT IMPLEMENTED
-DELETE  /loadbalancers/{loadBalancerId}/nodes/{nodeId}      NOT IMPLEMENTED
+POST    /loadbalancers/{loadBalancerId}/nodes               DONE
+PUT     /loadbalancers/{loadBalancerId}/nodes/{nodeId}      DONE
+DELETE  /loadbalancers/{loadBalancerId}/nodes/{nodeId}      DONE
 GET     /loadbalancers/{loadBalancerId}/virtualips          NOT IMPLEMENTED
 GET     /loadbalancers/{loadBalancerId}/usage               NOT IMPLEMENTED
 GET     /loadbalancers/{loadBalancerId}/healthmonitor       NOT IMPLEMENTED
