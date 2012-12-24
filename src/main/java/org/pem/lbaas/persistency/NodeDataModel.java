@@ -22,6 +22,7 @@ import org.pem.lbaas.datamodel.LoadBalancer;
 import org.pem.lbaas.datamodel.Node;
 import org.pem.lbaas.datamodel.Nodes;
 import org.pem.lbaas.datamodel.VirtualIp;
+import org.pem.lbaas.handlers.tenant.LbaasHandler;
 
 public class NodeDataModel {
    private static Logger logger       = Logger.getLogger(NodeDataModel.class);
@@ -299,6 +300,35 @@ public class NodeDataModel {
 		return val;	
 	}
    
+   
+   /**
+    * Change the 'enabled' condition on a node
+    * @param boolean
+    * @param nodeid
+    * @throws NodeModelAccessException
+    */
+   public boolean enable( boolean value, long nodeid) throws NodeModelAccessException {
+	   logger.info("enable nodeid :" + nodeid + " enabled: " + value); 
+	   
+		  if ( this.getNode(nodeid)==null)
+			  return false;                            // id not found
+		  
+	      Connection conn = dbConnect();
+	      try {
+				String query = "UPDATE nodes SET enabled = ?, status = ? WHERE id = ?";
+				PreparedStatement statement = conn.prepareStatement(query);
+				statement.setBoolean(1, value);	
+				statement.setString(2, value ? LbaasHandler.NODE_ONLINE : LbaasHandler.NODE_OFFLINE);
+				statement.setLong(3,nodeid);
+				statement.executeUpdate();
+				statement.close();
+				return true;
+	      }
+	      catch (SQLException s) {
+		    	throw new NodeModelAccessException("SQL Exception : " + s);   
+		  }
+	      	      
+   }
    
    /**
     * Create a set of nodes
