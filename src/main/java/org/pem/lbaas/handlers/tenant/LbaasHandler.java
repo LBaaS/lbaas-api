@@ -76,6 +76,7 @@ public class LbaasHandler {
     protected static String JSON_UPDATED     = "updated";
     protected static String JSON_ADDRESS     = "address";
     protected static String JSON_CONDITION   = "condition";
+    protected static String JSON_WEIGHT      = "weight";
     protected static String JSON_TYPE        = "type";
     protected static String JSON_IPVER       = "ipVersion";
     protected static String JSON_IPVER4      = "IPV4";
@@ -115,7 +116,7 @@ public class LbaasHandler {
 		   jsonResponseObject.put(JSON_VIPS, vipsToJSON(lb.getVirtualIps()));
 
 		   // nodes
-		   jsonResponseObject.put(JSON_NODES, nodesToJSON(lb.getNodes()));
+		   jsonResponseObject.put(JSON_NODES, nodesToJSON(lb.getNodes(),false));
 		   		   
 		   return jsonResponseObject.toString();
 		}
@@ -157,7 +158,7 @@ public class LbaasHandler {
 			   jsonLb.put(JSON_VIPS,vipsToJSON(lbs.get(x).getVirtualIps()));
 	   
 			   // nodes
-			   jsonLb.put(JSON_NODES, nodesToJSON(lbs.get(x).getNodes()));
+			   jsonLb.put(JSON_NODES, nodesToJSON(lbs.get(x).getNodes(),true));
 			   
 			   jsonArray.put(jsonLb);
 		   }
@@ -209,9 +210,18 @@ public class LbaasHandler {
 				   }
 				   node.setPort(Integer.valueOf(port));
 				   
-				   node.setWeight(0);                // currently not used				   
-				   node.setStatus(NODE_ONLINE);	     // currently only support ONLINE state
-				   node.setEnabled(true);            // currently only support ENABLED state
+				   if (jsonNode.has(JSON_WEIGHT))
+					   throw new JSONException("node weight is not supported");
+				   node.setWeight(0);                // currently not used	
+				   
+				   if (jsonNode.has(JSON_STATUS))
+					   throw new JSONException("node status may not be defined on creation");	
+				   node.setStatus(NODE_ONLINE);	     
+				   
+				   if (jsonNode.has(JSON_CONDITION))
+					   throw new JSONException("node condition may not be defined on creation");
+				   node.setEnabled(true);            
+				   
 				   nodes.getNodes().add(node);			   
 			   }
 			   return nodes;
@@ -232,12 +242,16 @@ public class LbaasHandler {
 	 * @return
 	 * @throws JSONException
 	 */
-	protected JSONArray nodesToJSON( Nodes nodes) throws JSONException {		
+	protected JSONArray nodesToJSON( Nodes nodes, boolean hideDisabledNodes) throws JSONException {		
        JSONArray jsonNodeArray = new JSONArray();
 	   if (nodes != null) {
 		   List<Node> nodeList = nodes.getNodes();
 		   for ( int x=0;x<nodeList.size();x++) 
-			   jsonNodeArray.put(nodeToJSON(nodeList.get(x)));		   		   		   
+			   if ( !hideDisabledNodes)
+			     jsonNodeArray.put(nodeToJSON(nodeList.get(x)));
+			   else
+				   if ( nodeList.get(x).isEnabled())
+					   jsonNodeArray.put(nodeToJSON(nodeList.get(x)));
 	   }
 	   return jsonNodeArray;
 	}
@@ -254,7 +268,7 @@ public class LbaasHandler {
 	   jsonNode.put(JSON_ID,node.getId().toString()); 			   
 	   jsonNode.put(JSON_PORT ,node.getPort().toString());
 	   jsonNode.put(JSON_STATUS, node.getStatus());	   
-       jsonNode.put(JSON_CONDITION, NODE_ENABLED);
+       jsonNode.put(JSON_CONDITION, node.isEnabled()?NODE_ENABLED:NODE_DISABLED);
 
 	   return jsonNode;
 	}
@@ -368,7 +382,7 @@ public class LbaasHandler {
 	public String getAll(@Context HttpServletRequest request) {
 		
 		 if (!KeystoneAuthFilter.authenticated(request)) {
-		    	throw new LBaaSException("Get /loadbalancers request cannot be authenticated", 401);  //  bad auth
+		    	throw new LBaaSException("Get /loadbalancers request cannot be authenticated", 401);   
 		 }
 		    
 		logger.info("Get /loadbalancers " + KeystoneAuthFilter.toString(request));
@@ -380,7 +394,7 @@ public class LbaasHandler {
 		String tenantId = KeystoneAuthFilter.getTenantId(request);
 		// must have tenant id
 		if ((tenantId == null) || ( tenantId.isEmpty())) {
-			throw new LBaaSException("token and/or tenant id was not specified", 401);  //  bad auth
+			throw new LBaaSException("token and/or tenant id was not specified", 401);   
 		}
 		
 		
@@ -411,7 +425,7 @@ public class LbaasHandler {
 		   return jsonObject.toString();
 		}
 		catch ( JSONException jsone) {
-			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);  //  internal error
+			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);   
 		}
 	}
 	
@@ -428,7 +442,7 @@ public class LbaasHandler {
 	public String getLb(@Context HttpServletRequest request, @PathParam("id") String id) 
 	{
 		if (!KeystoneAuthFilter.authenticated(request)) {
-	    	throw new LBaaSException("Get /loadbalancers/{id} request cannot be authenticated", 401);  //  bad auth
+	    	throw new LBaaSException("Get /loadbalancers/{id} request cannot be authenticated", 401);   
 	    }
 	    
 	    logger.info("Get /loadbalancers/" + id + " " + KeystoneAuthFilter.toString(request));
@@ -436,7 +450,7 @@ public class LbaasHandler {
 	    
 		// must have tenant id
 		if ((tenantId == null) || ( tenantId.isEmpty())) {
-			throw new LBaaSException("token and/or tenant id was not specified", 401);  //  bad auth
+			throw new LBaaSException("token and/or tenant id was not specified", 401);   
 		}
 				
 		LoadBalancer lb = null;
@@ -458,7 +472,7 @@ public class LbaasHandler {
 			return LbToJson(lb);
 		}
 		catch (JSONException jsone) {
-			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);  //  internal error
+			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);   
 		} 
 	}
 	
@@ -475,7 +489,7 @@ public class LbaasHandler {
 	public String updateLb(@Context HttpServletRequest request, @PathParam("id") String id, String content) 
 	{
 		if (!KeystoneAuthFilter.authenticated(request)) {
-	    	throw new LBaaSException("Put /loadbalancers/{id} request cannot be authenticated", 401);  //  bad auth
+	    	throw new LBaaSException("Put /loadbalancers/{id} request cannot be authenticated", 401);   
 	    }
 	    
 	    logger.info("Put /loadbalancers/" + id + " " + KeystoneAuthFilter.toString(request));
@@ -492,7 +506,7 @@ public class LbaasHandler {
 	         throw new LBaaSException(dme.message, 500);
 	    }		
 		if ( lb == null) {
-			throw new LBaaSException("could not find id : " + id + " for tenant :" + tenantId, 404);    //  not found			
+			throw new LBaaSException("could not find id : " + id + " for tenant :" + tenantId, 404);     			
 		}
 		
 		String name, algorithm;
@@ -503,7 +517,7 @@ public class LbaasHandler {
 		  jsonObject=new JSONObject(content);
 		}
 		catch (JSONException e) {
-			throw new LBaaSException("bad json request", 400);    //  bad request	
+			throw new LBaaSException("bad json request", 400);     	
 		}
 			
 		// look for name
@@ -534,7 +548,7 @@ public class LbaasHandler {
 		
 		// must have one of these fields
 		if ((name==null) && (algorithm==null)) {
-			throw new LBaaSException("name or algorithm must be specified", 400);    //  bad request				
+			throw new LBaaSException("name or algorithm must be specified", 400);     				
 		}
 				
 		if (name !=null)
@@ -560,13 +574,13 @@ public class LbaasHandler {
 		   lbaasTaskManager.sendJob( new Long(lb.getDevice()), LbToJsonArray(lbs, ACTION_UPDATE ));
 		}
 		catch ( JSONException jsone) {
-			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);  //  internal error
+			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);   
 		} 
 		catch ( InterruptedException ie) {
-			throw new LBaaSException("internal server error exception :" + ie.toString(), 500);  //  internal error
+			throw new LBaaSException("internal server error exception :" + ie.toString(), 500);   
 		}
 		catch ( DeviceModelAccessException dme) {
-			throw new LBaaSException("internal server error exception :" + dme.toString(), 500);  //  internal error
+			throw new LBaaSException("internal server error exception :" + dme.toString(), 500);   
 		}
 								
 		//respond with JSON
@@ -574,7 +588,7 @@ public class LbaasHandler {
 		   return LbToJson(lb);
 		}
 		catch ( JSONException jsone) {
-			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);  //  internal error
+			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);   
 		} 
 	}
 	
@@ -589,7 +603,7 @@ public class LbaasHandler {
 	public void deleteLb(@Context HttpServletRequest request, @PathParam("id") String id) 
 	{
 		if (!KeystoneAuthFilter.authenticated(request)) {
-	    	throw new LBaaSException("Delete /loadbalancers/{id} request cannot be authenticated", 401);  //  bad auth
+	    	throw new LBaaSException("Delete /loadbalancers/{id} request cannot be authenticated", 401);   
 	    }
 	    
 	    logger.info("Delete /loadbalancers/" + id + " " + KeystoneAuthFilter.toString(request));
@@ -597,7 +611,7 @@ public class LbaasHandler {
 		
 		// must have tenant id
 		if ((tenantId == null) || ( tenantId.isEmpty())) {
-			throw new LBaaSException("token and/or tenant id was not specified", 401);  //  bad auth
+			throw new LBaaSException("token and/or tenant id was not specified", 401);   
 		}
 		
 		// delete the LB, send worker delete, finally clear device when worker responds ( not here )				
@@ -612,7 +626,7 @@ public class LbaasHandler {
 	          throw new LBaaSException(dme.message, 500);
 	    }		
 		if ( lb == null) {
-			throw new LBaaSException("could not find loadbalancer id : " + id + " for tenant :" + tenantId, 404);              //  not found	
+			throw new LBaaSException("could not find loadbalancer id : " + id + " for tenant :" + tenantId, 404);               	
 		}
 		
 		// delete LB
@@ -625,7 +639,7 @@ public class LbaasHandler {
 	          throw new LBaaSException(dme.message, 500);
 	    }		
 		if (deleteCount==0) {
-			throw new LBaaSException("could not find loadbalancer id on delete: " + id + " for tenant:"+ tenantId, 404);    //  not found	
+			throw new LBaaSException("could not find loadbalancer id on delete: " + id + " for tenant:"+ tenantId, 404);     	
 		}
 				
 		
@@ -646,13 +660,13 @@ public class LbaasHandler {
 		   lbaasTaskManager.sendJob( new Long(lb.getDevice()), LbToJsonArray(lbs, action ));
 		}
 		catch ( JSONException jsone) {
-			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);  //  internal error
+			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);   
 		} 
 		catch ( InterruptedException ie) {
-			throw new LBaaSException("internal server error JSON exception :" + ie.toString(), 500);  //  internal error
+			throw new LBaaSException("internal server error JSON exception :" + ie.toString(), 500);   
 		}
 		catch ( DeviceModelAccessException dme) {
-			throw new LBaaSException("internal server error JSON exception :" + dme.toString(), 500);  //  internal error
+			throw new LBaaSException("internal server error JSON exception :" + dme.toString(), 500);   
 		}
 	}
 	
@@ -664,7 +678,7 @@ public class LbaasHandler {
 	public String getLbNodes(@Context HttpServletRequest request,@PathParam("id") String id) 
 	{
 		if (!KeystoneAuthFilter.authenticated(request)) {
-	    	throw new LBaaSException("Get /loadbalancers/{id}/nodes request cannot be authenticated", 401);  //  bad auth
+	    	throw new LBaaSException("Get /loadbalancers/{id}/nodes request cannot be authenticated", 401);   
 	    }
 	    
 	    logger.info("Get /loadbalancers/" + id + "/nodes " + KeystoneAuthFilter.toString(request));
@@ -672,7 +686,7 @@ public class LbaasHandler {
 		
 		// must have tenant id
 		if ((tenantId == null) || ( tenantId.isEmpty())) {
-			throw new LBaaSException("token and/or tenant id was not specified", 401);  //  bad auth
+			throw new LBaaSException("token and/or tenant id was not specified", 401);   
 		}
 				
 		
@@ -693,11 +707,11 @@ public class LbaasHandler {
 		// return JSON formatted response
 		try {
 			JSONObject nodes = new JSONObject();
-			nodes.put(JSON_NODES, nodesToJSON(lb.getNodes()));
+			nodes.put(JSON_NODES, nodesToJSON(lb.getNodes(), false));
 			return nodes.toString();
 		}
 		catch (JSONException jsone) {
-			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);  //  internal error
+			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);   
 		} 
 	}
 	
@@ -708,7 +722,7 @@ public class LbaasHandler {
 	public String getLbNode(@Context HttpServletRequest request, @PathParam("id") String id, @PathParam("nodeId") String nodeId) 
 	{
 		if (!KeystoneAuthFilter.authenticated(request)) {
-	    	throw new LBaaSException("Get /loadbalancers/{id}/nodes/{nodeid} request cannot be authenticated", 401);  //  bad auth
+	    	throw new LBaaSException("Get /loadbalancers/{id}/nodes/{nodeid} request cannot be authenticated", 401);   
 	    }
 	    
 	    logger.info("Get /loadbalancers/" + id + "/nodes" + nodeId + " " + KeystoneAuthFilter.toString(request));
@@ -716,7 +730,7 @@ public class LbaasHandler {
 		
 		// must have tenant id
 		if ((tenantId == null) || ( tenantId.isEmpty())) {
-			throw new LBaaSException("token and/or tenant id was not specified", 401);  //  bad auth
+			throw new LBaaSException("token and/or tenant id was not specified", 401);   
 		}
 				
         LoadBalancer lb = null;
@@ -745,7 +759,7 @@ public class LbaasHandler {
 			return nodeToJSON(node).toString();
 		}
 		catch (JSONException jsone) {
-			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);  //  internal error
+			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);   
 		} 
 	}
 	
@@ -757,7 +771,7 @@ public class LbaasHandler {
 	public String addLbNodes(@Context HttpServletRequest request, @PathParam("lbid") String lbid, String content) 
 	{
 		if (!KeystoneAuthFilter.authenticated(request)) {
-	    	throw new LBaaSException("POST /loadbalancers/{id}/nodes request cannot be authenticated", 401);  //  bad auth
+	    	throw new LBaaSException("POST /loadbalancers/{id}/nodes request cannot be authenticated", 401);   
 	    }
 		
 		logger.info("POST loadbalancer nodes lbid: " + lbid );
@@ -765,7 +779,7 @@ public class LbaasHandler {
 		
 		// must have tenant id
 		if ((tenantId == null) || ( tenantId.isEmpty())) {
-			throw new LBaaSException("token and/or tenant id was not specified", 401);  //  bad auth
+			throw new LBaaSException("token and/or tenant id was not specified", 401);   
 		}
 		
 		LoadBalancer lb = null;
@@ -805,9 +819,10 @@ public class LbaasHandler {
 		   throw new LBaaSException( pae.message, 400);  
         } 
 		
+		
 		// update Node model with new nodes
 		try {
-		   nodeModel.createNodes(nodes, lbId.longValue());
+		   nodeModel.createNodes(nodes, lbId);
 		   }
 		catch (NodeModelAccessException nme) {
 			throw new LBaaSException(nme.getMessage(),500);
@@ -819,13 +834,13 @@ public class LbaasHandler {
 		   lbaasTaskManager.sendJob( new Long(lb.getDevice()), LbToJsonArray(lbs, ACTION_UPDATE ));
 		}
 		catch ( JSONException jsone) {
-			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);  //  internal error
+			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);   
 		} 
 		catch ( InterruptedException ie) {
-			throw new LBaaSException("internal server error exception :" + ie.toString(), 500);  //  internal error
+			throw new LBaaSException("internal server error exception :" + ie.toString(), 500);   
 		}
 		catch ( DeviceModelAccessException dme) {
-			throw new LBaaSException("internal server error exception :" + dme.toString(), 500);  //  internal error
+			throw new LBaaSException("internal server error exception :" + dme.toString(), 500);   
 		}
 		
 		return content;
@@ -833,25 +848,173 @@ public class LbaasHandler {
 	}
 	
 	
-	@PUT
-	@Path("/{loadbalancerId}/nodes/{nodeId}")
+	@DELETE
+	@Path("/{id}/nodes/{nodeId}")
 	@Consumes("application/json")
 	@Produces("application/json")
-	public String modifyLbNode(@Context HttpServletRequest request, @PathParam("loadbalancerId") String loadbalancerId, @PathParam("nodeId") String nodeId) 
+	public void deleteLbNode(@Context HttpServletRequest request, @PathParam("id") String id, @PathParam("nodeId") String nodeId) 
 	{
 		if (!KeystoneAuthFilter.authenticated(request)) {
-	    	throw new LBaaSException("Get /loadbalancers/{id}/nodes/{nodeid} request cannot be authenticated", 401);  //  bad auth
+	    	throw new LBaaSException("Delete /loadbalancers/{id}/nodes/{nodeid} request cannot be authenticated", 401);   
 	    }
+	    
+	    logger.info("Delete /loadbalancers/" + id + "/nodes" + nodeId + " " + KeystoneAuthFilter.toString(request));
+	    String tenantId = KeystoneAuthFilter.getTenantId(request);
 		
-		logger.info("PUT loadbalancer node : " + loadbalancerId + ":" + nodeId);
+		// must have tenant id
+		if ((tenantId == null) || ( tenantId.isEmpty())) {
+			throw new LBaaSException("token and/or tenant id was not specified", 401);   
+		}
+				
+        LoadBalancer lb = null;
 		
-		throw new LBaaSException("not supported" , 501);  //  not implemented
+		// read LB
+		Long lbId = new Long(id);
+		try {
+		   lb = lbModel.getLoadBalancer(lbId, tenantId);
+		}
+		catch ( DeviceModelAccessException dme) {
+			throw new LBaaSException(dme.message, 500);                                     
+		}		
+		if (lb == null) {
+			throw new LBaaSException("loadbalancer id:" + id + " not found for tenant :" + tenantId, 404);   
+		}
+				
+		// find the node
+		Long longNodeId = new Long(nodeId);
+		Node node = getNodeInLb( lb, longNodeId);		
+		if (node == null) {
+			throw new LBaaSException("node id: " + nodeId + " not found", 404);  
+		}
+		
+		// update Node model with new nodes
+		try {
+		   nodeModel.deleteNode(longNodeId);
+		   }
+		catch (NodeModelAccessException nme) {
+			throw new LBaaSException(nme.getMessage(),500);
+		}
+				
+		// have the device process the job 
+		try {
+		   List<LoadBalancer> lbs = lbModel.getLoadBalancersWithDevice(lb.getDevice());
+		   lbaasTaskManager.sendJob( new Long(lb.getDevice()), LbToJsonArray(lbs, ACTION_UPDATE ));
+		}
+		catch ( JSONException jsone) {
+			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);   
+		} 
+		catch ( InterruptedException ie) {
+			throw new LBaaSException("internal server error exception :" + ie.toString(), 500);   
+		}
+		catch ( DeviceModelAccessException dme) {
+			throw new LBaaSException("internal server error exception :" + dme.toString(), 500);   
+		}
+		
+		
 	}
 	
 	
-	// delete a node
-	
+	@PUT
+	@Path("/{id}/nodes/{nodeId}")
+	@Consumes("application/json")
+	@Produces("application/json")
+	public void putLbNode(@Context HttpServletRequest request, @PathParam("id") String id, @PathParam("nodeId") String nodeId, String content) 
+	{
+		if (!KeystoneAuthFilter.authenticated(request)) {
+	    	throw new LBaaSException("Put /loadbalancers/{id}/nodes/{nodeid} request cannot be authenticated", 401);   
+	    }
+	    
+	    logger.info("Put /loadbalancers/" + id + "/nodes" + nodeId + " " + KeystoneAuthFilter.toString(request));
+	    String tenantId = KeystoneAuthFilter.getTenantId(request);
 		
+		// must have tenant id
+		if ((tenantId == null) || ( tenantId.isEmpty())) {
+			throw new LBaaSException("token and/or tenant id was not specified", 401);   
+		}
+				
+        LoadBalancer lb = null;
+		
+		// read LB
+		Long lbId = new Long(id);
+		try {
+		   lb = lbModel.getLoadBalancer(lbId, tenantId);
+		}
+		catch ( DeviceModelAccessException dme) {
+			throw new LBaaSException(dme.message, 500);                                     
+		}		
+		if (lb == null) {
+			throw new LBaaSException("loadbalancer id:" + id + " not found for tenant :" + tenantId, 404);   
+		}
+				
+		// find the node
+		Long longNodeId = new Long(nodeId);
+		Node node = getNodeInLb( lb, longNodeId);		
+		if (node == null) {
+			throw new LBaaSException("node id: " + nodeId + " not found", 404);  
+		}
+		
+		JSONObject jsonObject=null;
+		// process the JSON body
+		try {
+			  jsonObject=new JSONObject(content);
+				
+		      if (jsonObject.has(JSON_ID))
+			     throw new LBaaSException("json node request may not have 'id'", 400);        
+		
+		      if (jsonObject.has(JSON_ADDRESS))
+			     throw new LBaaSException("json node request may not have 'address'", 400);    
+		
+		      if (jsonObject.has(JSON_PORT))
+			     throw new LBaaSException("json node request may not have 'port'", 400);       
+		
+		      if (jsonObject.has(JSON_WEIGHT))
+			     throw new LBaaSException("json node request may not have 'weight'", 400);     
+		
+		      if (jsonObject.has(JSON_STATUS))
+			     throw new LBaaSException("json node request may not have 'status'", 400);     
+		
+		      if (!jsonObject.has(JSON_CONDITION))
+			     throw new LBaaSException("json node request must have 'condition'", 400);     
+		
+		      String condition = jsonObject.getString(JSON_CONDITION);
+		      
+		      if ( !condition.equalsIgnoreCase(NODE_ENABLED) && !condition.equalsIgnoreCase(NODE_DISABLED))
+		    	  throw new LBaaSException("'condition' value may only be 'ENABLED' or 'DISABLED'", 400);     
+		      
+		      // change the condition on the node
+		      // note, disabling a node will leave it in the local data model but will not be part of the
+		      boolean value = false;
+		      if ( condition.equalsIgnoreCase(NODE_ENABLED))
+		    	  value = true;
+		      try {
+				   nodeModel.enable(value,longNodeId);
+				   }
+				catch (NodeModelAccessException nme) {
+					throw new LBaaSException(nme.getMessage(),500);
+				}
+				
+				// have the device process the job 
+				try {
+				   List<LoadBalancer> lbs = lbModel.getLoadBalancersWithDevice(lb.getDevice());
+				   lbaasTaskManager.sendJob( new Long(lb.getDevice()), LbToJsonArray(lbs, ACTION_UPDATE ));
+				}
+				catch ( JSONException jsone) {
+					throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);   
+				} 
+				catch ( InterruptedException ie) {
+					throw new LBaaSException("internal server error exception :" + ie.toString(), 500);   
+				}
+				catch ( DeviceModelAccessException dme) {
+					throw new LBaaSException("internal server error exception :" + dme.toString(), 500);   
+				}
+		
+		}
+		catch (JSONException e) {
+			throw new LBaaSException("bad json request", 400);     	
+		}
+		
+		
+	}
 	
     /**
      * create a new LoadBalancer
@@ -864,7 +1027,7 @@ public class LbaasHandler {
 	public String post(@Context HttpServletRequest request, String content) {
 		
 		if (!KeystoneAuthFilter.authenticated(request)) {
-	    	throw new LBaaSException("Post /loadbalancers request cannot be authenticated", 401);  //  bad auth
+	    	throw new LBaaSException("Post /loadbalancers request cannot be authenticated", 401);   
 	    }
 	    
 	    logger.info("Post /loadbalancers " + KeystoneAuthFilter.toString(request));
@@ -872,7 +1035,7 @@ public class LbaasHandler {
 		
 		// must have tenant id
 		if ((tenantId == null) || ( tenantId.isEmpty())) {
-			throw new LBaaSException("token and/or tenant id was not specified", 401);  //  bad auth
+			throw new LBaaSException("token and/or tenant id was not specified", 401);   
 		}
 		
 		// check if tenant has not exceeded their limit
@@ -1024,7 +1187,7 @@ public class LbaasHandler {
 				   LoadBalancer existingLb = lbModel.getLoadBalancer(device.lbIds.get(z),tenantId);
 				   
 				   if (existingLb.getProtocol().equalsIgnoreCase(lb.getProtocol())) {
-					   throw new LBaaSException("VIP already has loadbalancer with this protoocol for tenant "+ tenantId , 400);    //  not available
+					   throw new LBaaSException("VIP already has loadbalancer with this protoocol for tenant "+ tenantId , 400);     
 				   }
 				   
 				   lbs.add(existingLb);
@@ -1043,7 +1206,7 @@ public class LbaasHandler {
 	           }
 			   		   
 			   if ( device == null) {
-				   throw new LBaaSException("cannot find free device available" , 503);    //  not available
+				   throw new LBaaSException("cannot find free device available" , 503);     
 			   }
 			   
 			   logger.info("found free device at id : " + device.getId().toString());
@@ -1096,13 +1259,13 @@ public class LbaasHandler {
 		   lbaasTaskManager.sendJob( lbResponse.getDevice(), LbToJsonArray(lbs, ACTION_UPDATE ));		    	
 		}
 		catch ( JSONException jsone) {
-			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);  //  internal error
+			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);   
 		} 
 		catch ( InterruptedException ie) {
-			throw new LBaaSException("internal server error JSON exception :" + ie.toString(), 500);  //  internal error
+			throw new LBaaSException("internal server error JSON exception :" + ie.toString(), 500);   
 		}
 		catch ( DeviceModelAccessException dme) {
-			throw new LBaaSException("internal server error JSON exception :" + dme.toString(), 500);  //  internal error
+			throw new LBaaSException("internal server error JSON exception :" + dme.toString(), 500);   
 		}
 		
 		//respond with JSON
@@ -1110,7 +1273,7 @@ public class LbaasHandler {
 		   return LbToJson(lbResponse);
 		}
 		catch ( JSONException jsone) {
-			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);  //  internal error
+			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);   
 		} 
 		
 	}	
