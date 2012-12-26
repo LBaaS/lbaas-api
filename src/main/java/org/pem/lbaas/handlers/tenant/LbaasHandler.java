@@ -210,16 +210,19 @@ public class LbaasHandler {
 				   }
 				   node.setPort(Integer.valueOf(port));
 				   
+				   if (jsonNode.has(JSON_ID))
+					   throw new JSONException("node 'id' may not be defined on creation");
+				   
 				   if (jsonNode.has(JSON_WEIGHT))
-					   throw new JSONException("node weight is not supported");
+					   throw new JSONException("node 'weight' is not supported");
 				   node.setWeight(0);                // currently not used	
 				   
 				   if (jsonNode.has(JSON_STATUS))
-					   throw new JSONException("node status may not be defined on creation");	
+					   throw new JSONException("node 'status' may not be defined on creation");	
 				   node.setStatus(NODE_ONLINE);	     
 				   
 				   if (jsonNode.has(JSON_CONDITION))
-					   throw new JSONException("node condition may not be defined on creation");
+					   throw new JSONException("node 'condition' may not be defined on creation");
 				   node.setEnabled(true);            
 				   
 				   nodes.getNodes().add(node);			   
