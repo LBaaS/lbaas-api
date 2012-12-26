@@ -226,7 +226,7 @@ public class DeviceHandler {
             throw new LBaaSException("POST requires 'name' in request body", 400);   
          }
                   		   
-         // floating IP adddress
+         // floating IP address
          if ( jsonObject.has(JSON_FLOAT_ADDRESS)) {
             String address = (String) jsonObject.get(JSON_FLOAT_ADDRESS);
             if ( ! ProtocolHandler.validateIPv4Address(address)) 
