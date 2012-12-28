@@ -153,7 +153,6 @@ public class LbaasHandler {
 			   jsonLb.put(JSON_UPDATED,lbs.get(x).getUpdated());
 			   jsonLb.put(HPCS_TENANTID,lbs.get(x).getTenantId());
 			   
-
 			   // vips
 			   jsonLb.put(JSON_VIPS,vipsToJSON(lbs.get(x).getVirtualIps()));
 	   
@@ -202,7 +201,7 @@ public class LbaasHandler {
 				   
 				   // port
 				   if (!jsonNode.has(JSON_PORT))
-					   throw new ProtocolAddressException("node definition requires port");				  				   
+					   throw new ProtocolAddressException("node definition requires 'port'");				  				   
 				   String strPort = (String) jsonNode.get(JSON_PORT);
 				   int port = ProtocolHandler.toPort(strPort);
 				   if(port <0) {
@@ -215,7 +214,7 @@ public class LbaasHandler {
 				   
 				   if (jsonNode.has(JSON_WEIGHT))
 					   throw new JSONException("node 'weight' is not supported");
-				   node.setWeight(0);                // currently not used	
+				   node.setWeight(0);                	
 				   
 				   if (jsonNode.has(JSON_STATUS))
 					   throw new JSONException("node 'status' may not be defined on creation");	
@@ -265,7 +264,7 @@ public class LbaasHandler {
 	 * @return
 	 * @throws JSONException
 	 */
-	protected JSONObject nodeToJSON( Node node) throws JSONException {
+	protected JSONObject nodeToJSON(Node node) throws JSONException {
 	   JSONObject jsonNode=new JSONObject();
 	   jsonNode.put(JSON_ADDRESS, node.getAddress());
 	   jsonNode.put(JSON_ID,node.getId().toString()); 			   
@@ -306,7 +305,7 @@ public class LbaasHandler {
 		   for ( int y=0;y<vipslist.size();y++) {
 			   JSONObject jsonVIP=new JSONObject();
 			   jsonVIP.put(JSON_ADDRESS, vipslist.get(y).getAddress());
-			   jsonVIP.put(JSON_ID, vipslist.get(y).getId());
+			   jsonVIP.put(JSON_ID, vipslist.get(y).getId().toString());
 			   jsonVIP.put(JSON_TYPE, vipslist.get(y).getType());
 			   jsonVIP.put(JSON_IPVER, vipslist.get(y).getIpVersion());
 			   jsonVipArray.put(jsonVIP);
@@ -322,30 +321,45 @@ public class LbaasHandler {
 	 * @return
 	 * @throws JSONException
 	 */
-	protected VirtualIps jsonToVips(JSONObject jsonObject) throws JSONException, ProtocolAddressException {		
+	protected VirtualIps jsonToVips(JSONObject jsonObject) throws JSONException,VipException {		
 	   if ( jsonObject.has(JSON_VIPS) ) {
 		   VirtualIps virtualIps = new VirtualIps();
 		   try {
 			   JSONArray jsonVIPArray = (JSONArray) jsonObject.get(JSON_VIPS);
-			   for ( int x=0;x<jsonVIPArray.length();x++) {
-				   VirtualIp virtualIp = new VirtualIp();				   
-				   JSONObject jsonVip = jsonVIPArray.getJSONObject(x);				   
-				   String address = (String) jsonVip.get(JSON_ADDRESS);
-				   if ( address.length()>LimitsHandler.LIMIT_MAX_ADDR_SIZE) {
-					   throw new ProtocolAddressException("address too long : " + address + "for VIP definition");
-				   }
-				   virtualIp.setAddress(address);				   
-				   if (jsonVip.get(JSON_IPVER).toString().equalsIgnoreCase(JSON_IPVER4))	
-				      virtualIp.setIpVersion(IpVersion.IPV_4);
-				   else
-					   virtualIp.setIpVersion(IpVersion.IPV_6);				   
-				   if ( jsonVip.get(JSON_TYPE).toString().equalsIgnoreCase(JSON_PUBLIC))
-				      virtualIp.setType(VipType.PUBLIC);
-				   else
-					   virtualIp.setType(VipType.PRIVATE);				   
-				   virtualIp.setId(new Integer(x+1));
-				   virtualIps.getVirtualIps().add(virtualIp);
+			   
+			   // read the vip id, find the device, ensure it is already used by the same tenant
+			   // use the VIP info from the device ...
+			   JSONObject jsonVip = jsonVIPArray.getJSONObject(0);
+			   
+			   if (!jsonVip.has(JSON_ID))
+				   throw new VipException("VIP 'id' not specified");
+			   
+			   String id = jsonVip.getString(JSON_ID);
+			   long longId=0;
+			   try {
+				   longId= Long.parseLong(id);
+			         
+			   } catch (NumberFormatException nfe) {
+				   throw new VipException("VIP id : " + id + " is not a valid id");
 			   }
+			   
+			   Device device=null;
+			   try { 
+			      device = deviceModel.getDevice(longId);
+			   }
+			   catch ( DeviceModelAccessException dme) {
+				   throw new VipException("VIP id : " + id + " is not a valid id");
+			   }
+			   
+			   // todo: check that device is used by the same tenant!
+			   
+			   VirtualIp virtualIp = new VirtualIp();
+			   virtualIp.setAddress(device.getAddress());
+			   virtualIp.setIpVersion(IpVersion.IPV_4);
+			   virtualIp.setType(VipType.PUBLIC);
+			   virtualIp.setId(longId);
+			   virtualIps.getVirtualIps().add(virtualIp);
+			   
 		       return virtualIps;
 		   }
 		   catch(JSONException jse) {
@@ -369,7 +383,7 @@ public class LbaasHandler {
 		 virtualIp.setAddress(device.getAddress());
 		 virtualIp.setIpVersion(IpVersion.IPV_4);
 		 virtualIp.setType(VipType.PUBLIC);
-		 virtualIp.setId(new Integer(1));
+		 virtualIp.setId(device.getId());
 		 virtualIps.getVirtualIps().add(virtualIp);
 		 return virtualIps;
 	}
@@ -385,10 +399,10 @@ public class LbaasHandler {
 	public String getAll(@Context HttpServletRequest request) {
 		
 		 if (!KeystoneAuthFilter.authenticated(request)) {
-		    	throw new LBaaSException("Get /loadbalancers request cannot be authenticated", 401);   
+		    	throw new LBaaSException("GET /loadbalancers request cannot be authenticated", 401);   
 		 }
 		    
-		logger.info("Get /loadbalancers " + KeystoneAuthFilter.toString(request));
+		logger.info("GET /loadbalancers " + KeystoneAuthFilter.toString(request));
 		
 		JSONObject jsonObject = new JSONObject();
 		JSONArray jsonArray = new JSONArray();		
@@ -440,15 +454,15 @@ public class LbaasHandler {
 	 * @return
 	 */
 	@GET
-	@Path("/{id}")
+	@Path("/{lbid}")
 	@Produces("application/json")
-	public String getLb(@Context HttpServletRequest request, @PathParam("id") String id) 
+	public String getLb(@Context HttpServletRequest request, @PathParam("lbid") String lbid) 
 	{
 		if (!KeystoneAuthFilter.authenticated(request)) {
 	    	throw new LBaaSException("Get /loadbalancers/{id} request cannot be authenticated", 401);   
 	    }
 	    
-	    logger.info("Get /loadbalancers/" + id + " " + KeystoneAuthFilter.toString(request));
+	    logger.info("Get /loadbalancers/" + lbid + " " + KeystoneAuthFilter.toString(request));
 	    String tenantId = KeystoneAuthFilter.getTenantId(request);
 	    
 		// must have tenant id
@@ -459,15 +473,22 @@ public class LbaasHandler {
 		LoadBalancer lb = null;
 	
 		// read LB
-		Long lbId = new Long(id);
+		long longId=0;
 		try {
-		   lb = lbModel.getLoadBalancer(lbId, tenantId);
+		   longId= Long.parseLong(lbid);		         
+        } catch (NumberFormatException nfe) 
+        {
+		   throw new LBaaSException("loadbalancer id : " + lbid + " is not a valid id",404);
+		}
+		   
+		try {
+		   lb = lbModel.getLoadBalancer(longId, tenantId);
 		}
 		catch ( DeviceModelAccessException dme) {
 			throw new LBaaSException(dme.message, 500);                                     
 		}		
 		if (lb == null) {
-			throw new LBaaSException("loadbalancer id:" + id + " not found for tenant :" + tenantId, 404);  
+			throw new LBaaSException("loadbalancer id:" + lbid + " not found for tenant :" + tenantId, 404);  
 		}
 		
 		// return JSON formatted response
@@ -486,30 +507,36 @@ public class LbaasHandler {
 	 * @param content JSON put body
 	 */
 	@PUT
-	@Path("/{id}")
+	@Path("/{lbid}")
 	@Consumes("application/json")
 	@Produces("application/json")
-	public String updateLb(@Context HttpServletRequest request, @PathParam("id") String id, String content) 
+	public String updateLb(@Context HttpServletRequest request, @PathParam("lbid") String lbid, String content) 
 	{
 		if (!KeystoneAuthFilter.authenticated(request)) {
-	    	throw new LBaaSException("Put /loadbalancers/{id} request cannot be authenticated", 401);   
+	    	throw new LBaaSException("PUT /loadbalancers/{id} request cannot be authenticated", 401);   
 	    }
 	    
-	    logger.info("Put /loadbalancers/" + id + " " + KeystoneAuthFilter.toString(request));
+	    logger.info("PUT /loadbalancers/" + lbid + " " + KeystoneAuthFilter.toString(request));
 	    String tenantId = KeystoneAuthFilter.getTenantId(request);
 				
 		LoadBalancer lb=null;
 		
 		// attempt to read lb to be updated
-		Long lbId = new Long(id);		
+		long longId=0;
 		try {
-		   lb = lbModel.getLoadBalancer(lbId,tenantId);
+		   longId= Long.parseLong(lbid);		         
+        } catch (NumberFormatException nfe) 
+        {
+		   throw new LBaaSException("loadbalancer id : " + lbid + " is not a valid id",404);
+		}	
+		try {
+		   lb = lbModel.getLoadBalancer(longId,tenantId);
 		}
 		catch ( DeviceModelAccessException dme) {
 	         throw new LBaaSException(dme.message, 500);
 	    }		
 		if ( lb == null) {
-			throw new LBaaSException("could not find id : " + id + " for tenant :" + tenantId, 404);     			
+			throw new LBaaSException("could not find loadbalancer id : " + lbid + " for tenant :" + tenantId, 404);     			
 		}
 		
 		String name, algorithm;
@@ -601,15 +628,15 @@ public class LbaasHandler {
 	 * @param id
 	 */
 	@DELETE
-	@Path("/{id}")
+	@Path("/{lbid}")
 	@Produces("application/json")
-	public void deleteLb(@Context HttpServletRequest request, @PathParam("id") String id) 
+	public void deleteLb(@Context HttpServletRequest request, @PathParam("lbid") String lbid) 
 	{
 		if (!KeystoneAuthFilter.authenticated(request)) {
-	    	throw new LBaaSException("Delete /loadbalancers/{id} request cannot be authenticated", 401);   
+	    	throw new LBaaSException("DELETE /loadbalancers/{id} request cannot be authenticated", 401);   
 	    }
 	    
-	    logger.info("Delete /loadbalancers/" + id + " " + KeystoneAuthFilter.toString(request));
+	    logger.info("DELETE /loadbalancers/" + lbid + " " + KeystoneAuthFilter.toString(request));
 	    String tenantId = KeystoneAuthFilter.getTenantId(request);
 		
 		// must have tenant id
@@ -621,28 +648,34 @@ public class LbaasHandler {
 		LoadBalancer lb=null;
 		
 		// need the device object from the LB to be deleted, so get it
-		Long lbId = new Long(id);
+		long longId=0;
 		try {
-		   lb = lbModel.getLoadBalancer(lbId, tenantId);
+		   longId= Long.parseLong(lbid);		         
+        } catch (NumberFormatException nfe) 
+        {
+		   throw new LBaaSException("loadbalancer id : " + lbid + " is not a valid id",404);
+		}	
+		try {
+		   lb = lbModel.getLoadBalancer(longId, tenantId);
 		}
 		catch ( DeviceModelAccessException dme) {
 	          throw new LBaaSException(dme.message, 500);
 	    }		
 		if ( lb == null) {
-			throw new LBaaSException("could not find loadbalancer id : " + id + " for tenant :" + tenantId, 404);               	
+			throw new LBaaSException("could not find loadbalancer id : " + lbid + " for tenant :" + tenantId, 404);               	
 		}
 		
 		// delete LB
 		int deleteCount=0;
 		try {
-		   deleteCount = lbModel.deleteLoadBalancer(lbId, tenantId);    // delete the lb
-		   deviceModel.markAsFree(lb.getDevice(),lbId);	      // delete the reference from the device
+		   deleteCount = lbModel.deleteLoadBalancer(longId, tenantId);    // delete the lb
+		   deviceModel.markAsFree(lb.getDevice(),longId);	      // delete the reference from the device
 		}
 		catch ( DeviceModelAccessException dme) {
 	          throw new LBaaSException(dme.message, 500);
 	    }		
 		if (deleteCount==0) {
-			throw new LBaaSException("could not find loadbalancer id on delete: " + id + " for tenant:"+ tenantId, 404);     	
+			throw new LBaaSException("could not find loadbalancer id on delete: " + lbid + " for tenant:"+ tenantId, 404);     	
 		}
 				
 		
@@ -674,17 +707,73 @@ public class LbaasHandler {
 	}
 	
 	
-	
 	@GET
-	@Path("/{id}/nodes")
+	@Path("/{lbid}/virtualips")
 	@Produces("application/json")
-	public String getLbNodes(@Context HttpServletRequest request,@PathParam("id") String id) 
+	public String getLbVips(@Context HttpServletRequest request,@PathParam("lbid") String lbid) 
 	{
 		if (!KeystoneAuthFilter.authenticated(request)) {
-	    	throw new LBaaSException("Get /loadbalancers/{id}/nodes request cannot be authenticated", 401);   
+	    	throw new LBaaSException("GET /loadbalancers/{id}/virtualips request cannot be authenticated", 401);   
 	    }
 	    
-	    logger.info("Get /loadbalancers/" + id + "/nodes " + KeystoneAuthFilter.toString(request));
+	    logger.info("GET /loadbalancers/" + lbid + "/virtualips " + KeystoneAuthFilter.toString(request));
+	    String tenantId = KeystoneAuthFilter.getTenantId(request);
+		
+		// must have tenant id
+		if ((tenantId == null) || ( tenantId.isEmpty())) {
+			throw new LBaaSException("token and/or tenant id was not specified", 401);   
+		}
+		
+		LoadBalancer lb = null;
+		
+		// read LB
+		long longId=0;
+		try {
+		   longId= Long.parseLong(lbid);		         
+        } catch (NumberFormatException nfe) 
+        {
+		   throw new LBaaSException("loadbalancer id : " + lbid + " is not a valid id",404);
+		}	
+		try {
+		   lb = lbModel.getLoadBalancer(longId,tenantId);
+		}
+		catch ( DeviceModelAccessException dme) {
+			throw new LBaaSException(dme.message, 500);                                     
+		}		
+		if (lb == null) {
+			throw new LBaaSException("loadbalancer id:" + lbid + " not found for tenant :" + tenantId, 404);  
+		}
+		
+		JSONObject jsonResponseObject=new JSONObject();
+		try {	
+		   jsonResponseObject.put(JSON_VIPS, vipsToJSON(lb.getVirtualIps()));
+		   return jsonResponseObject.toString();
+		}
+		catch ( JSONException jsone) {
+			throw new LBaaSException( jsone.toString() ,500);
+		}
+		
+		
+		
+	}
+	
+	
+	/**
+	 * Get all the nodes for a loadbalancer
+	 * @param request
+	 * @param id
+	 * @return JSON array of nodes
+	 */
+	@GET
+	@Path("/{lbid}/nodes")
+	@Produces("application/json")
+	public String getLbNodes(@Context HttpServletRequest request,@PathParam("lbid") String lbid) 
+	{
+		if (!KeystoneAuthFilter.authenticated(request)) {
+	    	throw new LBaaSException("GET /loadbalancers/{id}/nodes request cannot be authenticated", 401);   
+	    }
+	    
+	    logger.info("GET /loadbalancers/" + lbid + "/nodes " + KeystoneAuthFilter.toString(request));
 	    String tenantId = KeystoneAuthFilter.getTenantId(request);
 		
 		// must have tenant id
@@ -696,15 +785,21 @@ public class LbaasHandler {
 		LoadBalancer lb = null;
 		
 		// read LB
-		Long lbId = new Long(id);
+		long longId=0;
 		try {
-		   lb = lbModel.getLoadBalancer(lbId,tenantId);
+		   longId= Long.parseLong(lbid);		         
+        } catch (NumberFormatException nfe) 
+        {
+		   throw new LBaaSException("loadbalancer id : " + lbid + " is not a valid id",404);
+		}	
+		try {
+		   lb = lbModel.getLoadBalancer(longId,tenantId);
 		}
 		catch ( DeviceModelAccessException dme) {
 			throw new LBaaSException(dme.message, 500);                                     
 		}		
 		if (lb == null) {
-			throw new LBaaSException("loadbalancer id:" + id + " not found for tenant :" + tenantId, 404);  
+			throw new LBaaSException("loadbalancer id:" + lbid + " not found for tenant :" + tenantId, 404);  
 		}
 		
 		// return JSON formatted response
@@ -719,16 +814,23 @@ public class LbaasHandler {
 	}
 	
 	
+	/**
+	 * get a node definition for a loadbalancer
+	 * @param request
+	 * @param id
+	 * @param nodeId
+	 * @return
+	 */
 	@GET
-	@Path("/{id}/nodes/{nodeId}")
+	@Path("/{lbid}/nodes/{nodeid}")
 	@Produces("application/json")
-	public String getLbNode(@Context HttpServletRequest request, @PathParam("id") String id, @PathParam("nodeId") String nodeId) 
+	public String getLbNode(@Context HttpServletRequest request, @PathParam("lbid") String lbid, @PathParam("nodeid") String nodeId) 
 	{
 		if (!KeystoneAuthFilter.authenticated(request)) {
 	    	throw new LBaaSException("Get /loadbalancers/{id}/nodes/{nodeid} request cannot be authenticated", 401);   
 	    }
 	    
-	    logger.info("Get /loadbalancers/" + id + "/nodes" + nodeId + " " + KeystoneAuthFilter.toString(request));
+	    logger.info("GET /loadbalancers/" + lbid + "/nodes" + nodeId + " " + KeystoneAuthFilter.toString(request));
 	    String tenantId = KeystoneAuthFilter.getTenantId(request);
 		
 		// must have tenant id
@@ -739,19 +841,31 @@ public class LbaasHandler {
         LoadBalancer lb = null;
 		
 		// read LB
-		Long lbId = new Long(id);
+        long longId=0;
 		try {
-		   lb = lbModel.getLoadBalancer(lbId, tenantId);
+		   longId= Long.parseLong(lbid);		         
+        } catch (NumberFormatException nfe) 
+        {
+		   throw new LBaaSException("loadbalaner id : " + lbid + " is not a valid id",404);
+		}	
+		try {
+		   lb = lbModel.getLoadBalancer(longId, tenantId);
 		}
 		catch ( DeviceModelAccessException dme) {
 			throw new LBaaSException(dme.message, 500);                                     
 		}		
 		if (lb == null) {
-			throw new LBaaSException("loadbalancer id:" + id + " not found for tenant :" + tenantId, 404);   
+			throw new LBaaSException("loadbalancer id:" + lbid + " not found for tenant :" + tenantId, 404);   
 		}
 				
 		// find the node
-		Long longNodeId = new Long(nodeId);
+		long longNodeId=0;
+		try {
+			longNodeId= Long.parseLong(nodeId);		         
+        } catch (NumberFormatException nfe) 
+        {
+		   throw new LBaaSException("nodeId : " + nodeId + " is not a valid id",404);
+		}	
 		Node node = getNodeInLb( lb, longNodeId);		
 		if (node == null) {
 			throw new LBaaSException("node id: " + nodeId + " not found", 404);  
@@ -767,6 +881,13 @@ public class LbaasHandler {
 	}
 	
 	
+	/**
+	 * Add a node to a loadbalancer
+	 * @param request
+	 * @param lbid
+	 * @param content
+	 * @return
+	 */
 	@POST
 	@Path("/{lbid}/nodes")
 	@Consumes("application/json")
@@ -788,9 +909,15 @@ public class LbaasHandler {
 		LoadBalancer lb = null;
 		
 		// read LB and check total # of nodes present
-		Long lbId = new Long(lbid);
+		long longId=0;
 		try {
-		   lb = lbModel.getLoadBalancer(lbId,tenantId);
+		   longId= Long.parseLong(lbid);		         
+        } catch (NumberFormatException nfe) 
+        {
+		   throw new LBaaSException("loadbalaner id : " + lbid + " is not a valid id",404);
+		}	
+		try {
+		   lb = lbModel.getLoadBalancer(longId,tenantId);
 		}
 		catch ( DeviceModelAccessException dme) {
 			throw new LBaaSException(dme.message, 500);                                     
@@ -808,7 +935,7 @@ public class LbaasHandler {
 		   nodes = jsonToNodes(jsonObject);
 		   if ( (nodes.getNodes().size() + currentNodeSize) > Lbaas.lbaasConfig.maxNodesperLb)  {
 			   logger.warn("attempt to create update an LB with more than " + Lbaas.lbaasConfig.maxNodesperLb + " nodes");
-	           throw new LBaaSException( "attempt to update an LB with more than " + Lbaas.lbaasConfig.maxNodesperLb + " nodes. LB already has " + currentNodeSize + " nodes", 413); 
+	           throw new LBaaSException( "attempt to update an LB with more than " + Lbaas.lbaasConfig.maxNodesperLb + " nodes ", 413); 
 		   }
 			  		   
 		}         
@@ -825,7 +952,7 @@ public class LbaasHandler {
 		
 		// update Node model with new nodes
 		try {
-		   nodeModel.createNodes(nodes, lbId);
+		   nodeModel.createNodes(nodes, longId);
 		   }
 		catch (NodeModelAccessException nme) {
 			throw new LBaaSException(nme.getMessage(),500);
@@ -852,16 +979,16 @@ public class LbaasHandler {
 	
 	
 	@DELETE
-	@Path("/{id}/nodes/{nodeId}")
+	@Path("/{lbid}/nodes/{nodeid}")
 	@Consumes("application/json")
 	@Produces("application/json")
-	public void deleteLbNode(@Context HttpServletRequest request, @PathParam("id") String id, @PathParam("nodeId") String nodeId) 
+	public void deleteLbNode(@Context HttpServletRequest request, @PathParam("lbid") String lbid, @PathParam("nodeid") String nodeid) 
 	{
 		if (!KeystoneAuthFilter.authenticated(request)) {
-	    	throw new LBaaSException("Delete /loadbalancers/{id}/nodes/{nodeid} request cannot be authenticated", 401);   
+	    	throw new LBaaSException("DELETE /loadbalancers/{id}/nodes/{nodeid} request cannot be authenticated", 401);   
 	    }
 	    
-	    logger.info("Delete /loadbalancers/" + id + "/nodes" + nodeId + " " + KeystoneAuthFilter.toString(request));
+	    logger.info("DELETE /loadbalancers/" + lbid + "/nodes" + nodeid + " " + KeystoneAuthFilter.toString(request));
 	    String tenantId = KeystoneAuthFilter.getTenantId(request);
 		
 		// must have tenant id
@@ -872,22 +999,35 @@ public class LbaasHandler {
         LoadBalancer lb = null;
 		
 		// read LB
-		Long lbId = new Long(id);
+        long longId=0;
 		try {
-		   lb = lbModel.getLoadBalancer(lbId, tenantId);
+		   longId= Long.parseLong(lbid);		         
+        } catch (NumberFormatException nfe) 
+        {
+		   throw new LBaaSException("loadbalaner id : " + lbid + " is not a valid id",404);
+		}	
+		try {
+		   lb = lbModel.getLoadBalancer(longId, tenantId);
 		}
 		catch ( DeviceModelAccessException dme) {
 			throw new LBaaSException(dme.message, 500);                                     
 		}		
 		if (lb == null) {
-			throw new LBaaSException("loadbalancer id:" + id + " not found for tenant :" + tenantId, 404);   
+			throw new LBaaSException("loadbalancer id:" + lbid + " not found for tenant :" + tenantId, 404);   
 		}
 				
 		// find the node
-		Long longNodeId = new Long(nodeId);
+		long longNodeId=0;
+		try {
+			longNodeId= Long.parseLong(nodeid);		         
+        } catch (NumberFormatException nfe) 
+        {
+		   throw new LBaaSException("node id : " + nodeid + " is not a valid id",404);
+		}	
+		
 		Node node = getNodeInLb( lb, longNodeId);		
 		if (node == null) {
-			throw new LBaaSException("node id: " + nodeId + " not found", 404);  
+			throw new LBaaSException("node id: " + nodeid + " not found", 404);  
 		}
 		
 		// update Node model with new nodes
@@ -917,17 +1057,24 @@ public class LbaasHandler {
 	}
 	
 	
+	/**
+	 * Update a loadbalancers node
+	 * @param request
+	 * @param id
+	 * @param nodeId
+	 * @param content
+	 */
 	@PUT
-	@Path("/{id}/nodes/{nodeId}")
+	@Path("/{lbid}/nodes/{nodeid}")
 	@Consumes("application/json")
 	@Produces("application/json")
-	public void putLbNode(@Context HttpServletRequest request, @PathParam("id") String id, @PathParam("nodeId") String nodeId, String content) 
+	public void putLbNode(@Context HttpServletRequest request, @PathParam("lbid") String lbid, @PathParam("nodeid") String nodeid, String content) 
 	{
 		if (!KeystoneAuthFilter.authenticated(request)) {
-	    	throw new LBaaSException("Put /loadbalancers/{id}/nodes/{nodeid} request cannot be authenticated", 401);   
+	    	throw new LBaaSException("PUT /loadbalancers/{id}/nodes/{nodeid} request cannot be authenticated", 401);   
 	    }
 	    
-	    logger.info("Put /loadbalancers/" + id + "/nodes" + nodeId + " " + KeystoneAuthFilter.toString(request));
+	    logger.info("PUT /loadbalancers/" + lbid + "/nodes" + nodeid + " " + KeystoneAuthFilter.toString(request));
 	    String tenantId = KeystoneAuthFilter.getTenantId(request);
 		
 		// must have tenant id
@@ -938,22 +1085,34 @@ public class LbaasHandler {
         LoadBalancer lb = null;
 		
 		// read LB
-		Long lbId = new Long(id);
+        long longId=0;
 		try {
-		   lb = lbModel.getLoadBalancer(lbId, tenantId);
+		   longId= Long.parseLong(lbid);		         
+        } catch (NumberFormatException nfe) 
+        {
+		   throw new LBaaSException("loadbalaner id : " + lbid + " is not a valid id",404);
+		}	
+		try {
+		   lb = lbModel.getLoadBalancer(longId, tenantId);
 		}
 		catch ( DeviceModelAccessException dme) {
 			throw new LBaaSException(dme.message, 500);                                     
 		}		
 		if (lb == null) {
-			throw new LBaaSException("loadbalancer id:" + id + " not found for tenant :" + tenantId, 404);   
+			throw new LBaaSException("loadbalancer id:" + lbid + " not found for tenant :" + tenantId, 404);   
 		}
 				
 		// find the node
-		Long longNodeId = new Long(nodeId);
+		long longNodeId=0;
+		try {
+			longNodeId= Long.parseLong(nodeid);		         
+        } catch (NumberFormatException nfe) 
+        {
+		   throw new LBaaSException("node id : " + nodeid + " is not a valid id",404);
+		}	
 		Node node = getNodeInLb( lb, longNodeId);		
 		if (node == null) {
-			throw new LBaaSException("node id: " + nodeId + " not found", 404);  
+			throw new LBaaSException("node id: " + nodeid + " not found", 404);  
 		}
 		
 		JSONObject jsonObject=null;
@@ -1030,10 +1189,10 @@ public class LbaasHandler {
 	public String post(@Context HttpServletRequest request, String content) {
 		
 		if (!KeystoneAuthFilter.authenticated(request)) {
-	    	throw new LBaaSException("Post /loadbalancers request cannot be authenticated", 401);   
+	    	throw new LBaaSException("POST /loadbalancers request cannot be authenticated", 401);   
 	    }
 	    
-	    logger.info("Post /loadbalancers " + KeystoneAuthFilter.toString(request));
+	    logger.info("POST /loadbalancers " + KeystoneAuthFilter.toString(request));
 	    String tenantId = KeystoneAuthFilter.getTenantId(request);
 		
 		// must have tenant id
@@ -1156,8 +1315,8 @@ public class LbaasHandler {
 		   catch ( JSONException jsone) {
 				throw new LBaaSException( jsone.toString(), 400);  
 		   } 
-		   catch ( ProtocolAddressException pae) {
-				throw new LBaaSException( pae.message, 400);  
+		   catch ( VipException ve) {
+				throw new LBaaSException( ve.message, 400);  
 		   } 
 		   
 		   
