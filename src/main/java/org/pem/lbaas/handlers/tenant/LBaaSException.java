@@ -19,7 +19,12 @@ public class LBaaSException extends WebApplicationException {
 		JSONObject jsonDevice=new JSONObject();
 		   try {		  				
 		      jsonDevice.put("code", status);
-			  jsonDevice.put("message", Response.Status.fromStatusCode(status).toString() );
+		      String codeMessage=null;
+		      if (Response.Status.fromStatusCode(status)==null)
+		    	  codeMessage = new Integer(status).toString();	
+		      else
+		    	  codeMessage = Response.Status.fromStatusCode(status).toString();
+			  jsonDevice.put("message", codeMessage );
 			  jsonDevice.put("details", message);
 			  				  			   			   
 			  return jsonDevice.toString();
