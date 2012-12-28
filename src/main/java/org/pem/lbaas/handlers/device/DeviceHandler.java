@@ -22,6 +22,7 @@ import org.pem.lbaas.handlers.tenant.LBaaSException;
 import org.pem.lbaas.handlers.tenant.LimitsHandler;
 import org.pem.lbaas.handlers.tenant.ProtocolAddressException;
 import org.pem.lbaas.handlers.tenant.ProtocolHandler;
+import org.pem.lbaas.handlers.tenant.VipException;
 
 import javax.ws.rs.WebApplicationException;
 
@@ -141,9 +142,16 @@ public class DeviceHandler {
 		logger.info("GET device : " + id);
 		Device device = null;
 		
-		Long devId = new Long(id);
+		long longId=0;
 		try {
-		   device = deviceModel.getDevice(devId);
+		   longId= Long.parseLong(id);		         
+		} 
+		catch (NumberFormatException nfe) {
+			   throw new LBaaSException("id : " + id + " is not a valid id",404);
+	    }		
+		
+		try {
+		   device = deviceModel.getDevice(longId);
 		}
 		catch ( DeviceModelAccessException dme) {
 			throw new LBaaSException(dme.message, 500);                                     
@@ -320,11 +328,17 @@ public class DeviceHandler {
    {
       logger.info("DELETE device : " + id);
 		
-      Long devId = new Long(id);
+      long longId=0;
+	  try {
+	     longId= Long.parseLong(id);		         
+      } 
+      catch (NumberFormatException nfe) {
+         throw new LBaaSException("id : " + id + " is not a valid id",404);
+      }	
       Device device = null;
       
       try {
-          device = deviceModel.getDevice(devId);
+          device = deviceModel.getDevice(longId);
        }
        catch ( DeviceModelAccessException dme) {
           throw new LBaaSException(dme.message, 500);
@@ -341,7 +355,7 @@ public class DeviceHandler {
       
       int deleteCount=0;
       try {
-         deleteCount = deviceModel.deleteDevice(devId);
+         deleteCount = deviceModel.deleteDevice(longId);
       }
       catch ( DeviceModelAccessException dme) {
          throw new LBaaSException(dme.message, 500);
@@ -368,9 +382,16 @@ public class DeviceHandler {
       logger.info("PUT devices : " + id);
       Device device = null;
 		
-      Long devId = new Long(id);
+      long longId=0;
+	  try {
+	     longId= Long.parseLong(id);		         
+      } 
+      catch (NumberFormatException nfe) {
+         throw new LBaaSException("id : " + id + " is not a valid id",404);
+      }	
+      
       try {
-         device = deviceModel.getDevice(devId);
+         device = deviceModel.getDevice(longId);
       }
       catch ( DeviceModelAccessException dme) {
          throw new LBaaSException(dme.message, 500);
