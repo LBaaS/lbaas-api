@@ -15,7 +15,6 @@ CREATE TABLE loadbalancers (
     port      INT                      NOT NULL,                 # TCP port number associated with protocol and used by loadbalancer northbound interface
     status    VARCHAR(50)              NOT NULL,                 # current status, see ATLAS API 1.1 for all possible values
     algorithm VARCHAR(80)              NOT NULL,                 # LB Algorithm in use e.g. ROUND_ROBIN, see ATLAS API 1.1 for all possible values
-    vips      VARCHAR(512)             NOT NULL,                 # list of virtual IPs used for this LB (comma and colon separated)
     created   VARCHAR(128)             NOT NULL,                 # datestamp of when LB was created
     updated   VARCHAR(128)             NOT NULL,                 # datestamp of when LB was last updated
     device    BIGINT                   NOT NULL,                 # reference to associated device OR '0' for unassigned
