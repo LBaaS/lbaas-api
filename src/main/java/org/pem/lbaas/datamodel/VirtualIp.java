@@ -50,7 +50,7 @@ public class VirtualIp
 
     private final static long serialVersionUID = 532512316L;
     @XmlAttribute
-    protected Integer id;
+    protected Long id;
     @XmlAttribute
     protected String address;
     @XmlAttribute
@@ -68,7 +68,7 @@ public class VirtualIp
      *     {@link Integer }
      *     
      */
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
@@ -80,7 +80,7 @@ public class VirtualIp
      *     {@link Integer }
      *     
      */
-    public void setId(Integer value) {
+    public void setId(Long value) {
         this.id = value;
     }
 
