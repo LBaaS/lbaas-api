@@ -14,6 +14,7 @@ import java.sql.*;
 
 import org.apache.log4j.Logger;
 import org.pem.lbaas.Lbaas;
+import org.pem.lbaas.datamodel.Device;
 import org.pem.lbaas.datamodel.IpVersion;
 import org.pem.lbaas.datamodel.LoadBalancer;
 import org.pem.lbaas.datamodel.Node;
@@ -27,6 +28,7 @@ public class LoadBalancerDataModel {
 	
 	private static Logger logger = Logger.getLogger(LoadBalancerDataModel.class);
 	private static NodeDataModel nodeModel = new NodeDataModel();
+	private static DeviceDataModel deviceModel = new DeviceDataModel();
 	protected Connection  dbConnection = null;
 	
 	protected final static String SQL_ID            = "id";
@@ -39,7 +41,6 @@ public class LoadBalancerDataModel {
 	protected final static String SQL_CREATED       = "created";
 	protected final static String SQL_UPDATED       = "updated";
 	protected final static String SQL_DEVICE        = "device";
-	protected final static String SQL_VIPS          = "vips";
 	
 	static final protected String DEFAULT_ALGO      = "ROUND_ROBIN";
 	
@@ -111,33 +112,6 @@ public class LoadBalancerDataModel {
 	
 	
 	/**
-	 * encode VIP fields
-	 * @param lb
-	 * @return and encoded VIP string
-	 */
-	protected String encodeVIPDBFields( LoadBalancer lb) {
-		String vipString = new String();
-		VirtualIps vips = lb.getVirtualIps();
-		   if (vips != null) {
-			   List<VirtualIp> vipList = vips.getVirtualIps();
-			   for ( int y=0;y<vipList.size();y++) {
-				   vipString += vipList.get(y).getAddress();
-				   vipString += ":";
-				   vipString += vipList.get(y).getType().toString();
-				   vipString += ":";
-				   vipString += vipList.get(y).getIpVersion().toString();
-				   vipString += ":";
-				   vipString += vipList.get(y).getId().toString();
-				   vipString += ",";
-				   
-			   }	
-			   vipString = vipString.substring(0, vipString.length()-1);
-		   }		   		
-		  
-		return vipString;
-	}
-	
-	/**
 	 * Convert a result set into a Loadbalancer object
 	 * @param rs
 	 * @return a LoadBalancer object
@@ -156,41 +130,7 @@ public class LoadBalancerDataModel {
 		   lb.setCreated(rs.getString(SQL_CREATED));
 		   lb.setUpdated(rs.getString(SQL_UPDATED));
 		   lb.setDevice(new Long(rs.getInt(SQL_DEVICE)));
-		  
-		   
-		   // vips
-		   VirtualIps virtualIps = new VirtualIps();
-		   String vipString = rs.getString(SQL_VIPS);
-		   StringTokenizer stVips = new StringTokenizer(vipString, ",");
-		   while(stVips.hasMoreTokens()) { 
-			      String fields = stVips.nextToken(); 
-			      StringTokenizer stVipFields = new StringTokenizer(fields, ":");
-			      while(stVipFields.hasMoreTokens()) { 
-				     String address = stVipFields.nextToken();
-				     String type = stVipFields.nextToken();
-				     String version = stVipFields.nextToken();
-				     String id = stVipFields.nextToken();	
-				     
-				     VirtualIp virtualIp = new VirtualIp();
-				     
-				     virtualIp.setAddress(address);
-				     
-				     if (type.equalsIgnoreCase(VipType.PUBLIC.toString()))
-				         virtualIp.setType(VipType.PUBLIC);
-				     else
-				    	 virtualIp.setType(VipType.PRIVATE);
-				     
-				     if (version.equalsIgnoreCase(IpVersion.IPV_4.toString()))
-				        virtualIp.setIpVersion(IpVersion.IPV_4);
-				     else
-				    	 virtualIp.setIpVersion(IpVersion.IPV_6);
-				     
-				     virtualIp.setId(new Integer(id));
-				     
-				     virtualIps.getVirtualIps().add(virtualIp);				   
-			      }
-			   }		   
-		   lb.setVirtualIps(virtualIps);		   
+		  		   		   		   		   
 	   }
 	   catch (SQLException sqle){                                              
            logger.error( "SQL Exception : " + sqle); 
@@ -250,12 +190,28 @@ public class LoadBalancerDataModel {
 			  		for ( int z=0;z<listOfNodes.size();z++)
 			  			nodes.getNodes().add(listOfNodes.get(z));
 			        lb.setNodes(nodes);			      
-			        return lb;			      
+			        			      
 			      }
 			      catch ( NodeModelAccessException nme) {
 			    	  throw new DeviceModelAccessException("SQL Exception : " + nme);
 			      }
 			      
+			      // load the VIP from the device info
+				  VirtualIps virtualIps = new VirtualIps();				 						     
+				  VirtualIp virtualIp = new VirtualIp();
+				  // use floating ip from device
+				  Device device = deviceModel.getDevice(lb.getDevice());
+				  virtualIp.setAddress(device.getAddress());
+				  // public IP
+				  virtualIp.setType(VipType.PUBLIC);
+				  //IPV4 only supported for now
+                  virtualIp.setIpVersion(IpVersion.IPV_4);
+                  // vip id is device id
+                  virtualIp.setId(lb.getDevice());						     
+                  virtualIps.getVirtualIps().add(virtualIp);				   					     	   
+				  lb.setVirtualIps(virtualIps);		
+				  
+				  return lb;
 			      
 		      }
 		      else {
@@ -329,18 +285,17 @@ public class LoadBalancerDataModel {
 		
 		Connection conn = dbConnect();
 		try {
-			String query = "insert into loadbalancers (name,tenantid, protocol,port,status,algorithm,vips,created,updated,device ) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			String query = "insert into loadbalancers (name,tenantid, protocol,port,status,algorithm,created,updated,device ) values(?, ?, ?, ?, ?, ?, ?, ?, ?)";
 			PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);	
 			statement.setString(1,lb.getName() );
 			statement.setString(2,lb.getTenantId());
 			statement.setString(3,lb.getProtocol());
 			statement.setInt(4,lb.getPort());
 			statement.setString(5,lb.getStatus());
-			statement.setString(6,lb.getAlgorithm());
-			statement.setString(7,encodeVIPDBFields(lb));   
-			statement.setString(8,lb.getCreated());
-			statement.setString(9,lb.getUpdated());
-			statement.setLong(10,lb.getDevice());         
+			statement.setString(6,lb.getAlgorithm());  
+			statement.setString(7,lb.getCreated());
+			statement.setString(8,lb.getUpdated());
+			statement.setLong(9,lb.getDevice());         
 			
 			int affectedRows = statement.executeUpdate();
 			if (affectedRows == 0) {
