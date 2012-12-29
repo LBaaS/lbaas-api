@@ -321,7 +321,7 @@ public class LbaasHandler {
 	 * @return
 	 * @throws JSONException
 	 */
-	protected VirtualIps jsonToVips(JSONObject jsonObject) throws JSONException,VipException {		
+	protected VirtualIps jsonToVips(JSONObject jsonObject, String tenantId) throws JSONException,VipException {		
 	   if ( jsonObject.has(JSON_VIPS) ) {
 		   VirtualIps virtualIps = new VirtualIps();
 		   try {
@@ -351,7 +351,31 @@ public class LbaasHandler {
 				   throw new VipException("VIP id : " + id + " is not a valid id");
 			   }
 			   
-			   // todo: check that device is used by the same tenant!
+			   if ( device == null)
+				   throw new VipException("VIP id : " + id + " is not a valid id");
+			   
+			   // check that device is used by the same tenant
+			   // VIPs cannot be shared across tenants
+			   
+			   // do not allow using an unassigned device
+			   if (device.lbIds.size() == 0)
+			      throw new VipException("VIP id : " + id + " is not a valid id");
+			   
+			   // get lb owner
+			   long lbOwnerId = device.lbIds.get(0);
+			   LoadBalancer lb = null;
+			   
+			   // try to read this LB
+			   try {
+                  lb = lbModel.getLoadBalancer(lbOwnerId, tenantId);
+               }
+			   catch ( DeviceModelAccessException dme) {
+			      throw new LBaaSException(dme.message, 500);                                     
+               }		
+			   if (lb == null) {
+			      throw new VipException("VIP id : " + id + " is not a valid id"); 
+			   }
+			   
 			   
 			   VirtualIp virtualIp = new VirtualIp();
 			   virtualIp.setAddress(device.getAddress());
@@ -1310,7 +1334,7 @@ public class LbaasHandler {
 		   
 		   VirtualIps virtualIps = null;
 		   try {
-		      virtualIps = jsonToVips(jsonObject);		      		      		      
+		      virtualIps = jsonToVips(jsonObject,tenantId);		      		      		      
 		   }
 		   catch ( JSONException jsone) {
 				throw new LBaaSException( jsone.toString(), 400);  
