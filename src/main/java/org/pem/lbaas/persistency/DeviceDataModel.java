@@ -168,7 +168,7 @@ public class DeviceDataModel {
 	
 	
    /**
-    * get all devices
+    * get all devices with specified condition
     * 
     * @return List of Device objects
     * @throws DeviceModelAccessException if internal database error
@@ -181,6 +181,36 @@ public class DeviceDataModel {
 	  if (condition!=null) {
 		  query = query + " WHERE " + condition;
 	  }
+	  try {
+         stmt=conn.createStatement();
+		 ResultSet rs=stmt.executeQuery(query);
+		 while (rs.next()) {
+		    Device dev = rsToDevice(rs);
+			devices.add(dev);
+		 }
+		 rs.close();
+		 stmt.close();			   
+	  }
+	  catch (SQLException s) {                                              
+         throw new DeviceModelAccessException("SQL Exception : " + s);
+      }
+	  catch (JSONException jse) {
+    	  throw new DeviceModelAccessException("JSON Exception : " + jse);
+      }
+      return devices;
+   }
+   
+   /**
+    * get all devices with pagination using marker and limit
+    * 
+    * @return List of Device objects
+    * @throws DeviceModelAccessException if internal database error
+    */
+   public  List<Device> getDevicesMarkerAndLimit(long marker, long limit) throws DeviceModelAccessException {
+      List<Device> devices = new  ArrayList<Device>();		
+	  Connection conn = dbConnect();
+	  Statement stmt=null;
+	  String query = "SELECT * FROM devices LIMIT " + limit + " OFFSET " + marker;
 	  try {
          stmt=conn.createStatement();
 		 ResultSet rs=stmt.executeQuery(query);
