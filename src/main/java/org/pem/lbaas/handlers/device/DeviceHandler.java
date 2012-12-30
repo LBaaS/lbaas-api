@@ -3,17 +3,20 @@ package org.pem.lbaas.handlers.device;
 import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces; 
+import javax.ws.rs.QueryParam;
 
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.pem.lbaas.Lbaas;
 import org.pem.lbaas.datamodel.Device;
 import org.pem.lbaas.persistency.DeviceDataModel;
 import org.pem.lbaas.persistency.DeviceModelAccessException;
@@ -25,6 +28,8 @@ import org.pem.lbaas.handlers.tenant.ProtocolHandler;
 import org.pem.lbaas.handlers.tenant.VipException;
 
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 
 
 /**
@@ -91,14 +96,38 @@ public class DeviceHandler {
     */
    @GET
    @Produces("application/json")
-   public String getAll() {
-      logger.info("GET devices");
+   public String getAll(@Context UriInfo info) {
+	   
+	  long longMarker=0; 
+	  String marker = info.getQueryParameters().getFirst("marker");
+	  if (marker!=null) {
+		  try {
+			  longMarker= Long.parseLong(marker);		         
+			} 
+			catch (NumberFormatException nfe) {
+				   throw new LBaaSException("invalid marker value: " + marker,404);
+		    }			  
+	  }
+	  
+	  long longLimit=Lbaas.lbaasConfig.pageLimit; 
+	  String limit = info.getQueryParameters().getFirst("limit");
+	  if (limit!=null) {
+		  try {
+			  longLimit= Long.parseLong(limit);		         
+			} 
+			catch (NumberFormatException nfe) {
+				   throw new LBaaSException("invalid limit value: " + limit,404);
+		    }			  
+	  }
+		
+      logger.info("GET devices marker: " + longMarker + "  limit: " + longLimit);
+      
       JSONObject jsonObject = new JSONObject();
       JSONArray jsonArray = new JSONArray();
       List<Device> devices =null;
 		
       try {
-         devices = deviceModel.getDevices(null);
+         devices = deviceModel.getDevicesMarkerAndLimit(longMarker, longLimit);
       }
       catch ( DeviceModelAccessException dme) {
          throw new LBaaSException(dme.message, 500);                                   
