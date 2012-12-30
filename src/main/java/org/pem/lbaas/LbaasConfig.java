@@ -33,6 +33,7 @@ public class LbaasConfig {
 	public static String LIMITS_MAX_LBS          = "max-lbs"; 
 	public static String LIMITS_MAX_VIPS_PER_LB  = "max-vips-per-lb";
 	public static String LIMITS_MAX_NODES_PER_LB = "max-nodes-per-lb";
+	public static String PAGE_LIMIT              = "page-limit";
 	
 		
 	
@@ -57,6 +58,7 @@ public class LbaasConfig {
 	public int maxLbs;
 	public int maxVipsPerLb;
 	public int maxNodesperLb;
+	public int pageLimit;
 	
 	
 	public boolean load(String filename) {		
@@ -88,6 +90,8 @@ public class LbaasConfig {
        		   maxLbs = serviceConfig.getInt(LIMITS_MAX_LBS);
        		   maxVipsPerLb = serviceConfig.getInt(LIMITS_MAX_VIPS_PER_LB);
        		   maxNodesperLb = serviceConfig.getInt(LIMITS_MAX_NODES_PER_LB);
+       		   
+       		   pageLimit = serviceConfig.getInt(PAGE_LIMIT);
 	        	   
 		}  
 	    catch(ConfigurationException cex) {
@@ -115,7 +119,8 @@ public class LbaasConfig {
 	   logger.info("Keystone Truststore    : " + keystoneTruststore);
 	   logger.info("Max LBs Per Tenant     : " + maxLbs);
 	   logger.info("Max VIPs Per LB        : " + maxVipsPerLb);
-	   logger.info("Max Nodes Per LB       : " + maxNodesperLb);	   
+	   logger.info("Max Nodes Per LB       : " + maxNodesperLb);
+	   logger.info("Pagination Limit       : " + pageLimit);
 	      
 	}
 
