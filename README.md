@@ -6,7 +6,7 @@ the code. Steps 10 forward define how to install and run the package.
 1) Get ubuntu OS ,12.04 64 bit bit OS is recommended
 (other OSs are possible but these instructions assume Ubuntu & Debian packages) 
 
-2) Install lbaas api sources, clone from git repo
+2) Install LBaaS api sources, clone from git repo
 git clone https://github.com/LBaaS/lbaas-api.git your-lbaas-directory 
 
 3) Install maven, needed to building
