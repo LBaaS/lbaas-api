@@ -3,7 +3,7 @@ LBaaS API server environment and build information ( what's needed for developme
 Steps 1-10 describe how to set up a development environment and how to build and package
 the code. Steps 10 forward define how to install and run the package.
 
-1) Get ubuntu OS ,12.04 64 bit bit OS is recommended
+1) Get ubuntu OS, 12.04 64 bit bit OS is recommended
 (other OSs are possible but these instructions assume Ubuntu & Debian packages) 
 
 2) Install LBaaS api sources, clone from git repo
