@@ -15,6 +15,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
@@ -90,6 +91,9 @@ public class LbaasHandler {
     public static String    NODE_OFFLINE     = "OFFLINE";
     public static String    NODE_ENABLED     = "ENABLED";
     public static String    NODE_DISABLED    = "DISABLED";
+    
+    // query parm
+    public static String    PARAM_TENANTID   = "tenantid";
 
     
 	/**
@@ -411,6 +415,25 @@ public class LbaasHandler {
 		 virtualIps.getVirtualIps().add(virtualIp);
 		 return virtualIps;
 	}
+	
+	/**
+	 * look for admin role and extract admin role tenantid query param which allow cross tenant access
+	 * @param request
+	 * @param info
+	 * @param tenantId
+	 * @return
+	 */
+	protected String getAdminTenantId( HttpServletRequest request, UriInfo info, String tenantId)
+	{
+	   String returnedTenantId = tenantId;
+	   if ( KeystoneAuthFilter.isAdmin(request)) {
+		   String adminTenantId = info.getQueryParameters().getFirst(PARAM_TENANTID);
+		   if (adminTenantId != null) 	
+			   returnedTenantId = adminTenantId;
+		   logger.info("admin role tenantId: " + returnedTenantId);
+	   }
+	   return returnedTenantId;
+	}
 		
 	
 	
@@ -420,11 +443,11 @@ public class LbaasHandler {
      */
 	@GET
 	@Produces("application/json")
-	public String getAll(@Context HttpServletRequest request) {
+	public String getAll(@Context HttpServletRequest request, @Context UriInfo info) {
 		
 		 if (!KeystoneAuthFilter.authenticated(request)) {
 		    	throw new LBaaSException("GET /loadbalancers request cannot be authenticated", 401);   
-		 }
+		 }		 		 
 		    
 		logger.info("GET /loadbalancers " + KeystoneAuthFilter.toString(request));
 		
@@ -438,7 +461,9 @@ public class LbaasHandler {
 			throw new LBaaSException("token and/or tenant id was not specified", 401);   
 		}
 		
-		
+		// check for admin role tenantId
+		tenantId = getAdminTenantId( request, info, tenantId);
+								
 		// get all load balancers
 		try {
 		   lbs = lbModel.getLoadBalancers(LoadBalancerDataModel.SQL_TENANTID + "= \'" + tenantId + "\'");
@@ -480,20 +505,24 @@ public class LbaasHandler {
 	@GET
 	@Path("/{lbid}")
 	@Produces("application/json")
-	public String getLb(@Context HttpServletRequest request, @PathParam("lbid") String lbid) 
+	public String getLb(@Context HttpServletRequest request, @PathParam("lbid") String lbid, @Context UriInfo info) 
 	{
 		if (!KeystoneAuthFilter.authenticated(request)) {
 	    	throw new LBaaSException("Get /loadbalancers/{id} request cannot be authenticated", 401);   
 	    }
 	    
-	    logger.info("Get /loadbalancers/" + lbid + " " + KeystoneAuthFilter.toString(request));
+		logger.info("Get /loadbalancers/" + lbid + " " + KeystoneAuthFilter.toString(request));
+		
 	    String tenantId = KeystoneAuthFilter.getTenantId(request);
 	    
 		// must have tenant id
 		if ((tenantId == null) || ( tenantId.isEmpty())) {
 			throw new LBaaSException("token and/or tenant id was not specified", 401);   
 		}
-				
+		
+		// check for admin role tenantId
+		tenantId = getAdminTenantId( request, info, tenantId);
+			    				
 		LoadBalancer lb = null;
 	
 		// read LB
@@ -534,14 +563,19 @@ public class LbaasHandler {
 	@Path("/{lbid}")
 	@Consumes("application/json")
 	@Produces("application/json")
-	public String updateLb(@Context HttpServletRequest request, @PathParam("lbid") String lbid, String content) 
-	{
+	public String updateLb(@Context HttpServletRequest request, @PathParam("lbid") String lbid, String content, @Context UriInfo info) 
+	{		
+		
 		if (!KeystoneAuthFilter.authenticated(request)) {
 	    	throw new LBaaSException("PUT /loadbalancers/{id} request cannot be authenticated", 401);   
 	    }
-	    
-	    logger.info("PUT /loadbalancers/" + lbid + " " + KeystoneAuthFilter.toString(request));
+		
+		logger.info("PUT /loadbalancers/" + lbid + " " + KeystoneAuthFilter.toString(request));
+	    	    
 	    String tenantId = KeystoneAuthFilter.getTenantId(request);
+	    
+	    // check for admin role tenantId
+		tenantId = getAdminTenantId( request, info, tenantId);		
 				
 		LoadBalancer lb=null;
 		
@@ -654,14 +688,19 @@ public class LbaasHandler {
 	@DELETE
 	@Path("/{lbid}")
 	@Produces("application/json")
-	public void deleteLb(@Context HttpServletRequest request, @PathParam("lbid") String lbid) 
+	public void deleteLb(@Context HttpServletRequest request, @PathParam("lbid") String lbid, @Context UriInfo info) 
 	{
 		if (!KeystoneAuthFilter.authenticated(request)) {
 	    	throw new LBaaSException("DELETE /loadbalancers/{id} request cannot be authenticated", 401);   
 	    }
-	    
-	    logger.info("DELETE /loadbalancers/" + lbid + " " + KeystoneAuthFilter.toString(request));
+		
+		logger.info("DELETE /loadbalancers/" + lbid + " " + KeystoneAuthFilter.toString(request));
+	    	    
 	    String tenantId = KeystoneAuthFilter.getTenantId(request);
+	    
+	    // check for admin role tenantId
+		tenantId = getAdminTenantId( request, info, tenantId);	
+						
 		
 		// must have tenant id
 		if ((tenantId == null) || ( tenantId.isEmpty())) {
@@ -734,7 +773,7 @@ public class LbaasHandler {
 	@GET
 	@Path("/{lbid}/virtualips")
 	@Produces("application/json")
-	public String getLbVips(@Context HttpServletRequest request,@PathParam("lbid") String lbid) 
+	public String getLbVips(@Context HttpServletRequest request,@PathParam("lbid") String lbid, @Context UriInfo info) 
 	{
 		if (!KeystoneAuthFilter.authenticated(request)) {
 	    	throw new LBaaSException("GET /loadbalancers/{id}/virtualips request cannot be authenticated", 401);   
@@ -747,6 +786,10 @@ public class LbaasHandler {
 		if ((tenantId == null) || ( tenantId.isEmpty())) {
 			throw new LBaaSException("token and/or tenant id was not specified", 401);   
 		}
+		
+		// check for admin role tenantId
+		tenantId = getAdminTenantId( request, info, tenantId);
+				
 		
 		LoadBalancer lb = null;
 		
@@ -791,7 +834,7 @@ public class LbaasHandler {
 	@GET
 	@Path("/{lbid}/nodes")
 	@Produces("application/json")
-	public String getLbNodes(@Context HttpServletRequest request,@PathParam("lbid") String lbid) 
+	public String getLbNodes(@Context HttpServletRequest request,@PathParam("lbid") String lbid, @Context UriInfo info) 
 	{
 		if (!KeystoneAuthFilter.authenticated(request)) {
 	    	throw new LBaaSException("GET /loadbalancers/{id}/nodes request cannot be authenticated", 401);   
@@ -804,6 +847,9 @@ public class LbaasHandler {
 		if ((tenantId == null) || ( tenantId.isEmpty())) {
 			throw new LBaaSException("token and/or tenant id was not specified", 401);   
 		}
+		
+		// check for admin role tenantId
+		tenantId = getAdminTenantId( request, info, tenantId);
 				
 		
 		LoadBalancer lb = null;
@@ -848,7 +894,7 @@ public class LbaasHandler {
 	@GET
 	@Path("/{lbid}/nodes/{nodeid}")
 	@Produces("application/json")
-	public String getLbNode(@Context HttpServletRequest request, @PathParam("lbid") String lbid, @PathParam("nodeid") String nodeId) 
+	public String getLbNode(@Context HttpServletRequest request, @PathParam("lbid") String lbid, @PathParam("nodeid") String nodeId, @Context UriInfo info) 
 	{
 		if (!KeystoneAuthFilter.authenticated(request)) {
 	    	throw new LBaaSException("Get /loadbalancers/{id}/nodes/{nodeid} request cannot be authenticated", 401);   
@@ -861,6 +907,9 @@ public class LbaasHandler {
 		if ((tenantId == null) || ( tenantId.isEmpty())) {
 			throw new LBaaSException("token and/or tenant id was not specified", 401);   
 		}
+		
+		// check for admin role tenantId
+		tenantId = getAdminTenantId( request, info, tenantId);
 				
         LoadBalancer lb = null;
 		
@@ -916,7 +965,7 @@ public class LbaasHandler {
 	@Path("/{lbid}/nodes")
 	@Consumes("application/json")
 	@Produces("application/json")
-	public String addLbNodes(@Context HttpServletRequest request, @PathParam("lbid") String lbid, String content) 
+	public String addLbNodes(@Context HttpServletRequest request, @PathParam("lbid") String lbid, String content, @Context UriInfo info) 
 	{
 		if (!KeystoneAuthFilter.authenticated(request)) {
 	    	throw new LBaaSException("POST /loadbalancers/{id}/nodes request cannot be authenticated", 401);   
@@ -929,6 +978,9 @@ public class LbaasHandler {
 		if ((tenantId == null) || ( tenantId.isEmpty())) {
 			throw new LBaaSException("token and/or tenant id was not specified", 401);   
 		}
+		
+		// check for admin role tenantId
+		tenantId = getAdminTenantId( request, info, tenantId);
 		
 		LoadBalancer lb = null;
 		
@@ -1006,7 +1058,7 @@ public class LbaasHandler {
 	@Path("/{lbid}/nodes/{nodeid}")
 	@Consumes("application/json")
 	@Produces("application/json")
-	public void deleteLbNode(@Context HttpServletRequest request, @PathParam("lbid") String lbid, @PathParam("nodeid") String nodeid) 
+	public void deleteLbNode(@Context HttpServletRequest request, @PathParam("lbid") String lbid, @PathParam("nodeid") String nodeid, @Context UriInfo info) 
 	{
 		if (!KeystoneAuthFilter.authenticated(request)) {
 	    	throw new LBaaSException("DELETE /loadbalancers/{id}/nodes/{nodeid} request cannot be authenticated", 401);   
@@ -1019,6 +1071,9 @@ public class LbaasHandler {
 		if ((tenantId == null) || ( tenantId.isEmpty())) {
 			throw new LBaaSException("token and/or tenant id was not specified", 401);   
 		}
+		
+		// check for admin role tenantId
+		tenantId = getAdminTenantId( request, info, tenantId);
 				
         LoadBalancer lb = null;
 		
@@ -1092,7 +1147,7 @@ public class LbaasHandler {
 	@Path("/{lbid}/nodes/{nodeid}")
 	@Consumes("application/json")
 	@Produces("application/json")
-	public void putLbNode(@Context HttpServletRequest request, @PathParam("lbid") String lbid, @PathParam("nodeid") String nodeid, String content) 
+	public void putLbNode(@Context HttpServletRequest request, @PathParam("lbid") String lbid, @PathParam("nodeid") String nodeid, String content, @Context UriInfo info) 
 	{
 		if (!KeystoneAuthFilter.authenticated(request)) {
 	    	throw new LBaaSException("PUT /loadbalancers/{id}/nodes/{nodeid} request cannot be authenticated", 401);   
@@ -1105,6 +1160,9 @@ public class LbaasHandler {
 		if ((tenantId == null) || ( tenantId.isEmpty())) {
 			throw new LBaaSException("token and/or tenant id was not specified", 401);   
 		}
+		
+		// check for admin role tenantId
+		tenantId = getAdminTenantId( request, info, tenantId);
 				
         LoadBalancer lb = null;
 		
@@ -1210,7 +1268,7 @@ public class LbaasHandler {
 	@POST
 	@Consumes("application/json")
 	@Produces("application/json")
-	public String post(@Context HttpServletRequest request, String content) {
+	public String post(@Context HttpServletRequest request, String content, @Context UriInfo info) {
 		
 		if (!KeystoneAuthFilter.authenticated(request)) {
 	    	throw new LBaaSException("POST /loadbalancers request cannot be authenticated", 401);   
@@ -1223,6 +1281,9 @@ public class LbaasHandler {
 		if ((tenantId == null) || ( tenantId.isEmpty())) {
 			throw new LBaaSException("token and/or tenant id was not specified", 401);   
 		}
+		
+		// check for admin role tenantId
+		tenantId = getAdminTenantId( request, info, tenantId);
 		
 		// check if tenant has not exceeded their limit
 		try {
