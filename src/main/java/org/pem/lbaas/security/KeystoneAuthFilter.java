@@ -28,6 +28,8 @@ public class KeystoneAuthFilter {
 	private static String KEYSTONE_USER_NAME      = "X-USER-NAME";
 	private static String KEYSTONE_ROLES          = "X-ROLES";
 	private static String KEYSTONE_AUTH_CONFIRMED = "Confirmed";
+    private static String LBAAS_ADMIN             = "lbaas-admin";
+	private static String LBAAS_USER              = "lbaas-user";
 		
 	
 	public static void setupAuthFilter( ServletContextHandler context, LbaasConfig lbaasConfig) {
@@ -89,6 +91,13 @@ public class KeystoneAuthFilter {
     	String roles = (String) request.getAttribute(KEYSTONE_ROLES);
 		return roles;
 	}
+    
+    public static boolean isAdmin(HttpServletRequest request) {
+    	if ( getRoles(request).contains(LBAAS_ADMIN))
+    		return true;
+    	else
+    		return false;
+    }
 		
 
 }
