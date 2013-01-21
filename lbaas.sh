@@ -1,5 +1,5 @@
 #!/bin/bash
-JAR="/opt/lbaasapi/lbaasapi-0.1.0-jar-with-dependencies.jar"
+JAR="/opt/lbaasapi/lbaasapi-0.1.5-jar-with-dependencies.jar"
 LOGCFG="file:/opt/lbaasapi/log4j.properties"
 CONFIG="./lbaas.config"
 
