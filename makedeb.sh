@@ -1,11 +1,11 @@
 # build debian package for binaries and related files
 PACKAGE_NAME=lbaasapi
-PACKAGE_VERSION=1.4
+PACKAGE_VERSION=1.5
 PACKAGE_OWNER=pemellquist@gmail.com
 PACKAGE_CONTROL=debian/DEBIAN/control
 PACKAGE_DESCRIPT="LBaaS API server binaries"
 PACKAGE_LOCATION="opt/lbaasapi"
-PACKAGE_JAR="target/lbaasapi-0.1.0-jar-with-dependencies.jar"
+PACKAGE_JAR="target/lbaasapi-0.1.5-jar-with-dependencies.jar"
 
 # create debian package directory and initialize
 rm -r -f $PACKAGE_NAME-$PACKAGE_VERSION
