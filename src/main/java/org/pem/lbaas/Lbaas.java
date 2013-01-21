@@ -21,6 +21,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.pem.lbaas.security.KeystoneAuthFilter;
 
 import com.hp.csbu.cc.middleware.*;
+import com.sun.jersey.api.core.ResourceConfig;
 
 
 
@@ -60,9 +61,10 @@ public class Lbaas
 			sh.setName("lbaas");
 			sh.setClassName("com.sun.jersey.spi.container.servlet.ServletContainer");
 			sh.setInitParameter("com.sun.jersey.config.property.packages", "org.pem.lbaas.handlers.tenant");
+			sh.setInitParameter(ResourceConfig.FEATURE_NORMALIZE_URI, "true");
+			sh.setInitParameter(ResourceConfig.FEATURE_CANONICALIZE_URI_PATH, "true");
 			ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-			
-			
+						
 			context.setContextPath("/");
 			KeystoneAuthFilter.setupAuthFilter(context,lbaasConfig);
 			context.addServlet(sh, "/*");
