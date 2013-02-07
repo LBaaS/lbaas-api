@@ -45,8 +45,8 @@ public class KeystoneAuthFilter {
 		filterHolder.setInitParameter("ConnTimeout", "500");			
 		filterHolder.setInitParameter("ConnPoolMaxActive", "3");
 		filterHolder.setInitParameter("ConnPoolMaxIdle", "3");
-		filterHolder.setInitParameter("ConnPoolEvictPeriod", "600000");
-		filterHolder.setInitParameter("ConnPoolMinIdleTime", "600000");	
+		filterHolder.setInitParameter("ConnPoolEvictPeriod", "60000");
+		filterHolder.setInitParameter("ConnPoolMinIdleTime", "90000");	
 		EnumSet<DispatcherType> all = EnumSet.of(DispatcherType.ASYNC, DispatcherType.ERROR, DispatcherType.FORWARD, DispatcherType.INCLUDE, DispatcherType.REQUEST);
 		context.addFilter(filterHolder, "/*", all);
 	}
