@@ -7,6 +7,7 @@ package org.pem.lbaas.persistency;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Date;
 import java.util.StringTokenizer;
@@ -127,8 +128,17 @@ public class LoadBalancerDataModel {
 		   lb.setPort(rs.getInt(SQL_PORT));
 		   lb.setStatus(rs.getString(SQL_STATUS));
 		   lb.setAlgorithm(rs.getString(SQL_ALGORITHM));
-		   lb.setCreated(rs.getString(SQL_CREATED));
-		   lb.setUpdated(rs.getString(SQL_UPDATED));
+		   		   
+		   SimpleDateFormat ft = new SimpleDateFormat ("yyyy-MM-dd'T'HH:mm'Z'");
+		   
+		   Timestamp created = rs.getTimestamp(SQL_CREATED);
+	       Date createdDate = new Date(created.getTime());                  
+	       lb.setCreated( ft.format(createdDate));
+		   
+		   Timestamp updated = rs.getTimestamp(SQL_UPDATED);
+	       Date updatedDate = new Date(updated.getTime());                  
+	       lb.setUpdated( ft.format(updatedDate));
+		   
 		   lb.setDevice(new Long(rs.getInt(SQL_DEVICE)));
 		  		   		   		   		   
 	   }
@@ -247,9 +257,11 @@ public class LoadBalancerDataModel {
 			statement.setString(1,lb.getName());
 			statement.setString(2,lb.getAlgorithm());
 			statement.setString(3,lb.getStatus());
-			Date dNow = new Date();
-		    SimpleDateFormat ft = new SimpleDateFormat ("yyyy-MM-dd'T'HH:mm'Z'");
-			statement.setString(4,ft.format(dNow));
+			
+			Calendar calendar = Calendar.getInstance();
+			Date dNow = calendar.getTime();						
+			statement.setTimestamp(4,new java.sql.Timestamp(dNow.getTime()));
+			
 			statement.setLong(5,lb.getId());
 			statement.setString(6,lb.getTenantId());
 			statement.executeUpdate();
@@ -276,13 +288,7 @@ public class LoadBalancerDataModel {
 		
 		// status
 		lb.setStatus(LoadBalancer.STATUS_BUILD);
-		
-		// created and updated
-		Date dNow = new Date();
-	    SimpleDateFormat ft = new SimpleDateFormat ("yyyy-MM-dd'T'HH:mm'Z'");
-		lb.setCreated(ft.format(dNow));
-		lb.setUpdated(ft.format(dNow));
-		
+				
 		Connection conn = dbConnect();
 		try {
 			String query = "insert into loadbalancers (name,tenantid, protocol,port,status,algorithm,created,updated,device ) values(?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -293,8 +299,10 @@ public class LoadBalancerDataModel {
 			statement.setInt(4,lb.getPort());
 			statement.setString(5,lb.getStatus());
 			statement.setString(6,lb.getAlgorithm());  
-			statement.setString(7,lb.getCreated());
-			statement.setString(8,lb.getUpdated());
+			Calendar calendar = Calendar.getInstance();
+			Date dNow = calendar.getTime();
+			statement.setTimestamp(7,new java.sql.Timestamp(dNow.getTime()));	
+			statement.setTimestamp(8,new java.sql.Timestamp(dNow.getTime()));	
 			statement.setLong(9,lb.getDevice());         
 			
 			int affectedRows = statement.executeUpdate();
