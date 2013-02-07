@@ -25,6 +25,7 @@ import org.pem.lbaas.persistency.DeviceUsage;
 public class StatusHandler {
    private static Logger logger = Logger.getLogger(StatusHandler.class);
    private static DeviceDataModel deviceModel = new DeviceDataModel();
+   private static LBaaSTaskManager taskManager = new LBaaSTaskManager();
    	  		
    // JSON names
    protected final String JSON_STATUS              = "systemStatus";
@@ -33,6 +34,8 @@ public class StatusHandler {
    protected final String JSON_BUILD_DATE          = "buildDate";
    protected final String JSON_DB_ACCESS           = "databaseAccess";
    protected final String JSON_GEARMAN_ACCESS      = "gearManJobServerAccess";
+   protected final String JSON_JOBQDEPTH           = "jobQueueDepth";
+   
    
    public  String convertStreamToString(InputStream is) throws IOException {
        if (is != null) {
@@ -80,8 +83,9 @@ public class StatusHandler {
          }
          status.put(JSON_DB_ACCESS, dbAccess );
          
-         LBaaSTaskManager taskManager = new LBaaSTaskManager();
          status.put(JSON_GEARMAN_ACCESS, taskManager.serverCount() );
+         
+         status.put(JSON_JOBQDEPTH, taskManager.jobDepth() );
 		   
 	     jsonResponseObject.put(JSON_STATUS , status);
 	     return jsonResponseObject.toString();	      
