@@ -56,7 +56,7 @@ admin port allows access to all tenants
 
 Pagination Support
 ---------------------------------------------------------------------------
-limit and marker for lists                                 NOT IMPLEMENTED 
+limit and marker for lists                                 DONE 
 
 
 Certificate Management Support 
@@ -77,14 +77,14 @@ DB
 ---------------------------------------------------------------------------
 improved mysql connection pooling and mgmt                DONE
 
+Misc
+---------------------------------------------------------------------------
+Node weight                                               NOT IMPLEMENTED
+
 Pending state request blocking
 ---------------------------------------------------------------------------
 should requests be blocked when in BUILD or PENDING_UPDATE state ?
 
-Other:
----------------------------------------------------------------------------
-* Make sure all ids are Longs, how many LBs and devices will this handle?
-* need Junit tests for most everything
 
 
 
