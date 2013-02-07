@@ -1,5 +1,10 @@
 package org.pem.lbaas.messaging;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
+
 import org.apache.log4j.Logger;
 import org.gearman.Gearman;
 import org.gearman.GearmanClient;
@@ -24,10 +29,16 @@ import org.pem.lbaas.persistency.LoadBalancerDataModel;
  * @author peter
  *
  */
-public class LBaaSTaskManager implements GearmanJobEventCallback<String> {	
+public class LBaaSTaskManager implements GearmanJobEventCallback<String>, Runnable {	
 	private static Logger logger = Logger.getLogger(LBaaSTaskManager.class);
 	private static DeviceDataModel deviceModel = new DeviceDataModel();
 	private static LoadBalancerDataModel loadbalancerModel = new LoadBalancerDataModel();
+	private static HashMap requestMap = new HashMap();
+	private static long life=0;
+	private static Thread runner=null;
+	
+	public static long TASK_MGR_SLEEP_TOV = 1000;
+	public static long TASK_MGR_MAX_LIFE = 10;
 	
 	// gearman
 	Gearman gearman=null;
@@ -43,10 +54,138 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String> {
        gearmanServer = gearman.createGearmanServer( Lbaas.lbaasConfig.gearmanServerAddr, Lbaas.lbaasConfig.gearmanServerPort);
        gearmanClient.addServer(gearmanServer);
        logger.info("LBaaSTaskManager constructor");
+       if (runner==null) {
+          runner = new Thread(this);
+          runner.start();
+       }
 	}
 	
+	/**
+	 * Task manager background thread for timing out dead jobs
+	 */
+	public void run() {
+		for (;;) {
+			life++;
+			try {
+				Thread.sleep(TASK_MGR_SLEEP_TOV);
+				Iterator it = requestMap.entrySet().iterator();
+			    while (it.hasNext()) {
+			    	Map.Entry entry = (Map.Entry) it.next();
+			    	String key = (String)entry.getKey();
+			    	LBaaSTrackedJob job = (LBaaSTrackedJob)entry.getValue();
+			    	if ( job.lifeInSecs > TASK_MGR_MAX_LIFE) {
+			    		logger.info("timing out job " + key);
+			    		jobCompletedFail(job.trackedJob);
+			    		requestMap.remove(key);
+			    	}
+			    	else
+			    		job.lifeInSecs++;			        
+			    }				
+			} catch (InterruptedException e) {
+				
+			}
+		}
+	}
+	
+	/**
+	 *  return current gearman servercount
+	 * @return number of current gearman job servers
+	 */
 	public int serverCount() {
 		return gearmanClient.getServerCount();	
+	}
+	
+	/**
+	 * return the current depth of pending jobs
+	 * @return
+	 */
+	public int jobDepth() {
+		return requestMap.size();
+	}
+	
+	/**
+	 * extract the job request id from the job
+	 * @param message
+	 * @return
+	 */
+	public String getJobRequestId( String message) {
+		try {
+			   JSONObject jsonObject=new JSONObject(message);
+			   long id = jsonObject.getLong(LbaasHandler.HPCS_REQUESTID);
+			   return Long.toString(id);
+		}
+		catch (JSONException e) {
+			logger.error("could not find " + LbaasHandler.HPCS_REQUESTID + " in job submitted!" );
+			return null;
+		}
+	}
+	
+	/**
+	 * Stop tracking a job since it was completed with success
+	 * @param message
+	 */
+	public void jobCompletedSuccess( String message) {
+		logger.info("jobCompletedSuccess");
+		requestMap.remove(getJobRequestId(message));
+	}
+	
+	/**
+	 * Stop tracking a job due to a failure or timeout
+	 * @param message
+	 */
+	public void jobCompletedFail( String message) {
+		logger.info("jobCompletedFail");
+		requestMap.remove(getJobRequestId(message));
+		
+		// mark device in error
+		try {
+		    JSONObject jsonObject=new JSONObject(message);			   
+		   
+		    Long deviceId = (Long) jsonObject.getLong(LbaasHandler.HPCS_DEVICE);
+		    Long requestId = (Long) jsonObject.getLong(LbaasHandler.HPCS_REQUESTID);
+		    
+		    logger.info("Device ID : " + deviceId);
+		    logger.info("requestID : " + requestId);
+		    
+		    
+		    // put device in error state
+	    	try {
+	    		deviceModel.setStatus(Device.STATUS_ERROR, deviceId);
+	    	}
+	    	catch (DeviceModelAccessException dme) {
+	             logger.error(dme.message);
+	    	}
+	    	
+	    	// put LBs in error state
+		    if ( !jsonObject.has(LbaasHandler.JSON_LBS) ) {
+		    	logger.error("gearman worker response does not have array of " + LbaasHandler.JSON_LBS + " unable to process response!");
+		    	return;
+		    }
+		    
+		    // loop through all LBs
+		    JSONArray jsonLbArray = (JSONArray) jsonObject.get(LbaasHandler.JSON_LBS);
+			for ( int x=0;x<jsonLbArray.length();x++) {
+				JSONObject jsonLb = jsonLbArray.getJSONObject(x);						    		    
+		        String lbName = (String) jsonLb.get(LbaasHandler.JSON_NAME);
+		        Long lbId = (Long) jsonLb.getLong(LbaasHandler.JSON_ID);
+		        String tenantId = (String) jsonLb.get(LbaasHandler.HPCS_TENANTID);
+		        logger.info("Loadbalancer : " + lbName + " (" + lbId + ")" + "tenant id :" + tenantId);
+		        
+		        // move lb to error state
+		    	try {
+		    		loadbalancerModel.setStatus(LoadBalancer.STATUS_ERROR, lbId,tenantId);
+		    	}
+		    	catch (DeviceModelAccessException dme) {
+		             logger.error(dme.message);
+	            }
+		        
+			}
+		    
+		}
+		catch (JSONException e) {
+			logger.error("JSON error in gearman job response : " + e.toString());
+		}
+		
 	}
 	
 	/**
@@ -59,8 +198,10 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String> {
 	public void sendJob( String workerName, String message ) throws InterruptedException {
        logger.info("gearman client submitting job to :" + workerName);	
        logger.info("gearman client job request msg : " + message);
-       GearmanJoin<String> join = gearmanClient.submitJob( workerName, message.getBytes(), workerName, this);            
-       join.join();		
+       GearmanJoin<String> join = gearmanClient.submitJob( workerName, message.getBytes(), workerName, this);  
+       String jobRequestId = getJobRequestId(message);
+       if (jobRequestId!=null )
+    	   requestMap.put(jobRequestId, new LBaaSTrackedJob(message));       
        logger.info("gearman job submitted");
 	}
 	
@@ -99,7 +240,7 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String> {
 	
 	/**
 	 * Process Gearman job success. Response from worker has status, loadbalancer and device information which
-	 * is extracted and used to update database for loadlancer and device.
+	 * is extracted and used to update database for loadbalancer and device.
 	 * @param message
 	 */
 	public void processLoadBalancerSuccess( String message) {
@@ -115,6 +256,9 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String> {
 		    logger.info("requestID : " + requestId);
 		    logger.info("action    : " + action);
 		    logger.info("response  : " + response);
+		    
+		    // stop tracking this job
+		    jobCompletedSuccess(message);
 		    
 		    // must have array of lbs
 		    if ( !jsonObject.has(LbaasHandler.JSON_LBS) ) {
@@ -197,7 +341,7 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String> {
      */
     public void processLoadBalancerSubmitFail( String message) {
     	logger.error("gearman job submit failure message :" + message);
-    	
+    	jobCompletedFail(message);
 	}
     
     /**
@@ -205,7 +349,8 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String> {
      * @param message
      */
     public void processLoadBalancerWorkerFail( String message) {
-    	logger.error("gearman job worker failure message :" + message);    	    	
+    	logger.error("gearman job worker failure message :" + message);    	
+    	jobCompletedFail(message);
 	}
 	
 	
