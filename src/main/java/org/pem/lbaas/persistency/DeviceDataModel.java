@@ -7,6 +7,7 @@ package org.pem.lbaas.persistency;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.sql.*;
@@ -155,9 +156,16 @@ public class DeviceDataModel {
          device.setPublicIP(rs.getString(SQL_PUBLIC_ADDRESS));
          device.lbIds = jsonToLbIds( rs.getString(SQL_LOADBALANCERS));
          device.setLbType(rs.getString(SQL_TYPE));
-         device.setStatus(rs.getString(SQL_STATUS));	
-         device.setCreated(rs.getString(SQL_CREATED));
-         device.setUpdated(rs.getString(SQL_UPDATED));
+         device.setStatus(rs.getString(SQL_STATUS));
+         SimpleDateFormat ft = new SimpleDateFormat ("yyyy-MM-dd'T'HH:mm'Z'");
+         
+         Timestamp created = rs.getTimestamp(SQL_CREATED);
+         Date createdDate = new Date(created.getTime());                  
+         device.setCreated( ft.format(createdDate));
+         
+         Timestamp updated = rs.getTimestamp(SQL_UPDATED);
+         Date updatedDate = new Date(updated.getTime()); 
+         device.setUpdated( ft.format(updatedDate));
 	  }
 	  catch (SQLException sqle) {                                              
          logger.error( "SQL Exception : " + sqle); 
@@ -411,9 +419,9 @@ public class DeviceDataModel {
 			statement.setString(2, device.getAddress());
 			statement.setString(3, lbIdsToJson( device.lbIds).toString());
 			statement.setString(4, device.getStatus());
-			Date dNow = new Date();
-		    SimpleDateFormat ft = new SimpleDateFormat ("yyyy-MM-dd'T'HH:mm'Z'");
-			statement.setString(5,ft.format(dNow));
+			Calendar calendar = Calendar.getInstance();
+			Date dNow = calendar.getTime();
+			statement.setTimestamp( 5,new java.sql.Timestamp(dNow.getTime()));	
 			statement.setInt(6,device.getId().intValue());
 			statement.executeUpdate();
 			statement.close();
@@ -507,10 +515,10 @@ public class DeviceDataModel {
 			statement.setString(3, device.getPublicIP());			
 			statement.setString(4,lbIdsToJson( device.lbIds).toString());
 			statement.setString(5,device.getLbType());
-			Date dNow = new Date();
-		    SimpleDateFormat ft = new SimpleDateFormat ("yyyy-MM-dd'T'HH:mm'Z'");
-			statement.setString(6,ft.format(dNow));	
-			statement.setString(7,ft.format(dNow));	
+			Calendar calendar = Calendar.getInstance();
+			Date dNow = calendar.getTime();
+			statement.setTimestamp(6,new java.sql.Timestamp(dNow.getTime()));	
+			statement.setTimestamp(7,new java.sql.Timestamp(dNow.getTime()));	
 			statement.setString(8,device.getStatus());	
 			statement.setInt(9,device.getAz());
 			
