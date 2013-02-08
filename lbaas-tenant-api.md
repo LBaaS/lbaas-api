@@ -2,23 +2,23 @@
 layout: page
 permalink: /api/lbaas/
 title: HP Cloud My Service API
-description: "HP Cloud Load Balancer Service API Specifications"
+description: "HP Cloud Load Balancer Service API Specification"
 keywords: "lbaas,loadbalancer"
 product: LoadBalancer
 published: false
 
 ---
 
-# HP Cloud Load Balancer as a Service API Specifications
+# HP Cloud Load Balancer as a Service API Specification
 
-**Date: February 8, 2013**
+**Date:** February 8, 2013
 
-**Document Version: 0.1**
+**Document Version:** 0.1
 
 
 ## 1. Overview
 
-*This guide is intended for software developers who want to create applications using the HP Cloud Load Balancer API. It assumes the reader has a general understanding of load balancing concepts and is familiar with ReSTful web services, HTTP/1.1 conventions JSON serialization formats. *
+*This guide is intended for software developers who want to create applications using the HP Cloud Load Balancer API. It assumes the reader has a general understanding of load balancing concepts and is familiar with ReSTful web services, HTTP/1.1 conventions JSON serialization formats.*
 
 
 ### 1.1 API Maturity Level
@@ -35,7 +35,7 @@ published: false
 
 
 ### 2.1 Overview
-*The HP Cloud Load Balancer as a Service (LBaaS) set of APIs provide a RESTful interface for the creation and management of load balancers in the cloud which can be used for a variety of purposes including load balancers for your external services and internal load balancing needs. The load balancing solution is meant to provide both load balancing and high availability for your services. The LBaaS APIs are integrated within the HP Cloud ecosystem including integration with the HP Cloud identity management system and billing. *
+*The HP Cloud Load Balancer as a Service (LBaaS) set of APIs provide a RESTful interface for the creation and management of load balancers in the cloud which can be used for a variety of purposes including load balancers for your external services and internal load balancing needs. The load balancing solution is meant to provide both load balancing and high availability for your services. The LBaaS APIs are integrated within the HP Cloud ecosystem including integration with the HP Cloud identity management system and billing.*
 
 ### 2.2 Conceptual/Logical Architecture View
 *To use OpenStack Load Balancers API effectively, you should understand several key concepts.*
