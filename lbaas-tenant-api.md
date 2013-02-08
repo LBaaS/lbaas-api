@@ -18,12 +18,12 @@ published: false
 
 ## 1. Overview
 
-*This guide is intended for software developers who want to create applications using the HP Cloud Load Balancer API. It assumes the reader has a general understanding of load balancing concepts and is familiar with ReSTful web services, HTTP/1.1 conventions JSON serialization formats.*
+*This guide is intended for software developers who want to create applications using the HP Cloud Load Balancer API. It assumes the reader has a general understanding of load balancing concepts and is familiar with RESTful web services, HTTP/1.1 conventions and JSON serialization formats.*
 
 
 ### 1.1 API Maturity Level
 
-*This API definition represents the HP Cloud Load Balancer as a Service in Beta release form.*
+*This API definition represents the HP Cloud Load Balancer as a Service in Beta release form. Functionality represented within this specification is supported.*
 
 
 **Maturity Level**: *Experimental*
@@ -35,7 +35,7 @@ published: false
 
 
 ### 2.1 Overview
-*The HP Cloud Load Balancer as a Service (LBaaS) set of APIs provide a RESTful interface for the creation and management of load balancers in the cloud which can be used for a variety of purposes including load balancers for your external services and internal load balancing needs. The load balancing solution is meant to provide both load balancing and high availability for your services. The LBaaS APIs are integrated within the HP Cloud ecosystem including integration with the HP Cloud identity management system and billing.*
+*The HP Cloud Load Balancer as a Service (LBaaS) set of APIs provide a RESTful interface for the creation and management of load balancers in the cloud. These can be used for a variety of purposes including load balancers for your external services as well as internal load balancing needs. The load balancing solution is meant to provide both load balancing and high availability. The LBaaS APIs are integrated within the HP Cloud ecosystem including integration with the HP Cloud identity management system and billing systems.*
 
 ### 2.2 Conceptual/Logical Architecture View
 *To use OpenStack Load Balancers API effectively, you should understand several key concepts.*
@@ -50,38 +50,70 @@ published: false
 *A node is a back-end device providing a service on a specified IP and port.*
 
 ### 2.3 Infrastructure Architecture View
-*LBaaS fits into the HP Cloud ecosystem of APIs by utilizing the common authentication mechanisms as other HP cloud services. In order to use LBaaS a users account must be enabled to do so and all API calls require a valid HP Cloud authentication token.*
+*LBaaS fits into the HP Cloud ecosystem of APIs by utilizing the common authentication mechanisms as other HP cloud services. In order to use LBaaS, a users account must be enabled to do so and all API calls will require a valid HP Cloud authentication token.*
 
-## 3. Account-level View ( STOP )
-*Describe the relationship of the API with respect to the accounts, groups, tenants, regions, availability zones etc.*
-
-
-### 3.1 Accounts
-*Describe the structure of the user accounts, groups and tenants. Currently this might be described separately in context of Control Services, but in future each service API needs to state their usage. In future CS might support complex group hierarchies, enterprise account structures while there maybe a phased adoption by individual service APIs*
-
-### 3.2 Regions and Availability Zones
-*Describe the availability of the service API in different regions and availability zones. State plans for future expansion as well.*
-
-**Region(s)**: region-a
-
-**Availability Zone(s)**: az-1, az-2, az-3 
-
-**Future Expansion**: region-b
-
-
-### 3.3 Service Catalog
-*Describe if the service API is exposed via the service catalog. Reference the fragment of the service catalog showing the structure.*
-
-The service is exposed in the service catalog, as shown in the following fragment:
-
-
-	{
-	   service catalog fragment here
-	}
+## 3. Account-level View 
+*Each HP Cloud account wishing to use LBaaS must have the account activated for LBaaS usage. Once the account is activated, the HP Cloud LBaaS service will show up in the service catelog returned during user login. In addition, LBaaS endpoints to be used will also be presented. Availability zone information may vary based on region.*
 
 
 
-## 4. REST API Specifications
+### 3.1 Service Catalog
+*Once logged in the service catalog should list the availability of the LBaaS service, roles available and endpoints for the region you have logged into.*
+
+The following is an example of LBaaS information within the service catalog: 
+
+ "user": {
+    "id": "59267322167978",
+    "name": "lbaas_tools",
+    "roles": [
+      {
+        "id": "83241756956007",
+        "serviceId": "220",
+        "name": "lbaas-user",
+        "tenantId": "22994259061625"
+      },
+      {
+        "id": "00000000004024",
+        "serviceId": "140",
+        "name": "user",
+        "tenantId": "22994259061625"
+      },
+      {
+        "id": "00000000004013",
+        "serviceId": "130",
+        "name": "block-admin",
+        "tenantId": "22994259061625"
+      }
+    ]
+  },
+  "serviceCatalog": [
+    {
+      "name": "Identity",
+      "type": "identity",
+      "endpoints": [{
+        "publicURL": "https:\/\/ntt.region-b.geo-1.identity.hpcloudsvc.com:35357\/v2.0\/",
+        "region": "region-b.geo-1",
+        "versionId": "2.0",
+        "versionInfo": "https:\/\/ntt.region-b.geo-1.identity-internal.hpcloudsvc.com:35357\/v2.0\/"
+      }]
+    },
+    {
+      "name": "Load Balancer",
+      "type": "hpext:lbaas",
+      "endpoints": [{
+        "tenantId": "22994259061625",
+        "publicURL": "https:\/\/ntt.region-b.geo-1.lbaas.hpcloudsvc.com\/v1.1",
+        "publicURL2": "",
+        "region": "region-b.geo-1",
+        "versionId": "1.1",
+        "versionInfo": "https:\/\/ntt.region-b.geo-1.lbaas.hpcloudsvc.com\/v1.1",
+        "versionList": "https:\/\/ntt.region-b.geo-1.lbaas.hpcloudsvc.comntt.region-b.geo-1.lbaas.hpcloudsvc.com"
+      }]
+    }
+]
+
+
+## 4. REST API Specifications (STOP)
 *Describe the API specifications, namely the API operations, and its details, documenting the naming conventions, request and response formats, media type support, status codes, error conditions, rate limits, quota limits, and specific business rules.*
 
 ### 4.1 Service API Operations
