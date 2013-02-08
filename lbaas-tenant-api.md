@@ -62,55 +62,55 @@ published: false
 
 The following is an example of LBaaS information within the service catalog: 
 
- "user": {
-    "id": "59267322167978",
-    "name": "lbaas_tools",
-    "roles": [
-      {
-        "id": "83241756956007",
-        "serviceId": "220",
-        "name": "lbaas-user",
-        "tenantId": "22994259061625"
-      },
-      {
-        "id": "00000000004024",
-        "serviceId": "140",
-        "name": "user",
-        "tenantId": "22994259061625"
-      },
-      {
-        "id": "00000000004013",
-        "serviceId": "130",
-        "name": "block-admin",
-        "tenantId": "22994259061625"
-      }
-    ]
-  },
-  "serviceCatalog": [
-    {
-      "name": "Identity",
-      "type": "identity",
-      "endpoints": [{
-        "publicURL": "https:\/\/ntt.region-b.geo-1.identity.hpcloudsvc.com:35357\/v2.0\/",
-        "region": "region-b.geo-1",
-        "versionId": "2.0",
-        "versionInfo": "https:\/\/ntt.region-b.geo-1.identity-internal.hpcloudsvc.com:35357\/v2.0\/"
-      }]
-    },
-    {
-      "name": "Load Balancer",
-      "type": "hpext:lbaas",
-      "endpoints": [{
-        "tenantId": "22994259061625",
-        "publicURL": "https:\/\/ntt.region-b.geo-1.lbaas.hpcloudsvc.com\/v1.1",
-        "publicURL2": "",
-        "region": "region-b.geo-1",
-        "versionId": "1.1",
-        "versionInfo": "https:\/\/ntt.region-b.geo-1.lbaas.hpcloudsvc.com\/v1.1",
-        "versionList": "https:\/\/ntt.region-b.geo-1.lbaas.hpcloudsvc.comntt.region-b.geo-1.lbaas.hpcloudsvc.com"
-      }]
-    }
-]
+	 "user": {
+	    "id": "59267322167978",
+	    "name": "lbaas_tools",
+	    "roles": [
+	      {
+	        "id": "83241756956007",
+	        "serviceId": "220",
+	        "name": "lbaas-user",
+	        "tenantId": "22994259061625"
+	      },
+	      {
+	        "id": "00000000004024",
+	        "serviceId": "140",
+	        "name": "user",
+	        "tenantId": "22994259061625"
+	      },
+	      {
+	        "id": "00000000004013",
+	        "serviceId": "130",
+	        "name": "block-admin",
+	        "tenantId": "22994259061625"
+	      }
+	    ]
+	  },
+	  "serviceCatalog": [
+	    {
+	      "name": "Identity",
+	      "type": "identity",
+	      "endpoints": [{
+	        "publicURL": "https:\/\/ntt.region-b.geo-1.identity.hpcloudsvc.com:35357\/v2.0\/",
+	        "region": "region-b.geo-1",
+	        "versionId": "2.0",
+	        "versionInfo": "https:\/\/ntt.region-b.geo-1.identity-internal.hpcloudsvc.com:35357\/v2.0\/"
+	      }]
+	    },
+	    {
+	      "name": "Load Balancer",
+	      "type": "hpext:lbaas",
+	      "endpoints": [{
+	        "tenantId": "22994259061625",
+	        "publicURL": "https:\/\/ntt.region-b.geo-1.lbaas.hpcloudsvc.com\/v1.1",
+	        "publicURL2": "",
+	        "region": "region-b.geo-1",
+	        "versionId": "1.1",
+	        "versionInfo": "https:\/\/ntt.region-b.geo-1.lbaas.hpcloudsvc.com\/v1.1",
+	        "versionList": "https:\/\/ntt.region-b.geo-1.lbaas.hpcloudsvc.comntt.region-b.geo-1.lbaas.hpcloudsvc.com"
+	      }]
+	    }
+	]
 
 
 ## 4. REST API Specifications (STOP)
