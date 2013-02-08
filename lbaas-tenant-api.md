@@ -119,17 +119,38 @@ The following is an example of LBaaS information within the service catalog:
 *This section describes operations and guidelines that are common to all LBaaS APIs.*
 
 #### 4.1.1 Authentication
+*The LBaaS API uses the standard defined by OpenStack Keystone project for authentication. Please refer to the HP Cloud identity management system for more details on all authentication methods currently supported.*
 
 #### 4.1.2 Service Access/Endpoints
+*As shown in the example above, logging into your region will provide you with the appropriate LBaaS endpoints to use. In addition, all supported versions are published within the service catalog. A client may chose to use any LBaaS API version listed.* 
 
 #### 4.1.3 Request/Response Types
+*The LBaaS API currently only supports JSON data serialization formats for request and response bodies. The request format is specified using the Content-Type header and is required for operations that have a request body. The response format should be specified in requests using the Accept header. If no response format is specified, JSON is the default.*
 
 #### 4.1.4 Persistent Connections
+*By default, the API supports persistent connections via HTTP/1.1 keep-alives. All connections will be kept alive unless the connection header is set to close. In adherence with the IETF HTTP RFCs, the server may close the connection at any time and clients should not rely on this behavior.*
 
-#### 4.1.5 Limits
+#### 4.1.5 Paginated Collections
+*Some LBaaS APIs have the capability to return collections of many resources. To reduce load on the service, list operations will return a maximum of 100 items at a time. To navigate the collection, Openstack style 'limit' and 'marker' query parameters are utilized. For example, ?limit=50&marker=1 can be set in the URI. If a marker beyond the end of a list is given, an empty list is returned.*
 
-#### 4.1.6 Faults
+#### 4.1.6 Absolute Limits
+*Absolute limits are limits which prohibit a user from creating too many LBaaS resources. For example, maxNodesPerLoadbalancer identifies the total number of nodes that may be associated with a given load balancer. Limits for a specific tenant may be queried for using the 'GET /limits' API. This will return the limit values which apply to the tenant who made the request.*
 
+| Limited Resource     | Description                   |
+|:---------------------|:------------------------------|
+| blah                 |blah                           |
+
+
+
+#### 4.1.7 Faults
+
+#### 4.1.8 Specifing Tenant IDs
+
+### 4.2 LBaaS API Summary Table
+
+
+
+## 5. STOP
 
 **Host**: https://az-1.region-a.geo-1.compute.hpcloudsvc.com
 
