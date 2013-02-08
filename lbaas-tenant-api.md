@@ -64,7 +64,7 @@ The following is an example of LBaaS information within the service catalog:
 
 	 "user": {
 	    "id": "59267322167978",
-	    "name": "lbaas_tools",
+	    "name": "lbaas_user",
 	    "roles": [
 	      {
 	        "id": "83241756956007",
@@ -91,10 +91,10 @@ The following is an example of LBaaS information within the service catalog:
 	      "name": "Identity",
 	      "type": "identity",
 	      "endpoints": [{
-	        "publicURL": "https:\/\/ntt.region-b.geo-1.identity.hpcloudsvc.com:35357\/v2.0\/",
+	        "publicURL": "https:\/\/usa.region-b.geo-1.identity.hpcloudsvc.com:35357\/v2.0\/",
 	        "region": "region-b.geo-1",
 	        "versionId": "2.0",
-	        "versionInfo": "https:\/\/ntt.region-b.geo-1.identity-internal.hpcloudsvc.com:35357\/v2.0\/"
+	        "versionInfo": "https:\/\/usa.region-b.geo-1.identity-internal.hpcloudsvc.com:35357\/v2.0\/"
 	      }]
 	    },
 	    {
@@ -102,21 +102,33 @@ The following is an example of LBaaS information within the service catalog:
 	      "type": "hpext:lbaas",
 	      "endpoints": [{
 	        "tenantId": "22994259061625",
-	        "publicURL": "https:\/\/ntt.region-b.geo-1.lbaas.hpcloudsvc.com\/v1.1",
+	        "publicURL": "https:\/\/usa.region-b.geo-1.lbaas.hpcloudsvc.com\/v1.1",
 	        "publicURL2": "",
 	        "region": "region-b.geo-1",
 	        "versionId": "1.1",
-	        "versionInfo": "https:\/\/ntt.region-b.geo-1.lbaas.hpcloudsvc.com\/v1.1",
-	        "versionList": "https:\/\/ntt.region-b.geo-1.lbaas.hpcloudsvc.comntt.region-b.geo-1.lbaas.hpcloudsvc.com"
+	        "versionInfo": "https:\/\/usa.region-b.geo-1.lbaas.hpcloudsvc.com\/v1.1",
+	        "versionList": "https:\/\/usa.region-b.geo-1.lbaas.hpcloudsvc.com"
 	      }]
 	    }
 	]
 
 
-## 4. REST API Specifications (STOP)
-*Describe the API specifications, namely the API operations, and its details, documenting the naming conventions, request and response formats, media type support, status codes, error conditions, rate limits, quota limits, and specific business rules.*
+## 4. REST API Specification
 
-### 4.1 Service API Operations
+### 4.1 General API Information
+*This section describes operations and guidelines that are common to all LBaaS APIs.*
+
+#### 4.1.1 Authentication
+
+#### 4.1.2 Service Access/Endpoints
+
+#### 4.1.3 Request/Response Types
+
+#### 4.1.4 Persistent Connections
+
+#### 4.1.5 Limits
+
+#### 4.1.6 Faults
 
 
 **Host**: https://az-1.region-a.geo-1.compute.hpcloudsvc.com
