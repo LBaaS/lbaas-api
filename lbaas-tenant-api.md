@@ -165,17 +165,30 @@ The following represents the JSON response body used for all faults:
 ## 5. LBaaS API Resources and Methods 
 *The following is a summary of all supported LBaaS API resources and methods. Each resource and method is defined in detail in the subsequent sections.* 
 
-**Derived resources:**
-*{baseURI} is the endpoint URI returned in the service catalog upon logging in including the protocol, endpoint and base URI.*
-*{version} is the specific version URI returned as part of the service catalog.*
+**Derived resource identifiers:**
 
-| Resource    | Operation                                 | HTTP Method | Path                           | Auth Required  |
-| :-----------| :-----------------------------------------|:------------|:-------------------------------|----------------|
-| versions    | Get list of all API versions              | GET         | {baseURI}/                     | yes            | 
-| versions    | Get specific API version information      | GET         | {baseURI}/{version}            | yes            |
-| limits      | Get list of LBaaS limits                  | GET         | {baseURI}/{version}/limits     | yes            |
-| protocols   | Get list of supported protocols and ports | GET         | {baseURI}/{version}/protocols  | yes            |
-| algorithms  | Get list of supported algorithms          | GET         | {baseURI}/{version}/algorithms | yes            |
+*{baseURI} is the endpoint URI returned in the service catalog upon logging in including the protocol, endpoint and base URI.*
+
+*{ver} is the specific version URI returned as part of the service catalog.*
+
+*{loadbalancerId} is the unique identifier for a load balancer returned by the LBaaS service *
+
+| Resource      | Operation                                 | HTTP   | Path                                           | Auth     |
+|               |                                           | Method |                                                | Required |
+| :-------------|:-------------------------- ---------------|:-------|:-----------------------------------------------|:---------|
+| versions      | Get list of all API versions              | GET    | {baseURI}/                                     | yes      | 
+| versions      | Get specific API version information      | GET    | {baseURI}/{ver}                                | yes      |
+| limits        | Get list of LBaaS limits                  | GET    | {baseURI}/{ver}/limits                         | yes      |
+| protocols     | Get list of supported protocols and ports | GET    | {baseURI}/{ver}/protocols                      | yes      |
+| algorithms    | Get list of supported algorithms          | GET    | {baseURI}/{ver}/algorithms                     | yes      |
+| load balancer | Get list of all load balancers            | GET    | {baseURI}/{ver}/loadbalancers                  | yes      |
+| load balancer | Get a specific load balancer              | GET    | {baseURI}/{ver}/loadbalancers/{loadbalancerId} | yes      |
+| load balancer | Create a new load balancer                | POST   | {baseURI}/{ver}/loadbalancers                  | yes      |
+| load balancer | Update an existing load balancer          | PUT    | {baseURI}/{ver}/loadbalancers/{loadbalancerId} | yes      |
+| load balancer | Delete an existing load balancer          | DELETE | {baseURI}/{ver}/loadbalancers/{loadbalancerId} | yes      |
+
+
+
 
 
 ### 5.1 Common Request Headers
