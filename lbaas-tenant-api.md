@@ -151,38 +151,32 @@ The following is an example of LBaaS information within the service catalog:
 The following represents the JSON response body used for all faults:
 
 	{
-	"message":"Description of fault",
-	"details":"Details of fault",
-	"code": HTTP standard error status
+	   "message":"Description of fault",
+	   "details":"Details of fault",
+	   "code": HTTP standard error status
 	}
 
 
-#### 4.1.8 Specifing Tenant IDs
-
-### 4.2 LBaaS API Summary Table
-
+#### 4.1.8 Specifying Tenant IDs
+*Tenant identifiers with LBaaS API URIs are not required. The tenant identifier is derived from the Openstack Keystone authentication token provided which each call. This simplifies the REST URIs to only include the base URI and the resource. For example, to retrieve a list of load balancers the request would be 'GET https://<endpoint>/loadbalancers'. All LBaaS calls will behave in this manner.*
 
 
-## 5. STOP
 
-**Host**: https://az-1.region-a.geo-1.compute.hpcloudsvc.com
-
-**BaseUri**: {Host}/v1.1/{tenant_id}
-
-**Admin URI**: N/A
+## 5. LBaaS API Resources and Methods 
+ 
 
 | Resource | Operation            | HTTP Method | Path                   | JSON/XML Support? | Privilege Level |
 | :------- | :------------------- | :---------- | :--------------------- | :---------------- | :-------------: |
 | R1       | [Short desc. of the call](#anchor_link) | {GET/POST/DELETE/PUT} | {BaseURI}/{path} | {Y/N}    |                 |
 
 
-### 4.2 Common Request Headers
+### 5.1 Common Request Headers
 *List the common response headers i.e. X-Auth-Token, Content-Type, Content-Length, Date etc.*
 
-### 4.3 Common Response Headers
+### 5.2 Common Response Headers
 *List the common response headers i.e. Content-Type, Content-Length, Connection, Date, ETag, Server, etc.*
 
-### 4.4 Service API Operation Details
+### 5.3 Service API Operation Details
 *The following section, enumerates each resource and describes each of its API calls as listed in the Service API Operations section, documenting the naming conventions, request and response formats, status codes, error conditions, rate limits, quota limits, and specific business rules.*
 
 #### 4.4.1 {Resource}
@@ -283,25 +277,14 @@ JSON
 	{"cloudServersFault": {"message": "Server Error, please try again later.", "code": 500}}
 
 
-XML
-
-
-	<xml data structure here>
-
-
 **Curl Example**
 
 
 	curl -i -H "X-Auth-Token: <Auth_Token>" {BaseUri}/{path}
 
-
 **Additional Notes**
 
 *Specify any inconsistencies, ambiguities, issues, commentary or discussion relevant to the call.*
-
-## 5. Changes from Cloud 1.0 API to Cloud 1.1 API
-
-*Put down a list of things that has changed from the 1.0 specs to 1.1 specs. If your service did not have a 1.0 version, please remove this section.*
 
 ## 6. Glossary
 
