@@ -136,9 +136,12 @@ The following is an example of LBaaS information within the service catalog:
 #### 4.1.6 Absolute Limits
 *Absolute limits are limits which prohibit a user from creating too many LBaaS resources. For example, maxNodesPerLoadbalancer identifies the total number of nodes that may be associated with a given load balancer. Limits for a specific tenant may be queried for using the 'GET /limits' API. This will return the limit values which apply to the tenant who made the request.*
 
-| Limited Resource     | Description                   |
-|:---------------------|:------------------------------|
-| blah                 |blah                           |
+| Limited Resource         | Description                                             |
+|:-------------------------|:--------------------------------------------------------|
+|maxLoadBalancers          |Maximum number of load balancers allowed for this tenant |
+|maxNodesPerLoadBalancer   |Maximum number of nodes allowed for each load balancer   |
+|maxLoadBalancerNameLength |Maximum length allowed for a load balancer name          |
+|maxVIPsPerLoadBalancer    |Maximum number of Virtual IPs for each load balancer     |
 
 
 
