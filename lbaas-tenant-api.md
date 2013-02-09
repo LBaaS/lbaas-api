@@ -252,17 +252,21 @@ The following represents the JSON response body used for all faults:
 ### 6.4 Query Parameters Supported
 *None required.*
 
-### 6.5 Request Body
+### 6.5 Required HTTP Header Values
+**X-Auth-Token**
+
+### 6.6 Request Body
 *None required.*
 
-### 6.6 Normal Responce Code 
+### 6.7 Normal Response Code 
 | HTTP Status Code | Description         |
 |:-----------------|:--------------------|
 |200               |OK                   |
 
-### 6.7 Response Body
+### 6.8 Response Body
+*The response body contains a list of all supported versions of LBaaS.*
 
-### 6.8 Error Response Codes 
+### 6.9 Error Response Codes 
 | HTTP Status Code | Description         |
 |:-----------------|:--------------------|
 |401               |Unauthorized         |
@@ -270,9 +274,24 @@ The following represents the JSON response body used for all faults:
 |405               |Not Allowed          |
 
 
-### 6.9 Example
+### 6.10 Example
+	curl -H "X-Auth-Token:HPAuth_d17a1fb4c6b5375050e80c800ef55a4987b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com | python -mjson.tool
 
-
+	{
+    	"versions": [
+        	{
+            	"id": "v1.1", 
+            	"links": [
+                	{
+                    	"href": "http://api-docs.hpcloud.com", 
+                    	"rel": "self"
+                	}
+            	], 
+            	"status": "CURRENT", 
+            	"updated": "2012-12-18T18:30:02.25Z"
+        	}
+    	]
+	}
 
 
 
