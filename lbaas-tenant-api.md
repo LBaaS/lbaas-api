@@ -223,8 +223,6 @@ The following represents the JSON response body used for all faults:
 
 *HTTP standard response headers*
 
-**Content-Length** - The length of the response body in octets (8-bit bytes).
-
 **Content-Type** - Internet media type of the response body.
 
 **Date** - The date and time that the response was sent.
@@ -238,25 +236,49 @@ The following represents the JSON response body used for all faults:
 
 
 
-## 6. Get List of All Versions
+## 6. Get a List of All API Versions
 
-### 6.1 Description
+### 6.1 Operation 
+|Resource            |Operation                                 |Method |Path                                                          |
+|:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
+|versions            |Get list of all API versions              |GET    |{baseURI}/                                                    |
 
-### 6.2 Operation
+### 6.2 Description 
+*This method allows querying the LBaaS service for all supported versions it supports. This method is also advertised within the Keystone service catalog which is presented upon user login.*
 
 ### 6.3 Request Data
+*None required.*
 
 ### 6.4 Query Parameters Supported
+*None required.*
 
 ### 6.5 Request Body
+*None required.*
 
-### 6.6 Success Status
+### 6.6 Normal Responce Code 
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|200               |OK                   |
 
 ### 6.7 Response Body
 
-### 6.8 Error Responses
+### 6.8 Error Response Codes 
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|401               |Unauthorized         |
+|404               |Not Found            |
+|405               |Not Allowed          |
 
-### 6.9 Curl Example
+
+### 6.9 Example
 
 
+
+
+
+
+
+
+
+## Known Issues 
 
