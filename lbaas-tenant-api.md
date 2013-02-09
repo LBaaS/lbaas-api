@@ -165,14 +165,17 @@ The following represents the JSON response body used for all faults:
 ## 5. LBaaS API Resources and Methods 
 *The following is a summary of all supported LBaaS API resources and methods. Each resource and method is defined in detail in the subsequent sections.* 
 
-Derived resources:
-{BaseURI} is the endpoint URI returned in the service catalog upon logging in including the protocol, endpoint and base URI.
-{version} is the specific version URI returned as part of the service catalog.
+**Derived resources:**
+*{baseURI} is the endpoint URI returned in the service catalog upon logging in including the protocol, endpoint and base URI.*
+*{version} is the specific version URI returned as part of the service catalog.*
 
-| Resource    | Operation                            | HTTP Method | Path                   | 
-| :-----------| :------------------------------------|:------------|:---------------------- |
-| versions    | Get list of all API versions         | GET         | {BaseURI}/             | 
-| versions    | Get specific API version information | GET         | {BaseURI}/{version}    |
+| Resource    | Operation                                 | HTTP Method | Path                           | Auth Required  |
+| :-----------| :-----------------------------------------|:------------|:-------------------------------|----------------|
+| versions    | Get list of all API versions              | GET         | {baseURI}/                     | yes            | 
+| versions    | Get specific API version information      | GET         | {baseURI}/{version}            | yes            |
+| limits      | Get list of LBaaS limits                  | GET         | {baseURI}/{version}/limits     | yes            |
+| protocols   | Get list of supported protocols and ports | GET         | {baseURI}/{version}/protocols  | yes            |
+| algorithms  | Get list of supported algorithms          | GET         | {baseURI}/{version}/algorithms | yes            |
 
 
 ### 5.1 Common Request Headers
