@@ -171,21 +171,31 @@ The following represents the JSON response body used for all faults:
 
 *{ver} is the specific version URI returned as part of the service catalog.*
 
-*{loadbalancerId} is the unique identifier for a load balancer returned by the LBaaS service *
+*{loadbalancerId} is the unique identifier for a load balancer returned by the LBaaS servicer.*
 
-| Resource      | Operation                                 | HTTP   | Path                                           | Auth     |
-|               |                                           | Method |                                                | Required |
-|:--------------|:-------------------------- ---------------|:-------|:-----------------------------------------------|:---------|
-| versions      | Get list of all API versions              | GET    | {baseURI}/                                     | yes      | 
-| versions      | Get specific API version information      | GET    | {baseURI}/{ver}                                | yes      |
-| limits        | Get list of LBaaS limits                  | GET    | {baseURI}/{ver}/limits                         | yes      |
-| protocols     | Get list of supported protocols and ports | GET    | {baseURI}/{ver}/protocols                      | yes      |
-| algorithms    | Get list of supported algorithms          | GET    | {baseURI}/{ver}/algorithms                     | yes      |
-| load balancer | Get list of all load balancers            | GET    | {baseURI}/{ver}/loadbalancers                  | yes      |
-| load balancer | Get a specific load balancer              | GET    | {baseURI}/{ver}/loadbalancers/{loadbalancerId} | yes      |
-| load balancer | Create a new load balancer                | POST   | {baseURI}/{ver}/loadbalancers                  | yes      |
-| load balancer | Update an existing load balancer          | PUT    | {baseURI}/{ver}/loadbalancers/{loadbalancerId} | yes      |
-| load balancer | Delete an existing load balancer          | DELETE | {baseURI}/{ver}/loadbalancers/{loadbalancerId} | yes      |
+*{nodeId} is the unique identifier for a load balancer node returned by the LBaaS service.*
+
+### 5.1 LBaaS API Summary Table
+
+| Resource           | Operation                                 | Method | Path                                                          |
+|:-------------------|:-------------------------- ---------------|:-------|:--------------------------------------------------------------|
+| versions           | Get list of all API versions              | GET    | {baseURI}/                                                    | 
+| versions           | Get specific API version information      | GET    | {baseURI}/{ver}                                               |
+| limits             | Get list of LBaaS limits                  | GET    | {baseURI}/{ver}/limits                                        |
+| protocols          | Get list of supported protocols and ports | GET    | {baseURI}/{ver}/protocols                                     |
+| algorithms         | Get list of supported algorithms          | GET    | {baseURI}/{ver}/algorithms                                    |
+| load balancer      | Get list of all load balancers            | GET    | {baseURI}/{ver}/loadbalancers                                 | 
+| load balancer      | Get a specific load balancer              | GET    | {baseURI}/{ver}/loadbalancers/{loadbalancerId}                |
+| load balancer      | Create a new load balancer                | POST   | {baseURI}/{ver}/loadbalancers                                 |
+| load balancer      | Update an existing load balancer          | PUT    | {baseURI}/{ver}/loadbalancers/{loadbalancerId}                | 
+| load balancer      | Delete an existing load balancer          | DELETE | {baseURI}/{ver}/loadbalancers/{loadbalancerId}                | 
+| load balancer node | Get list of load balancer nodes           | GET    | {baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes          |
+| load balancer node | Get a specific load balancer node         | GET    | {baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
+| load balancer node | Create a new load balancer node           | POST   | {baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes          |
+| load balancer node | Update a load balancer node               | PUT    | {baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
+| load balancer node | Delete a load balancer node               | DELETE | {baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
+| virtual IP         | Get list of virtual IPs for load balancer | GET    | {baseURI}/{ver}/loadbalancers/{loadbalancerId}virtualips      |
+
 
 
 
