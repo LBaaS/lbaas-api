@@ -175,7 +175,7 @@ The following represents the JSON response body used for all faults:
 
 | Resource      | Operation                                 | HTTP   | Path                                           | Auth     |
 |               |                                           | Method |                                                | Required |
-| :-------------|:-------------------------- ---------------|:-------|:-----------------------------------------------|:---------|
+|:--------------|:-------------------------- ---------------|:-------|:-----------------------------------------------|:---------|
 | versions      | Get list of all API versions              | GET    | {baseURI}/                                     | yes      | 
 | versions      | Get specific API version information      | GET    | {baseURI}/{ver}                                | yes      |
 | limits        | Get list of LBaaS limits                  | GET    | {baseURI}/{ver}/limits                         | yes      |
