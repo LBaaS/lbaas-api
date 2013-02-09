@@ -146,6 +146,16 @@ The following is an example of LBaaS information within the service catalog:
 
 
 #### 4.1.7 Faults
+*When issuing a LBaaS API request it is possible that an error can occur. In these cases, the system will return an HTTP error response code denoting the type of error and a response body with additional details regarding the error.(specific HTTP status codes possible are listed in each API definition)*
+
+The following represents the JSON response body used for all faults:
+
+	{
+	"message":"Description of fault",
+	"details":"Details of fault",
+	"code": HTTP standard error status
+	}
+
 
 #### 4.1.8 Specifing Tenant IDs
 
