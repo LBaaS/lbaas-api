@@ -180,37 +180,68 @@ The following represents the JSON response body used for all faults:
 |Resource            |Operation                                 |Method |Path                                                          |
 |:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
 |versions            |Get list of all API versions              |GET    |{baseURI}/                                                    | 
-|versions            |Get specific API version information      |GET    |{baseURI}/{ver}                                               |
+|versions            |Get specific API version                  |GET    |{baseURI}/{ver}                                               |
 |limits              |Get list of LBaaS limits                  |GET    |{baseURI}/{ver}/limits                                        |
-|protocols           |Get list of supported protocols and ports |GET    |{baseURI}/{ver}/protocols                                     |
+|protocols           |Get list of supported protocols           |GET    |{baseURI}/{ver}/protocols                                     |
 |algorithms          |Get list of supported algorithms          |GET    |{baseURI}/{ver}/algorithms                                    |
 |load balancer       |Get list of all load balancers            |GET    |{baseURI}/{ver}/loadbalancers                                 | 
 |load balancer       |Get a specific load balancer              |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                |
 |load balancer       |Create a new load balancer                |POST   |{baseURI}/{ver}/loadbalancers                                 |
 |load balancer       |Update an existing load balancer          |PUT    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                | 
 |load balancer       |Delete an existing load balancer          |DELETE |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                | 
-|load balancer node  |Get list of load balancer nodes           |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes          |
-|load balancer node  |Get a specific load balancer node         |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
-|load balancer node  |Create a new load balancer node           |POST   |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes          |
-|load balancer node  |Update a load balancer node               |PUT    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
-|load balancer node  |Delete a load balancer node               |DELETE |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
-|virtual IP          |Get list of virtual IPs for load balancer |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}virtualips      |
+|node                |Get list of load balancer nodes           |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes          |
+|node                |Get a specific load balancer node         |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
+|node                |Create a new load balancer node           |POST   |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes          |
+|node                |Update a load balancer node               |PUT    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
+|node                |Delete a load balancer node               |DELETE |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
+|virtual IP          |Get list of virtual IPs                   |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}virtualips      |
+
+
+### 5.2 Common Request Headers 
+
+*HTTP standard request headers*
+
+**Accept** - Internet media types that are acceptable in the response. HP Cloud LBaaS supports the media type application/json.
+
+**Content-Length** - The length of the request body in octets (8-bit bytes).
+
+**Content-Type** - The Internet media type of the request body. Used with POST and PUT requests. 
+
+*Non-standard request headers*
+
+**X-Auth-Token** - HP Cloud authorization token.
+
+*Example*
+
+	GET /v1.0/loadbalancers HTTP/1.1
+	Host: system.hpcloudsvc.com
+	Content-Type: application/json
+	Accept: application/json
+	X-Auth-Token: HPAuth_2895c13b1118e23d977f6a21aa176fd2bd8a10e04b74bd8e353216072968832a
+	Content-Length: 85
+
+### 5.3 Common Response Headers 
+
+*HTTP standard response headers*
+
+**Content-Length** - The length of the response body in octets (8-bit bytes).
+
+**Content-Type** - Internet media type of the response body.
+
+**Date** - The date and time that the response was sent.
+
+*Example*
+
+	HTTP/1.1 200 OK
+	Content-Length: 1135
+	Content-Type: application/json; charset=UTF-8
+	Date: Tue, 30 Oct 2012 16:22:35 GMT
 
 
 
 
 
-
-### 5.1 Common Request Headers
-*List the common response headers i.e. X-Auth-Token, Content-Type, Content-Length, Date etc.*
-
-### 5.2 Common Response Headers
-*List the common response headers i.e. Content-Type, Content-Length, Connection, Date, ETag, Server, etc.*
-
-### 5.3 Service API Operation Details
-*The following section, enumerates each resource and describes each of its API calls as listed in the Service API Operations section, documenting the naming conventions, request and response formats, status codes, error conditions, rate limits, quota limits, and specific business rules.*
-
-#### 4.4.1 {Resource}
+####  STOP ! 
 *Describe the resource and what information they provide. Then enumerate all the API method calls below.*
 
 **Status Lifecycle**
