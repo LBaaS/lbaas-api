@@ -113,27 +113,26 @@ The following is an example of LBaaS information within the service catalog:
 	]
 
 
-## 4. REST API Specification
+## 4. General API Information 
 
-### 4.1 General API Information
 *This section describes operations and guidelines that are common to all LBaaS APIs.*
 
-#### 4.1.1 Authentication
+### 4.1 Authentication
 *The LBaaS API uses the standard defined by OpenStack Keystone project for authentication. Please refer to the HP Cloud identity management system for more details on all authentication methods currently supported.*
 
-#### 4.1.2 Service Access/Endpoints
+### 4.2 Service Access/Endpoints
 *As shown in the example above, logging into your region will provide you with the appropriate LBaaS endpoints to use. In addition, all supported versions are published within the service catalog. A client may chose to use any LBaaS API version listed.* 
 
-#### 4.1.3 Request/Response Types
+### 4.3 Request/Response Types
 *The LBaaS API currently only supports JSON data serialization formats for request and response bodies. The request format is specified using the Content-Type header and is required for operations that have a request body. The response format should be specified in requests using the Accept header. If no response format is specified, JSON is the default.*
 
-#### 4.1.4 Persistent Connections
+### 4.4 Persistent Connections
 *By default, the API supports persistent connections via HTTP/1.1 keep-alives. All connections will be kept alive unless the connection header is set to close. In adherence with the IETF HTTP RFCs, the server may close the connection at any time and clients should not rely on this behavior.*
 
-#### 4.1.5 Paginated Collections
+### 4.5 Paginated Collections
 *Some LBaaS APIs have the capability to return collections of many resources. To reduce load on the service, list operations will return a maximum of 100 items at a time. To navigate the collection, Openstack style 'limit' and 'marker' query parameters are utilized. For example, ?limit=50&marker=1 can be set in the URI. If a marker beyond the end of a list is given, an empty list is returned.*
 
-#### 4.1.6 Absolute Limits
+### 4.6 Absolute Limits
 *Absolute limits are limits which prohibit a user from creating too many LBaaS resources. For example, maxNodesPerLoadbalancer identifies the total number of nodes that may be associated with a given load balancer. Limits for a specific tenant may be queried for using the 'GET /limits' API. This will return the limit values which apply to the tenant who made the request.*
 
 |Limited Resource          |Description                                              |
@@ -145,7 +144,7 @@ The following is an example of LBaaS information within the service catalog:
 
 
 
-#### 4.1.7 Faults
+### 4.7 Faults
 *When issuing a LBaaS API request it is possible that an error can occur. In these cases, the system will return an HTTP error response code denoting the type of error and a response body with additional details regarding the error.(specific HTTP status codes possible are listed in each API definition)*
 
 The following represents the JSON response body used for all faults:
@@ -157,7 +156,7 @@ The following represents the JSON response body used for all faults:
 	}
 
 
-#### 4.1.8 Specifying Tenant IDs
+### 4.8 Specifying Tenant IDs
 *Tenant identifiers with LBaaS API URIs are not required. The tenant identifier is derived from the Openstack Keystone authentication token provided which each call. This simplifies the REST URIs to only include the base URI and the resource. For example, to retrieve a list of load balancers the request would be 'GET https://<endpoint>/loadbalancers'. All LBaaS calls will behave in this manner.*
 
 
@@ -239,118 +238,25 @@ The following represents the JSON response body used for all faults:
 
 
 
+## 6. Get List of All Versions
 
+### 6.1 Description
 
-####  STOP ! 
-*Describe the resource and what information they provide. Then enumerate all the API method calls below.*
+### 6.2 Operation
 
-**Status Lifecycle**
+### 6.3 Request Data
 
-N/A
+### 6.4 Query Parameters Supported
 
-**Rate Limits**
+### 6.5 Request Body
 
-N/A
+### 6.6 Success Status
 
-**Quota Limits**
+### 6.7 Response Body
 
-N/A
+### 6.8 Error Responses
 
-**Business Rules**
-
-None.
-
-##### 4.4.1.1 {Short description of the method call}
-**{HTTP Verb: GET, POST, DELETE, PUT} {path only, no root path}**
-
-*Description about the method call*
-
-**Request Data**
-
-*Specify all the required/optional url and data parameters for the given method call.*
-
-**URL Parameters**
-
-*Pagination concepts can be described here, i.e. marker, limit, count etc. Filtering concepts can be described as well i.e. prefix, delimiter etc.*
-
-* *name_of_attribute* - {data type} - {description of the attribute}
-* *name_of_attribute* - {data type} - {description of the attribute}
-* *name_of_attribute* (Optional) - {data type} - {description of the attribute}
-
-**Data Parameters**
-
-*List all the attributes that comprises the data structure*
-
-* *name_of_attribute* - {data type} - {description of the attribute}
-* *name_of_attribute* - {data type} - {description of the attribute}
-* *name_of_attribute* (Optional) - {data type} - {description of the attribute}
-
-*Either put 'This call does not require a request body' or include JSON/XML request data structure*
-
-JSON
-
-
-	{json data structure here}
-
-
-XML
-
-
-	<xml data structure here>
-
-
-**Success Response**
-
-*Specify the status code and any content that is returned.*
-
-**Status Code**
-
-200 - OK
-
-**Response Data**
-
-*Either put 'This call does not require a request body' or include JSON/XML response data structure*
-
-JSON
-
-
-	{json data structure here}
-
-
-XML
-
-
-	<xml data structure here>
-
-
-**Error Response**
-
-*Enumerate all the possible error status codes and any content that is returned.*
-
-**Status Code**
-
-500 - Internal Server Error
-
-**Response Data**
-
-JSON
-
-
-	{"cloudServersFault": {"message": "Server Error, please try again later.", "code": 500}}
-
-
-**Curl Example**
-
-
-	curl -i -H "X-Auth-Token: <Auth_Token>" {BaseUri}/{path}
-
-**Additional Notes**
-
-*Specify any inconsistencies, ambiguities, issues, commentary or discussion relevant to the call.*
-
-## 6. Glossary
-
-*Put down definitions of terms and items that need explanation.*
+### 6.9 Curl Example
 
 
 
