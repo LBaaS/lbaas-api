@@ -163,11 +163,13 @@ The following represents the JSON response body used for all faults:
 
 
 ## 5. LBaaS API Resources and Methods 
- 
+*The following is a summary of all supported LBaaS API resources and methods. Each resource and method is defined in detail in the subsequent sections.* 
 
-| Resource | Operation            | HTTP Method | Path                   | JSON/XML Support? | Privilege Level |
-| :------- | :------------------- | :---------- | :--------------------- | :---------------- | :-------------: |
-| R1       | [Short desc. of the call](#anchor_link) | {GET/POST/DELETE/PUT} | {BaseURI}/{path} | {Y/N}    |                 |
+BaseURI is the endpoint URI returned in the service catalog upon logging in.
+
+| Resource    | Operation                    | HTTP Method | Path                   | 
+| :-----------| :----------------------------|:------------|:---------------------- |
+| versions    | Get list of all API versions | GET         | {BaseURI}/             | 
 
 
 ### 5.1 Common Request Headers
