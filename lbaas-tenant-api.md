@@ -187,7 +187,7 @@ The following is a summary of all supported LBaaS API resources and methods. Eac
 |load balancer       |Get list of all load balancers            |GET    |{baseURI}/{ver}/loadbalancers                                 | 
 |load balancer       |Get load balancer details                 |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                |
 |load balancer       |Create a new load balancer                |POST   |{baseURI}/{ver}/loadbalancers                                 |
-|load balancer       |Update an existing load balancer          |PUT    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                | 
+|load balancer       |Update load balancer attributes           |PUT    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                | 
 |load balancer       |Delete an existing load balancer          |DELETE |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                | 
 |node                |Get list of load balancer nodes           |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes          |
 |node                |Get a specific load balancer node         |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
@@ -625,7 +625,7 @@ The response body contains a list of load balancers for the tenant making the re
 
 **Curl Request**
 
-	curl -H "X-Auth-Token:HPAuth_d17a1fb4e1e0b4987b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalancers
+	curl -H "X-Auth-Token:HPAuth_d17a187b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalancers
 
 **Response**
 
@@ -698,7 +698,7 @@ The response body contains the load balancer requested or 404, if not found.
 
 **Curl Request**
 
-	curl -H "X-Auth-Token:HPAuth_d17a1fb4e1e0b4987b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalancers/2000
+	curl -H "X-Auth-Token:HPAuth_d17a17b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalancers/2000
 
 **Response**
 
@@ -937,6 +937,85 @@ The response body contains the load balancer requested or 404, if not found.
 		],
 		"algorithm":"ROUND_ROBIN"
 	}
+
+
+
+
+## 14. Update Load Balancer Attributes
+
+### 14.1 Operation
+|Resource            |Operation                                 |Method |Path                                                          |
+|:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
+|load balancer       |Update load balancer attributes           |PUT    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                |
+
+
+### 14.2 Description
+This operation updates the attributes of the specified load balancer. Upon successful validation of the request, the service will return a 202 (Accepted) response code. A caller should check that the load balancer status is ACTIVE to confirm that the update has taken effect. If the load balancer status is "PENDING_UPDATE" then the caller can poll the load balancer with its ID (using a GET operation) to wait for the changes to be applied and the load balancer to return to an ACTIVE status.
+
+This operation allows the caller to change one or more of the following attributes:
+
+**name**
+
+**algorithm**
+
+This operation does not return a response body.
+
+Note, The load balancers ID, status, port and protocol are immutable attributes and cannot be modified by the caller. Supplying an unsupported attribute will result in a 400 (badRequest) fault.
+
+### 14.3 Request Data
+Load balancer body with attributes to be updated.
+
+### 14.4 Query Parameters Supported
+None required.
+
+### 14.5 Required HTTP Header Values
+**X-Auth-Token**
+
+### 14.6 Request Body
+
+**Example**
+
+	{
+   		"name": "newname-loadbalancer",
+   		"algorithm": "LEAST_CONNECTIONS"
+	}
+
+### 14.7 Normal Response Code
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|202               |Accepted             |
+
+### 14.8 Response Body
+None.
+
+### 14.9 Error Response Codes
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|401               |Unauthorized         |
+|404               |Not Found            |
+|405               |Not Allowed          |
+|500               |LBaaS Fault          |
+
+### 14.10 Example
+
+**Contents of Request file lb.json**
+
+        {
+                "name": "newname-loadbalancer",
+                "algorithm": "LEAST_CONNECTIONS"
+        }
+
+**Curl Request**
+
+	curl -X PUT -H "X-Auth-Token:HPAuth_d17efd" --data-binary "@lb.json" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalance/100
+
+**Response**
+202 status with no response body.
+
+
+
+
+
 
 
 
