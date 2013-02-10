@@ -50,6 +50,9 @@ A virtual IP is an Internet Protocol (IP) address configured on the load balance
 #### 2.2.3 Node
 A node is a back-end device providing a service on a specified IP and port.
 
+The nodes defined by the load balancer are responsible for servicing the requests received through the load balancers virtual IP. By default, the load balancer employs a basic health check that ensures the node is listening on its defined port. The node is checked at the time of addition and at regular intervals as defined by the load balancer health check configuration. If a back-end node is not listening on its port or does not meet the conditions of the defined active health check for the load balancer, then the loadbalancer will not forward connections or requests to it and its status will be listed as OFFLINE. Only nodes that are in an ONLINE status will receive and be able to service traffic from the load balancer.
+
+
 ### 2.3 Infrastructure Architecture View
 LBaaS fits into the HP Cloud ecosystem of APIs by utilizing the common authentication mechanisms as other HP cloud services. In order to use LBaaS, a users account must be enabled to do so and all API calls will require a valid HP Cloud authentication token.
 
@@ -1047,7 +1050,7 @@ None required.
 ### 15.7 Normal Response Code
 | HTTP Status Code | Description         |
 |:-----------------|:--------------------|
-|202               |OK                   |
+|202               |Accepted             |
 
 ### 15.8 Response Body
 None.
@@ -1069,6 +1072,81 @@ None.
 **Response**
 
 202 status with no response body.
+
+
+
+## 16. List All Load Balancer Nodes 
+
+### 16.1 Operation
+|Resource            |Operation                                 |Method |Path                                                          |
+|:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
+|node                |Get list of load balancer nodes           |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes          |
+
+### 16.2 Description
+List all nodes of a load balancer.
+
+### 16.3 Request Data
+None required.
+
+### 16.4 Query Parameters Supported
+None required.
+
+### 16.5 Required HTTP Header Values
+**X-Auth-Token**
+
+### 16.6 Request Body
+List of the load balancers nodes.
+
+### 16.7 Normal Response Code
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|200               |OK                   |
+
+### 16.8 Response Body
+The response body contains the load balancer nodes requested or 404, if not found.
+
+### 16.9 Error Response Codes
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|401               |Unauthorized         |
+|404               |Not Found            |
+|405               |Not Allowed          |
+|500               |LBaaS Fault          |
+
+### 16.10 Example
+
+**Curl Example**
+
+	curl -H "X-Auth-Token:HPAuth_d17efd" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalance/100/nodes
+
+**Response**
+
+	{
+  		"nodes" : [
+              	{
+                	"id":"410",
+                	"address":"10.1.1.1",
+                	"port":"80",
+                	"condition":"ENABLED",
+                	"status":"ONLINE"
+              	},
+              	{
+                	"id":"236",
+                	"address":"10.1.1.2",
+                	"port":"80",
+                	"condition":"ENABLED",
+                	"status":"ONLINE"
+              	},
+              	{
+                	"id":"2815",
+                	"address":"10.1.1.3",
+                	"port":"83",
+                	"condition":"DISABLED",
+                	"status":"OFFLINE"
+              	},
+            	]
+	}	
+
 
 
 
