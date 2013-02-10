@@ -279,9 +279,11 @@ The response body contains a list of all supported versions of LBaaS.
 ### 6.10 Example
 
 **Curl Request**
+
 	curl -H "X-Auth-Token:HPAuth_d17a1fb4c6b5375055a4987b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com
 
 **Response**
+
 	{
     	"versions": [
         	{
@@ -342,9 +344,11 @@ The response body contains information regarding a specific LBaaS API version.
 ### 7.10 Example
 
 **Curl Request**
+
 	curl -H "X-Auth-Token:HPAuth_d17a1fb4e100ef55a4987b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1 
 
 **Response**
+
 	{
     		"version": {
         	"id": "v1.1", 
@@ -407,9 +411,11 @@ The response body contains information regarding limits imposed for the tenant m
 ### 8.10 Example
 
 **Curl Request**
+
 	curl -H "X-Auth-Token:HPAuth_d17a1fb4e1e0b8857b9d" https://ntt.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/limits 
 
 **Response**
+
 	{
 	"limits": {
         	"absolute": {
@@ -468,9 +474,11 @@ The response body contains the currently supported protocols and port numbers.
 ### 9.10 Example
 
 **Curl Request**
+
 	curl -H "X-Auth-Token:HPAuth_d17a1a4987b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/protocols 
 
 **Response**
+
 	{
 		"protocols": [
 		{	
@@ -538,9 +546,11 @@ The response body contains the currently supported algorithms.
 ### 10.10 Example
 
 **Curl Request**
+
 	curl -H "X-Auth-Token:HPAuth_d17a1fbb9d" https://ntt.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/algorithms 
 
 **Response**
+
 	{
     		"algorithms": [
         		{
@@ -614,9 +624,11 @@ The response body contains a list of load balancers for the tenant making the re
 ### 11.10 Example
 
 **Curl Request**
+
 	curl -H "X-Auth-Token:HPAuth_d17a1fb4e1e0b4987b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalancers
 
 **Response**
+
 	{
   		"loadBalancers":[
          	{
@@ -685,9 +697,11 @@ The response body contains the load balancer requested or 404, if not found.
 ### 12.10 Example
 
 **Curl Request**
+
 	curl -H "X-Auth-Token:HPAuth_d17a1fb4e1e0b4987b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalancers/2000
 
 **Response**
+
 	{
       		"id": "2000",
       		"name":"sample-loadbalancer",
@@ -823,6 +837,7 @@ The request body must follow the correct format for new load balancer creation, 
 The response body contains the load balancer requested or 404, if not found.
 
 **Create Load Balancer (Required Attributes with Shared IP) Response: JSON**
+
 	{
     		"name": "a-new-loadbalancer",
     		"id": "144",
@@ -865,6 +880,7 @@ The response body contains the load balancer requested or 404, if not found.
 ### 13.10 Example
 
 **Contents of Request file lb.json**
+
 	{
    		"name": "lb #1",
    		"protocol":"tcp",
@@ -882,9 +898,11 @@ The response body contains the load balancer requested or 404, if not found.
 
 
 **Curl Request**
+
 	curl -X POST -H "X-Auth-Token:HPAuth_d17efd" --data-binary "@lb.json" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalancers
 
 **Response**
+
 	{
 		"port":"443",
 		"id":"10",
