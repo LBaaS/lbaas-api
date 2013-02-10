@@ -6,7 +6,7 @@ description: "HP Cloud Load Balancer Service API Specification"
 keywords: "lbaas,loadbalancer"
 product: LoadBalancer
 published: false
-author:pemellquist@gmail.com
+author:Peter Mellquist, pemellquist@gmail.com
 
 ---
 
@@ -277,8 +277,11 @@ The response body contains a list of all supported versions of LBaaS.
 
 
 ### 6.10 Example
+
+**Curl Request**
 	curl -H "X-Auth-Token:HPAuth_d17a1fb4c6b5375055a4987b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com
 
+**Response**
 	{
     	"versions": [
         	{
@@ -338,8 +341,10 @@ The response body contains information regarding a specific LBaaS API version.
 
 ### 7.10 Example
 
+**Curl Request**
 	curl -H "X-Auth-Token:HPAuth_d17a1fb4e100ef55a4987b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1 
 
+**Response**
 	{
     		"version": {
         	"id": "v1.1", 
@@ -401,8 +406,10 @@ The response body contains information regarding limits imposed for the tenant m
 
 ### 8.10 Example
 
+**Curl Request**
 	curl -H "X-Auth-Token:HPAuth_d17a1fb4e1e0b8857b9d" https://ntt.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/limits 
 
+**Response**
 	{
 	"limits": {
         	"absolute": {
@@ -460,8 +467,10 @@ The response body contains the currently supported protocols and port numbers.
 
 ### 9.10 Example
 
+**Curl Request**
 	curl -H "X-Auth-Token:HPAuth_d17a1a4987b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/protocols 
 
+**Response**
 	{
 		"protocols": [
 		{	
@@ -528,8 +537,10 @@ The response body contains the currently supported algorithms.
 
 ### 10.10 Example
 
+**Curl Request**
 	curl -H "X-Auth-Token:HPAuth_d17a1fbb9d" https://ntt.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/algorithms 
 
+**Response**
 	{
     		"algorithms": [
         		{
@@ -602,8 +613,10 @@ The response body contains a list of load balancers for the tenant making the re
 
 ### 11.10 Example
 
+**Curl Request**
 	curl -H "X-Auth-Token:HPAuth_d17a1fb4e1e0b4987b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalancers
 
+**Response**
 	{
   		"loadBalancers":[
          	{
@@ -671,8 +684,10 @@ The response body contains the load balancer requested or 404, if not found.
 
 ### 12.10 Example
 
+**Curl Request**
 	curl -H "X-Auth-Token:HPAuth_d17a1fb4e1e0b4987b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalancers/2000
 
+**Response**
 	{
       		"id": "2000",
       		"name":"sample-loadbalancer",
@@ -761,7 +776,7 @@ None required.
 ### 13.6 Request Body
 The request body must follow the correct format for new load balancer creation, examples....
 
-**request body example to create a load balancer with two nodes**
+**Request body example to create a load balancer with two nodes**
 
 	{
     		"name": "a-new-loadbalancer",
@@ -777,7 +792,7 @@ The request body must follow the correct format for new load balancer creation, 
                 ]
 	} 
 
-**request body example to create a load balancer using existing load balancer virtual IP**
+**Request body example to create a load balancer using existing load balancer virtual IP**
 
 	{
    		"name":"a-new-loadbalancer",
@@ -802,10 +817,40 @@ The request body must follow the correct format for new load balancer creation, 
 ### 13.7 Normal Response Code
 | HTTP Status Code | Description         |
 |:-----------------|:--------------------|
-|200               |OK                   |
+|202               |Accepted             |
 
 ### 13.8 Response Body
 The response body contains the load balancer requested or 404, if not found.
+
+**Create Load Balancer (Required Attributes with Shared IP) Response: JSON**
+	{
+    		"name": "a-new-loadbalancer",
+    		"id": "144",
+    		"protocol": "HTTP",
+    		"port": "83",
+    		"algorithm": "ROUND_ROBIN",
+    		"status": "BUILD",
+    		"created": "2011-04-13T14:18:07Z",
+    		"updated":"2011-04-13T14:18:07Z",
+    		"virtualIps": [
+                    {
+                      	"address": "3ffe:1900:4545:3:200:f8ff:fe21:67cf",
+                      	"id": "39",
+                      	"type": "PUBLIC",
+                      	"ipVersion": "IPV6"
+                    }
+                  ],
+    		"nodes":      [
+                    {
+                      	"address": "10.1.1.1",
+                      	"id": "653",
+                      	"port": "80",
+                      	"status": "ONLINE",
+                      	"condition": "ENABLED"
+                    }
+                  ]
+	}
+
 
 ### 13.9 Error Response Codes
 | HTTP Status Code | Description         |
@@ -819,6 +864,61 @@ The response body contains the load balancer requested or 404, if not found.
 
 ### 13.10 Example
 
+**Contents of Request file lb.json**
+	{
+   		"name": "lb #1",
+   		"protocol":"tcp",
+    		"nodes":      [
+                    {
+                      	"address": "15.185.229.153",
+                      	"port": "443"
+                    },
+                   {
+                      	"address": "15.185.226.163",
+                      	"port": "443"
+                    },
+                   ],
+	}
+
+
+**Curl Request**
+	curl -X POST -H "X-Auth-Token:HPAuth_d17efd" --data-binary "@lb.json" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalancers
+
+**Response**
+	{
+		"port":"443",
+		"id":"10",
+		"protocol":"tcp",
+		"updated":"2013-02-10T18:20Z",
+		"created":"2013-02-10T18:20Z",
+		"status":"BUILD",
+		"nodes":[
+			{	
+				"port":"443",
+				"id":"19",
+				"condition":"ENABLED",
+				"status":"ONLINE",
+				"address":"15.185.229.153"
+			},
+			{
+				"port":"443",
+				"id":"20",
+				"condition":"ENABLED",
+				"status":"ONLINE",
+				"address":"15.185.226.163"
+			}
+		],
+		"name":"lb #1",
+		"virtualIps":[
+			{
+				"id":"5",
+				"address":"15.185.96.125",
+				"ipVersion":"IPV_4",
+				"type":"PUBLIC"
+			}
+		],
+		"algorithm":"ROUND_ROBIN"
+	}
 
 
 
@@ -827,7 +927,7 @@ The following features are not supported.
 
 1. Node 'weight' values are not implemented
 
-2. Passing node 'condition' on node create will not be honored, all new nodes will be set in ENABLED state
+2. Passing node 'condition' on node create will not be honored, all new nodes will be set in ENABLED condition state
 
 3. IPV6 support is not implemented
 
