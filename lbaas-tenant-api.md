@@ -1149,7 +1149,59 @@ The response body contains the load balancer nodes requested or 404, if not foun
 
 
 
+## 17. Get Load Balancer Node Details
 
+### 17.1 Operation
+|Resource            |Operation                                 |Method |Path                                                          |
+|:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
+|node                |Get a specific load balancer node         |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
+
+### 17.2 Description
+This operation retrieves the configuration of a node.
+
+### 17.3 Request Data
+None required.
+
+### 17.4 Query Parameters Supported
+None required.
+
+### 17.5 Required HTTP Header Values
+**X-Auth-Token**
+
+### 17.6 Request Body
+None required.
+
+### 17.7 Normal Response Code
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|200               |OK                   |
+
+### 17.8 Response Body
+The response body contains the load balancer node requested or 404, if not found.
+
+### 17.9 Error Response Codes
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|401               |Unauthorized         |
+|404               |Not Found            |
+|405               |Not Allowed          |
+|500               |LBaaS Fault          |
+
+### 17.10 Example
+
+**Curl Example**
+
+        curl -H "X-Auth-Token:HPAuth_d17efd" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalance/100/nodes/410
+
+**Response**
+
+	{
+  		"id":"410",
+  		"address":"10.1.1.2",
+  		"port":"80",
+  		"condition":"ENABLED",
+  		"status":"ONLINE"
+	}
 
 
 ## Features Currently Not Implemented or Supported
