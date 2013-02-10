@@ -762,6 +762,7 @@ None required.
 The request body must follow the correct format for new load balancer creation, examples....
 
 **request body example to create a load balancer with two nodes**
+
 	{
     		"name": "a-new-loadbalancer",
     		"nodes":      [
@@ -777,6 +778,7 @@ The request body must follow the correct format for new load balancer creation, 
 	} 
 
 **request body example to create a load balancer using existing load balancer virtual IP**
+
 	{
    		"name":"a-new-loadbalancer",
    		"port":"83",
