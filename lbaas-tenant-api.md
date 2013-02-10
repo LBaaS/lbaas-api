@@ -414,6 +414,64 @@ The response body contains information regarding limits imposed for the tenant m
 	}
 
 
+## 9. Get List Of Supported Protocols 
+
+### 9.1 Operation
+|Resource            |Operation                                 |Method |Path                                                          |
+|:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
+|protocols           |Get list of supported protocols           |GET    |{baseURI}/{ver}/protocols                                     |
+
+
+### 9.2 Description
+All load balancers must be configured with the protocol of the service which is being load balanced. The protocol selection should be based on the protocol of the back-end nodes. The current specification supports HTTP, HTTPS and TCP services.
+
+When configuring an HTTP or HTTPS load balancer, the default port for the given protocol will be selected unless otherwise specified. For TCP load balancers, the port attribute must be provided.
+
+### 9.3 Request Data
+None required.
+
+### 9.4 Query Parameters Supported
+None required.
+
+### 9.5 Required HTTP Header Values
+**X-Auth-Token**
+
+### 9.6 Request Body
+None required.
+
+### 9.7 Normal Response Code
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|200               |OK                   |
+
+### 9.8 Response Body
+The response body contains the currently supported protocols and port numbers.
+
+### 9.9 Error Response Codes
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|401               |Unauthorized         |
+|404               |Not Found            |
+|405               |Not Allowed          |
+
+### 9.10 Example
+
+	curl -H "X-Auth-Token:HPAuth_d17a1a4987b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/protocols | python -mjson.tool
+
+	{
+		"protocols": [
+		{	
+            		"name": "HTTP", 
+            		"port": 80
+        	}, 
+        	{
+            		"name": "TCP", 
+            		"port": 443
+        	}
+    		]
+	}
+
+
 
 
 ## Known Issues 
