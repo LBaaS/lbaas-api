@@ -1368,6 +1368,56 @@ None.
 
 
 
+## 20. Delete Load Balancer Node 
+
+### 20.1 Operation
+|Resource            |Operation                                 |Method |Path                                                          |
+|:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
+|node                |Delete a load balancer node               |DELETE |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
+
+### 20.2 Description
+Delete a node for a load balancer. Note, A load balancer must have at least one node. Attempting to remove the last node of a loadbalancer will result in a badRequest (401) error.
+
+### 20.3 Request Data
+None required.
+
+### 20.4 Query Parameters Supported
+None required.
+
+### 20.5 Required HTTP Header Values
+**X-Auth-Token**
+
+### 20.6 Request Body
+None required.
+
+### 20.7 Normal Response Code
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|202               |Accepted             |
+
+### 20.8 Response Body
+None.
+
+### 20.9 Error Response Codes
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|401               |Unauthorized         |
+|404               |Not Found            |
+|405               |Not Allowed          |
+|500               |LBaaS Fault          |
+
+### 20.10 Example
+
+**Curl Request**
+
+        curl -X DELETE -H "X-Auth-Token:HPAuth_d17efd" --data-binary "@node.json" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalancers/100/nodes/100
+
+
+**Response**
+
+202 status with no response body.
+
+
 
 
 
