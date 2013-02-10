@@ -473,6 +473,57 @@ The response body contains the currently supported protocols and port numbers.
 
 
 
+## 10. Get List Of Supported Algorithms 
+
+### 10.1 Operation
+|Resource            |Operation                                 |Method |Path                                                          |
+|:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
+|algorithms          |Get list of supported algorithms          |GET    |{baseURI}/{ver}/algorithms                                    |
+
+### 10.2 Description
+All load balancers utilize an algorithm that defines how traffic should be directed between back- end nodes. The default algorithm for newly created load balancers is ROUND_ROBIN, which can be overridden at creation time or changed after the load balancer has been initially provisioned.
+
+The algorithm name is to be constant within a major revision of the load balancing API, though new algorithms may be created with a unique algorithm name within a given major revision of this API.
+
+**Supported Load Balancing Algorithms**
+|Name               |Description                             |
+|:------------------|:---------------------------------------|
+|LEAST_CONNECTIONS  |The node with the lowest number of connections will receive requests. Weights can be defined as part of the node configuration|
+|ROUND_ROBIN        |Connections are routed to each of the back-end servers in turn. This is the default algorithm. Weights can be defined as part of the node configuration| 
+
+
+### 10.3 Request Data
+None required.
+
+### 10.4 Query Parameters Supported
+None required.
+
+### 10.5 Required HTTP Header Values
+**X-Auth-Token**
+
+### 10.6 Request Body
+None required.
+
+### 10.7 Normal Response Code
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|200               |OK                   |
+
+### 10.8 Response Body
+The response body contains the currently supported algorithms.
+
+### 10.9 Error Response Codes
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|401               |Unauthorized         |
+|404               |Not Found            |
+|405               |Not Allowed          |
+
+### 10.10 Example
+
+
+
+
 
 ## Known Issues 
 
