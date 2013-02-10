@@ -750,7 +750,7 @@ If you have at least one load balancer, you may create subsequent load balancers
 
 
 ### 13.3 Request Data
-None required.
+The caller is required to provide a request data with the POST which includes the appropriate information to create a new load balancer.
 
 ### 13.4 Query Parameters Supported
 None required.
@@ -759,7 +759,43 @@ None required.
 **X-Auth-Token**
 
 ### 13.6 Request Body
-None required.
+The request body must follow the correct format for new load balancer creation, examples....
+
+**request body example to create a load balancer with two nodes**
+	{
+    		"name": "a-new-loadbalancer",
+    		"nodes":      [
+                    	{
+                      		"address": "10.1.1.1",
+                      		"port": "80"
+                    	},
+                    	{
+                      		"address": "10.1.1.2",
+                      		"port": "81"
+                    	}
+                ]
+	} 
+
+**request body example to create a load balancer using existing load balancer virtual IP**
+	{
+   		"name":"a-new-loadbalancer",
+   		"port":"83",
+   		"protocol":"HTTP",
+   		"virtualIps": [
+                   {
+                      "id":"39"
+                   }
+                 ],
+   		"nodes":      [
+                   {
+                      "address":"10.1.1.1",
+                      "port":"80",
+                      "condition":"ENABLED"
+                   }
+                 ]
+	}
+
+
 
 ### 13.7 Normal Response Code
 | HTTP Status Code | Description         |
