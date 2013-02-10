@@ -185,7 +185,7 @@ The following is a summary of all supported LBaaS API resources and methods. Eac
 |protocols           |Get list of supported protocols           |GET    |{baseURI}/{ver}/protocols                                     |
 |algorithms          |Get list of supported algorithms          |GET    |{baseURI}/{ver}/algorithms                                    |
 |load balancer       |Get list of all load balancers            |GET    |{baseURI}/{ver}/loadbalancers                                 | 
-|load balancer       |Get a specific load balancer              |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                |
+|load balancer       |Get load balancer details                 |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                |
 |load balancer       |Create a new load balancer                |POST   |{baseURI}/{ver}/loadbalancers                                 |
 |load balancer       |Update an existing load balancer          |PUT    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                | 
 |load balancer       |Delete an existing load balancer          |DELETE |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                | 
@@ -596,7 +596,7 @@ The response body contains a list of load balancers for the tenant making the re
 
 ### 11.10 Example
 
-	curl -H "X-Auth-Token:HPAuth_d17a1fb4e1e0b4987b9d" https://ntt.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalancers
+	curl -H "X-Auth-Token:HPAuth_d17a1fb4e1e0b4987b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalancers
 
 	{
   		"loadBalancers":[
@@ -624,6 +624,94 @@ The response body contains a list of load balancers for the tenant making the re
 	}
 
 
+
+## 12. Get Load Balancer Details 
+
+### 12.1 Operation
+|Resource            |Operation                                 |Method |Path                                                          |
+|:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
+|load balancer       |Get a specific load balancer              |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                |
+
+### 12.2 Description
+This operation provides detailed output for a specific load balancer configured and associated with your account. This operation is not capable of returning details for a load balancer which has been deleted. Details include load balancer virtual IP and node information.
+
+### 12.3 Request Data
+None required.
+
+### 12.4 Query Parameters Supported
+None required.
+
+### 12.5 Required HTTP Header Values
+**X-Auth-Token**
+
+### 12.6 Request Body
+None required.
+
+### 12.7 Normal Response Code
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|200               |OK                   |
+
+### 12.8 Response Body
+The response body contains the load balancer requested or 404, if not found.
+
+### 12.9 Error Response Codes
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|401               |Unauthorized         |
+|404               |Not Found            |
+|405               |Not Allowed          |
+
+### 12.10 Example
+
+	curl -H "X-Auth-Token:HPAuth_d17a1fb4e1e0b4987b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalancers/2000
+
+	{
+      		"id": "2000",
+      		"name":"sample-loadbalancer",
+      		"protocol":"HTTP",
+      		"port": "80",
+      		"algorithm":"ROUND_ROBIN",
+      		"status":"ACTIVE",
+      		"created":"2010-11-30T03:23:42Z",
+      		"updated":"2010-11-30T03:23:44Z",
+      		"virtualIps":[
+                    	{
+                       		"id": "1000",
+                       		"address":"192.168.1.1",
+                       		"type":"PUBLIC",
+                       		"ipVersion":"IPV4"
+                    	}
+                 ],
+       		"nodes":     [
+                      {
+                         	"id": "1041",
+                         	"address":"10.1.1.1",
+                         	"port": "80",
+                         	"condition":"ENABLED",
+                         	"status":"ONLINE"
+                       },
+                       {
+                         	"id": "1411",
+                         	"address":"10.1.1.2",
+                         	"port": "80",
+                         	"condition":"ENABLED",
+                         	"status":"ONLINE"
+                       }
+                  ],
+	}
+
+
+
+
+
+
+## Currently Not Supported
+The following features are not supported or exist as known defects.
+
+### Node 'weight' values are not implemented
+### Passing node 'condition' on node create will not be honored, all new nodes will be set in ENABLED state
+### IPV6 support is not implemented
 
 
 
