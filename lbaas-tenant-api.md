@@ -1309,6 +1309,67 @@ The response body contains the load balancer requested or 404, if not found.
 
 
 
+## 19. Update a Load Balancer Node Condition 
+
+### 19.1 Operation
+|Resource            |Operation                                 |Method |Path                                                          |
+|:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
+|node                |Update a load balancer node               |PUT    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
+
+### 19.2 Description
+Every node in the load balancer is either enabled or disabled which determines its role within the load balancer. When the node has condition="ENABLED" the node is permitted to accept new connections. Its status will eventually become ONLINE to reflect this configuration. When the node has condition="DISABLED" the node is not permitted to accept any new connections. Existing connections to the node are forcibly terminated. The nodes status changes to OFFLINE once the configuration has been successfully applied.
+
+The nodes IP and port are immutable attributes and cannot be modified with a PUT request. Supplying an unsupported attribute will result in a 400 (badRequest) fault. A load balancer supports a maximum number of nodes. The maximum number of nodes per loadbalancer is returned when querying the limits of the LB service.
+
+### 19.3 Request Data
+Request data includes the desired condition of the node.
+
+### 19.4 Query Parameters Supported
+None required.
+
+### 19.5 Required HTTP Header Values
+**X-Auth-Token**
+
+### 19.6 Request Body
+The request body includes the node 'condition' attribute and its desired state.
+
+### 19.7 Normal Response Code
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|202               |Accepted             |
+
+### 19.8 Response Body
+None.
+
+### 19.9 Error Response Codes
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|401               |Unauthorized         |
+|404               |Not Found            |
+|405               |Not Allowed          |
+|500               |LBaaS Fault          |
+
+### 19.10 Example
+
+**Contents of Request file node.json**
+
+	{
+  		"condition": "DISABLED"
+	}
+
+**Curl Request**
+
+	curl -X PUT -H "X-Auth-Token:HPAuth_d17efd" --data-binary "@node.json" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalancers/100/nodes/100
+
+
+**Response**
+
+202 status with no response body.
+
+
+
+
+
 
 
 
