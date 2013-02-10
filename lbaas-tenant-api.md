@@ -1204,6 +1204,114 @@ The response body contains the load balancer node requested or 404, if not found
 	}
 
 
+
+
+## 18. Add a new Load Balancer Node 
+
+### 18.1 Operation
+|Resource            |Operation                                 |Method |Path                                                          |
+|:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
+|node                |Create a new load balancer node           |POST   |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes          |
+
+
+### 18.2 Description
+Add a new node to and existing loadbalancer. When a node is added, it is assigned a unique identifier that can be used for mutating operations such as changing the condition or the weight of a node, or removing the node from the load balancer. When a node is added to a load balancer, it is enabled by default.
+
+
+### 18.3 Request Data
+The request must contain information regarding the new node to be added. More than one node can be added at a time.
+
+### 18.4 Query Parameters Supported
+None required.
+
+### 18.5 Required HTTP Header Values
+**X-Auth-Token**
+
+### 18.6 Request Body
+The request body defines the attributes of the new node to be created.
+
+### 18.7 Normal Response Code
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|202               |Accepted             |
+
+### 18.8 Response Body
+The response body contains the load balancer requested or 404, if not found.
+
+### 18.9 Error Response Codes
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|401               |Unauthorized         |
+|404               |Not Found            |
+|405               |Not Allowed          |
+|413               |Over Limit           |
+|500               |LBaaS Fault          |
+
+### 18.10 Example
+
+**Contents of Request file nodes.json**
+
+	{
+  		"nodes": [
+             		{
+               			"address": "10.1.1.1",
+               			"port": "80"
+             		},
+             		{
+               			"address": "10.2.2.1",
+               			"port": "80",
+               			"weight": "2"
+             		},
+             		{
+               			"address": "10.2.2.2",
+               			"port": "88",
+               			"condition": "DISABLED",
+               			"weight": "2"
+             		}
+           	]
+	}
+
+
+**Curl Request**
+
+        curl -X POST -H "X-Auth-Token:HPAuth_d17efd" --data-binary "@nodes.json" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalancers/100/nodes
+
+**Response**
+
+	{
+  		"nodes": [
+             		{
+               			"id": "7298",
+               			"address": "10.1.1.1",
+               			"port": "80",
+               			"condition": "ENABLED",
+               			"status": "ONLINE"
+             		},
+             		{
+               			"id": "293",
+               			"address": "10.2.2.1",
+               			"port": "80",
+               			"weight": "2",
+               			"condition": "ENABLED",
+               			"status": "OFFLINE"
+             		},
+             		{		
+               			"id": "183",
+               			"address": "10.2.2.2",
+               			"port": "88",
+               			"weight": "2",
+               			"condition": "DISABLED",
+               			"status": "OFFLINE"
+             		}
+           	]
+	}
+
+
+
+
+
+
+
 ## Features Currently Not Implemented or Supported
 The following features are not supported.
 
