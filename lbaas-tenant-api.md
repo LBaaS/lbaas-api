@@ -485,10 +485,13 @@ All load balancers utilize an algorithm that defines how traffic should be direc
 
 The algorithm name is to be constant within a major revision of the load balancing API, though new algorithms may be created with a unique algorithm name within a given major revision of this API.
 
+**Supported Algorithms**
+
+
 |Name               |Description                                                           |
 |:------------------|:---------------------------------------------------------------------|
-|LEAST_CONNECTIONS  |The node with the lowest number of connections will receive requests. |
-|ROUND_ROBIN        |Connections are routed to each of the back-end servers in turn.       | 
+|LEAST_CONNECTIONS  |The node with the lowest number of connections will receive requests. Weights can be defined as part of the node configuration. |
+|ROUND_ROBIN        |Connections are routed to each of the back-end servers in turn. Weights can be defined as part of the node configuration. | 
 
 
 ### 10.3 Request Data
