@@ -485,7 +485,6 @@ All load balancers utilize an algorithm that defines how traffic should be direc
 
 The algorithm name is to be constant within a major revision of the load balancing API, though new algorithms may be created with a unique algorithm name within a given major revision of this API.
 
-**Supported Load Balancing Algorithms**
 |Name               |Description                                                           |
 |:------------------|:---------------------------------------------------------------------|
 |LEAST_CONNECTIONS  |The node with the lowest number of connections will receive requests. |
