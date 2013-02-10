@@ -276,7 +276,7 @@ The response body contains a list of all supported versions of LBaaS.
 
 
 ### 6.10 Example
-	curl -H "X-Auth-Token:HPAuth_d17a1fb4c6b5375050e80c800ef55a4987b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com 
+	curl -H "X-Auth-Token:HPAuth_d17a1fb4c6b5375055a4987b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com
 
 	{
     	"versions": [
@@ -551,12 +551,19 @@ This operation provides a list of all load balancers configured and associated w
 This operation returns the following attributes for each load balancer:
 
 **id** Unique identifier for the load balancer
+
 **name**  Creator assigned name for the load balancer
+
 **algorithm** Creator specified algoriothm for the load balancer
+
 **protocol** Creator specified protocol for the load balancer
+
 **port** Creator specified port for the load balancer
+
 **status** Current status, see section on load balancer status within load balancer create
+
 **created** When the load balancer was created
+
 **updated** When the load balancer was last updated
 
 
