@@ -276,7 +276,7 @@ The response body contains a list of all supported versions of LBaaS.
 
 
 ### 6.10 Example
-	curl -H "X-Auth-Token:HPAuth_d17a1fb4c6b5375050e80c800ef55a4987b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com | python -mjson.tool
+	curl -H "X-Auth-Token:HPAuth_d17a1fb4c6b5375050e80c800ef55a4987b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com 
 
 	{
     	"versions": [
@@ -336,7 +336,7 @@ The response body contains information regarding a specific LBaaS API version.
 
 ### 7.10 Example
 
-	curl -H "X-Auth-Token:HPAuth_d17a1fb4e100ef55a4987b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1 | python -mjson.tool
+	curl -H "X-Auth-Token:HPAuth_d17a1fb4e100ef55a4987b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1 
 
 	{
     		"version": {
@@ -398,7 +398,7 @@ The response body contains information regarding limits imposed for the tenant m
 
 ### 8.10 Example
 
-	curl -H "X-Auth-Token:HPAuth_d17a1fb4e1e0b8857b9d" https://ntt.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/limits | python -mjson.tool
+	curl -H "X-Auth-Token:HPAuth_d17a1fb4e1e0b8857b9d" https://ntt.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/limits 
 
 	{
 	"limits": {
@@ -456,7 +456,7 @@ The response body contains the currently supported protocols and port numbers.
 
 ### 9.10 Example
 
-	curl -H "X-Auth-Token:HPAuth_d17a1a4987b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/protocols | python -mjson.tool
+	curl -H "X-Auth-Token:HPAuth_d17a1a4987b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/protocols 
 
 	{
 		"protocols": [
@@ -523,7 +523,7 @@ The response body contains the currently supported algorithms.
 
 ### 10.10 Example
 
-	curl -H "X-Auth-Token:HPAuth_d17a1fbb9d" https://ntt.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/algorithms | python -mjson.tool
+	curl -H "X-Auth-Token:HPAuth_d17a1fbb9d" https://ntt.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/algorithms 
 
 	{
     		"algorithms": [
@@ -538,7 +538,54 @@ The response body contains the currently supported algorithms.
 
 
 
+## 11. Get List Of Load Balancers 
+
+### 11.1 Operation
+|Resource            |Operation                                 |Method |Path                                                          |
+|:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
+|load balancer       |Get list of all load balancers            |GET    |{baseURI}/{ver}/loadbalancers                                 |
+
+### 11.2 Description
+This operation provides a list of all load balancers configured and associated with your account. This includes a summary of attributes for each load balancer. In order to retrieve all the details for a load balancer, an individual request for the load balancer must be made.
+
+This operation returns the following attributes for each load balancer:
+
+**id** Unique identifier for the load balancer
+**name**  Creator assigned name for the load balancer
+**algorithm** Creator specified algoriothm for the load balancer
+**protocol** Creator specified protocol for the load balancer
+**port** Creator specified port for the load balancer
+**status** Current status, see section on load balancer status within load balancer create
+**created** When the load balancer was created
+**updated** When the load balancer was last updated
 
 
-## Known Issues 
+### 11.3 Request Data
+None required.
+
+### 11.4 Query Parameters Supported
+None required.
+
+### 11.5 Required HTTP Header Values
+**X-Auth-Token**
+
+### 11.6 Request Body
+None required.
+
+### 11.7 Normal Response Code
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|200               |OK                   |
+
+### 11.8 Response Body
+The response body contains a list of load balancers for the tenant making the request.
+
+### 11.9 Error Response Codes
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|401               |Unauthorized         |
+|404               |Not Found            |
+|405               |Not Allowed          |
+
+### 11.10 Example
 
