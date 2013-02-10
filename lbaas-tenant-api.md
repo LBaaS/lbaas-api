@@ -1000,20 +1000,75 @@ None.
 
 **Contents of Request file lb.json**
 
-        {
-                "name": "newname-loadbalancer",
-                "algorithm": "LEAST_CONNECTIONS"
-        }
+	{
+		"name": "newname-loadbalancer",
+		"algorithm": "LEAST_CONNECTIONS"
+	}
 
 **Curl Request**
 
 	curl -X PUT -H "X-Auth-Token:HPAuth_d17efd" --data-binary "@lb.json" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalance/100
 
 **Response**
+
 202 status with no response body.
 
 
 
+## 15. Delete Load Balancer 
+
+### 15.1 Operation
+|Resource            |Operation                                 |Method |Path                                                          |
+|:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
+|load balancer       |Delete an existing load balancer          |DELETE |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                |
+
+
+### 15.2 Description
+The remove load balancer function removes the specified load balancer and its associated configuration from the account. Any and all configuration data is immediately purged and is not recoverable.
+
+This operation does not require a request body.
+
+This operation does not return a response body.
+
+Deleted load balancers are still displayed for a number of days after deletion when listing load balancers of an account. 
+
+### 15.3 Request Data
+None required.
+
+### 15.4 Query Parameters Supported
+None required.
+
+### 15.5 Required HTTP Header Values
+**X-Auth-Token**
+
+### 15.6 Request Body
+None required.
+
+### 15.7 Normal Response Code
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|202               |OK                   |
+
+### 15.8 Response Body
+None.
+
+### 15.9 Error Response Codes
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|401               |Unauthorized         |
+|404               |Not Found            |
+|405               |Not Allowed          |
+|500               |LBaaS Fault          |
+
+### 15.10 Example
+
+**Curl Example**
+
+	curl -X DELETE -H "X-Auth-Token:HPAuth_d17efd" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalance/100
+
+**Response**
+
+202 status with no response body.
 
 
 
