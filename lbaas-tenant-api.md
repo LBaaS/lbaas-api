@@ -550,21 +550,21 @@ This operation provides a list of all load balancers configured and associated w
 
 This operation returns the following attributes for each load balancer:
 
-**id** Unique identifier for the load balancer
+**id :** Unique identifier for the load balancer
 
-**name**  Creator assigned name for the load balancer
+**name :**  Creator assigned name for the load balancer
 
-**algorithm** Creator specified algoriothm for the load balancer
+**algorithm :** Creator specified algoriothm for the load balancer
 
-**protocol** Creator specified protocol for the load balancer
+**protocol :** Creator specified protocol for the load balancer
 
-**port** Creator specified port for the load balancer
+**port :** Creator specified port for the load balancer
 
-**status** Current status, see section on load balancer status within load balancer create
+**status :** Current status, see section on load balancer status within load balancer create
 
-**created** When the load balancer was created
+**created :** When the load balancer was created
 
-**updated** When the load balancer was last updated
+**updated :** When the load balancer was last updated
 
 
 ### 11.3 Request Data
@@ -595,4 +595,35 @@ The response body contains a list of load balancers for the tenant making the re
 |405               |Not Allowed          |
 
 ### 11.10 Example
+
+	curl -H "X-Auth-Token:HPAuth_d17a1fb4e1e0b4987b9d" https://ntt.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalancers
+
+	{
+  		"loadBalancers":[
+         	{
+           		"name":"lb-site1",
+           		"id":"71",
+           		"protocol":"HTTP",
+           		"port":"80",
+           		"algorithm":"LEAST_CONNECTIONS",
+           		"status":"ACTIVE",
+           		"created":"2010-11-30T03:23:42Z",
+           		"updated":"2010-11-30T03:23:44Z"
+         	},
+         	{
+           		"name":"lb-site2",
+           		"id":"166",
+           		"protocol":"TCP",
+           		"port":"9123",
+           		"algorithm":"ROUND_ROBIN",
+           		"status":"ACTIVE",
+           		"created":"2010-11-30T03:23:42Z",
+           		"updated":"2010-11-30T03:23:44Z"
+         	}
+      		]
+	}
+
+
+
+
 
