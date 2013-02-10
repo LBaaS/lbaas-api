@@ -6,6 +6,7 @@ description: "HP Cloud Load Balancer Service API Specification"
 keywords: "lbaas,loadbalancer"
 product: LoadBalancer
 published: false
+author:pemellquist@gmail.com
 
 ---
 
@@ -355,6 +356,63 @@ The response body contains information regarding a specific LBaaS API version.
         	"updated": "2012-12-18T18:30:02.25Z"
     		}
 	}
+
+
+
+## 8. Get List of LBaaS Limits 
+
+### 8.1 Operation
+|Resource            |Operation                                 |Method |Path                                                          |
+|:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
+|limits              |Get list of LBaaS limits                  |GET    |{baseURI}/{ver}/limits                                        |
+
+### 8.2 Description
+This method allows querying the LBaaS service for a list of API limits which apply on a tenant basis. Each tenant may not utilize LBaaS API resources exceeded these limits. 
+
+### 8.3 Request Data
+None required.
+
+### 8.4 Query Parameters Supported
+None required.
+
+### 8.5 Required HTTP Header Values
+**X-Auth-Token**
+
+### 8.6 Request Body
+None required.
+
+### 8.7 Normal Response Code
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|200               |OK                   |
+
+### 8.8 Response Body
+The response body contains information regarding limits imposed for the tenant making the request.
+
+### 8.9 Error Response Codes
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|401               |Unauthorized         |
+|404               |Not Found            |
+|405               |Not Allowed          |
+
+### 8.10 Example
+
+	curl -H "X-Auth-Token:HPAuth_d17a1fb4e1e0b8857b9d" https://ntt.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/limits | python -mjson.tool
+
+	{
+	"limits": {
+        	"absolute": {
+            		"values": {
+                		"maxLoadBalancerNameLength": 128, 
+                		"maxLoadBalancers": 20, 
+                		"maxNodesPerLoadBalancer": 5, 
+                		"maxVIPsPerLoadBalancer": 1
+            			}
+        		}
+    		}
+	}
+
 
 
 
