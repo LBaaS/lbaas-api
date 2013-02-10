@@ -523,6 +523,19 @@ The response body contains the currently supported algorithms.
 
 ### 10.10 Example
 
+	curl -H "X-Auth-Token:HPAuth_d17a1fbb9d" https://ntt.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/algorithms | python -mjson.tool
+
+	{
+    		"algorithms": [
+        		{
+            			"name": "ROUND_ROBIN"
+        		}, 
+        		{
+            			"name": "LEAST_CONNECTIONS"
+        		}
+    		]
+	}
+
 
 
 
