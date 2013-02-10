@@ -273,6 +273,7 @@ The response body contains a list of all supported versions of LBaaS.
 |401               |Unauthorized         |
 |404               |Not Found            |
 |405               |Not Allowed          |
+|500               |LBaaS Fault          |
 
 
 ### 6.10 Example
@@ -333,6 +334,7 @@ The response body contains information regarding a specific LBaaS API version.
 |401               |Unauthorized         |
 |404               |Not Found            |
 |405               |Not Allowed          |
+|500               |LBaaS Fault          |
 
 ### 7.10 Example
 
@@ -395,6 +397,7 @@ The response body contains information regarding limits imposed for the tenant m
 |401               |Unauthorized         |
 |404               |Not Found            |
 |405               |Not Allowed          |
+|500               |LBaaS Fault          |
 
 ### 8.10 Example
 
@@ -453,6 +456,7 @@ The response body contains the currently supported protocols and port numbers.
 |401               |Unauthorized         |
 |404               |Not Found            |
 |405               |Not Allowed          |
+|500               |LBaaS Fault          |
 
 ### 9.10 Example
 
@@ -520,6 +524,7 @@ The response body contains the currently supported algorithms.
 |401               |Unauthorized         |
 |404               |Not Found            |
 |405               |Not Allowed          |
+|500               |LBaaS Fault          |
 
 ### 10.10 Example
 
@@ -593,6 +598,7 @@ The response body contains a list of load balancers for the tenant making the re
 |401               |Unauthorized         |
 |404               |Not Found            |
 |405               |Not Allowed          |
+|500               |LBaaS Fault          |
 
 ### 11.10 Example
 
@@ -661,6 +667,7 @@ The response body contains the load balancer requested or 404, if not found.
 |401               |Unauthorized         |
 |404               |Not Found            |
 |405               |Not Allowed          |
+|500               |LBaaS Fault          |
 
 ### 12.10 Example
 
@@ -703,15 +710,88 @@ The response body contains the load balancer requested or 404, if not found.
 
 
 
+## 13. Create a New Load Balancer 
+
+### 13.1 Operation
+|Resource            |Operation                                 |Method |Path                                                          |
+|:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
+|load balancer       |Create a new load balancer                |POST   |{baseURI}/{ver}/loadbalancers                                 |
+
+### 13.2 Description
+This operation provisions a new load balancer based on the configuration defined in the request object. Once the request is validated and progress has started on the provisioning process, a response object will be returned. The object will contain a unique identifier and status of the request.
+
+If the status returned is set to "BUILD", then using the identifier of the load balancer, the caller can check on the progress of the creation operation by performing a GET on loadbalancers/{loadbalancerId}. When the status of the load balancer returned changes to "ACTIVE", then the load balancer has been successfully provisioned and is now operational.
+
+**Load Balancer Status Values**
+
+|Status Name     |Description                                                  |
+|:---------------|:------------------------------------------------------------|
+|BUILD           |Load balancer is in a building state and not yet operational |
+|ACTIVE          |Load balancer is in an operational state                     |
+|PENDING_UPDATE  |Load balancer is in the process of an update                 |
+|ERROR           |Load balancer is in an error state and not operational       |
+
+The caller of this operation must specify at least the following attributes of the load balancer:
+
+**name**
+
+**At least one node**
+
+If the request cannot be fulfilled due to insufficient or invalid data, an HTTP 400 (Bad Request) error response will be returned with information regarding the nature of the failure in the body of the response. Failures in the validation process are non-recoverable and require the caller to correct the cause of the failure and POST the request again.
+
+By default the system will create a loadbalancer with protocol set to HTTP, port set to 80 (or 443 if protocol is HTTPS), and assign a public IPV4 address to the loadbalancer. The default algorithm used is set to ROUND_ROBIN.
+
+A load balancer name has a max length that can be queried when querying limits.
+
+Users may configure all documented features of the load balancer at creation time by simply providing the additional elements or attributes in the request. This document provides an overview of all the features the load balancing service supports.
+
+If you have at least one load balancer, you may create subsequent load balancers that share a single virtual IP by issuing a POST and supplying a virtual IP ID instead of a type. Additionally, this feature is highly desirable if you wish to load balance both an unsecured and secure protocol using one IP address. For example, this method makes it possible to use the same load balancing configuration to support an HTTP and an HTTPS load balancer. Load balancers sharing a virtual IP must utilize a unique port.
 
 
 
-## Currently Not Supported
-The following features are not supported or exist as known defects.
+### 13.3 Request Data
+None required.
 
-### Node 'weight' values are not implemented
-### Passing node 'condition' on node create will not be honored, all new nodes will be set in ENABLED state
-### IPV6 support is not implemented
+### 13.4 Query Parameters Supported
+None required.
+
+### 13.5 Required HTTP Header Values
+**X-Auth-Token**
+
+### 13.6 Request Body
+None required.
+
+### 13.7 Normal Response Code
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|200               |OK                   |
+
+### 13.8 Response Body
+The response body contains the load balancer requested or 404, if not found.
+
+### 13.9 Error Response Codes
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|400               |Bad Request          |
+|401               |Unauthorized         |
+|404               |Not Found            |
+|405               |Not Allowed          |
+|413               |Over Limit           |
+|500               |LBaaS Fault          |
+
+### 13.10 Example
+
+
+
+
+## Features Currently Not Implemented or Supported
+The following features are not supported.
+
+1. Node 'weight' values are not implemented
+
+2. Passing node 'condition' on node create will not be honored, all new nodes will be set in ENABLED state
+
+3. IPV6 support is not implemented
 
 
 
