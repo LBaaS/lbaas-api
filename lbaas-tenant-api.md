@@ -260,7 +260,7 @@ None required.
 None required.
 
 ### 6.7 Normal Response Code 
-| HTTP Status Code | Description         |
+|HTTP Status Code  |Description          |
 |:-----------------|:--------------------|
 |200               |OK                   |
 
@@ -268,7 +268,7 @@ None required.
 The response body contains a list of all supported versions of LBaaS.
 
 ### 6.9 Error Response Codes 
-| HTTP Status Code | Description         |
+|HTTP Status Code  |Description          |
 |:-----------------|:--------------------|
 |401               |Unauthorized         |
 |404               |Not Found            |
@@ -320,7 +320,7 @@ None required.
 None required.
 
 ### 7.7 Normal Response Code
-| HTTP Status Code | Description         |
+|HTTP Status Code  |Description          |
 |:-----------------|:--------------------|
 |200               |OK                   |
 
@@ -328,7 +328,7 @@ None required.
 The response body contains information regarding a specific LBaaS API version.
 
 ### 7.9 Error Response Codes
-| HTTP Status Code | Description         |
+|HTTP Status Code  |Description          |
 |:-----------------|:--------------------|
 |401               |Unauthorized         |
 |404               |Not Found            |
@@ -382,7 +382,7 @@ None required.
 None required.
 
 ### 8.7 Normal Response Code
-| HTTP Status Code | Description         |
+|HTTP Status Code  |Description          |
 |:-----------------|:--------------------|
 |200               |OK                   |
 
@@ -390,7 +390,7 @@ None required.
 The response body contains information regarding limits imposed for the tenant making the request.
 
 ### 8.9 Error Response Codes
-| HTTP Status Code | Description         |
+|HTTP Status Code  |Description          |
 |:-----------------|:--------------------|
 |401               |Unauthorized         |
 |404               |Not Found            |
@@ -440,7 +440,7 @@ None required.
 None required.
 
 ### 9.7 Normal Response Code
-| HTTP Status Code | Description         |
+|HTTP Status Code  |Description          |
 |:-----------------|:--------------------|
 |200               |OK                   |
 
@@ -448,7 +448,7 @@ None required.
 The response body contains the currently supported protocols and port numbers.
 
 ### 9.9 Error Response Codes
-| HTTP Status Code | Description         |
+|HTTP Status Code  |Description          |
 |:-----------------|:--------------------|
 |401               |Unauthorized         |
 |404               |Not Found            |
@@ -486,10 +486,10 @@ All load balancers utilize an algorithm that defines how traffic should be direc
 The algorithm name is to be constant within a major revision of the load balancing API, though new algorithms may be created with a unique algorithm name within a given major revision of this API.
 
 **Supported Load Balancing Algorithms**
-|Name               |Description                             |
-|:------------------|:---------------------------------------|
-|LEAST_CONNECTIONS  |The node with the lowest number of connections will receive requests. Weights can be defined as part of the node configuration|
-|ROUND_ROBIN        |Connections are routed to each of the back-end servers in turn. This is the default algorithm. Weights can be defined as part of the node configuration| 
+|Name               |Description                                                           |
+|:------------------|:---------------------------------------------------------------------|
+|LEAST_CONNECTIONS  |The node with the lowest number of connections will receive requests. |
+|ROUND_ROBIN        |Connections are routed to each of the back-end servers in turn.       | 
 
 
 ### 10.3 Request Data
