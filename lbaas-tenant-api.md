@@ -14,7 +14,7 @@ author:Peter Mellquist, pemellquist@gmail.com
 
 **Date:** February 8, 2013
 
-**Document Version:** 0.3
+**Document Version:** 0.4
 
 
 ## 1. Overview
@@ -196,7 +196,7 @@ The following is a summary of all supported LBaaS API resources and methods. Eac
 |Node                |Create a new load balancer node           |POST   |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes          |
 |Node                |Update a load balancer node               |PUT    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
 |Node                |Delete a load balancer node               |DELETE |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
-|Virtual IP          |Get list of virtual IPs                   |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}virtualips      |
+|Virtual IP          |Get list of virtual IPs                   |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/virtualips     |
 
 
 ### 5.2 Common Request Headers 
@@ -1026,7 +1026,7 @@ None.
 
 
 ### 15.2 Description
-The remove load balancer function removes the specified load balancer and its associated configuration from the account. Any and all configuration data is immediately purged and is not recoverable.
+Remove load balancer removes the specified load balancer and its associated configuration from the account. Any and all configuration data is immediately purged and is not recoverable.
 
 This operation does not require a request body.
 
@@ -1092,7 +1092,7 @@ None required.
 **X-Auth-Token**
 
 ### 16.6 Request Body
-List of the load balancer nodes.
+None required.
 
 ### 16.7 Normal Response Code
 | HTTP Status Code | Description         |
@@ -1203,7 +1203,7 @@ The response body contains the load balancer node requested or 404, if not found
 
 
 
-## 18. Add Load Balancer Node 
+## 18. Create Load Balancer Node 
 
 ### 18.1 Operation
 |Resource            |Operation                                 |Method |Path                                                          |
@@ -1314,9 +1314,9 @@ The response body contains the load balancer requested or 404, if not found.
 |Node                |Update a load balancer node               |PUT    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
 
 ### 19.2 Description
-Every node in the load balancer is either enabled or disabled which determines its role within the load balancer. When the node has condition='ENABLED' the node is permitted to accept new connections. Its status will eventually become ONLINE to reflect this configuration. When the node has condition='DISABLED' the node is not permitted to accept any new connections. Existing connections to the node are forcibly terminated. The nodes status changes to OFFLINE once the configuration has been successfully applied.
+Every node in the load balancer is either enabled or disabled which determines its role within the load balancer. When the node has condition='ENABLED' the node is permitted to accept new connections. Its status will eventually become 'ONLINE' to reflect this configuration. When the node has condition='DISABLED' the node is not permitted to accept any new connections. Existing connections to the node are forcibly terminated. The nodes status changes to OFFLINE once the configuration has been successfully applied.
 
-The node IP and port are immutable attributes and cannot be modified with a PUT request. Supplying an unsupported attribute will result in a 400 (badRequest) fault. A load balancer supports a maximum number of nodes. The maximum number of nodes per loadbalancer is returned when querying the limits of the LB service.
+The node IP and port are immutable attributes and cannot be modified with a PUT request. Supplying an unsupported attribute will result in a 400 fault. A load balancer supports a maximum number of nodes. The maximum number of nodes per loadbalancer is returned when querying the limits of the LB service.
 
 ### 19.3 Request Data
 Request data includes the desired condition of the node.
@@ -1373,7 +1373,7 @@ None.
 |Node                |Delete a load balancer node               |DELETE |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
 
 ### 20.2 Description
-Delete node for a load balancer. Note, A load balancer must have at least one node. Attempting to remove the last node of a loadbalancer will result in a badRequest (401) error.
+Delete node for a load balancer. Note, A load balancer must have at least one node. Attempting to remove the last node of a loadbalancer will result in a 401 error.
 
 ### 20.3 Request Data
 None required.
@@ -1416,6 +1416,65 @@ None.
 
 
 
+
+## 21. Get List of Virtual IPs 
+
+### 21.1 Operation
+|Resource            |Operation                                 |Method |Path                                                          |
+|:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
+|Virtual IP          |Get list of virtual IPs                   |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/virtualips     |
+
+
+### 21.2 Description
+This operation lists all the virtual IP addresses of a load balancer.The maximum number of VIPs that can be configured when creating a load balancer can be discovered by querying the limits of the LB service.
+
+### 21.3 Request Data
+None required.
+
+### 21.4 Query Parameters Supported
+None required.
+
+### 21.5 Required HTTP Header Values
+**X-Auth-Token**
+
+### 21.6 Request Body
+None required.
+
+### 21.7 Normal Response Code
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|200               |OK                   |
+
+### 21.8 Response Body
+The response body contains the load balancer VIP list requested or 404, if not found.
+
+### 21.9 Error Response Codes
+| HTTP Status Code | Description         |
+|:-----------------|:--------------------|
+|401               |Unauthorized         |
+|404               |Not Found            |
+|405               |Not Allowed          |
+|500               |LBaaS Fault          |
+
+### 21.10 Example
+
+**Curl Request**
+
+        curl -H "X-Auth-Token:HPAuth_d17efd" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalancers/100/virtualips 
+
+
+**Response**
+
+	{
+  	"virtualIps": [
+                 	{
+                   		"id": "1021",
+                   		"address": "206.10.10.210",
+                   		"type": "PUBLIC",
+                   		"ipVersion": "IPV4"
+                 	}
+                	]
+	}
 
 
 
