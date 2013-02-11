@@ -1460,7 +1460,7 @@ The response body contains the load balancer VIP list requested or 404, if not f
 
 **Curl Request**
 
-        curl -H "X-Auth-Token:HPAuth_d17efd" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalancers/100/virtualips 
+	curl -H "X-Auth-Token:HPAuth_d17efd" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalancers/100/virtualips 
 
 
 **Response**
