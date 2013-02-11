@@ -10,21 +10,21 @@ author:Peter Mellquist, pemellquist@gmail.com
 
 ---
 
-# HP Cloud Load Balancer as a Service API Specification
+# HP Cloud Load Balancer as a Service (LBaaS) API Specification
 
 **Date:** February 8, 2013
 
-**Document Version:** 0.1
+**Document Version:** 0.3
 
 
 ## 1. Overview
 
-This guide is intended for software developers who want to create applications using the HP Cloud Load Balancer API. It assumes the reader has a general understanding of load balancing concepts and is familiar with RESTful web services, HTTP/1.1 conventions and JSON serialization formats.
+This guide is intended for software developers who wish to create applications using the HP Cloud Load Balancer as a Service (LBaaS) set of APIs. It assumes the reader has a general understanding of cloud APIs, load balancing concepts, RESTful web services, HTTP/1.1 conventions and JSON serialization formats. The LBaaS set of APIs utilize and take advantage of a variety of Openstack cloud API patterns which are described in detail.
 
 
 ### 1.1 API Maturity Level
 
-This API definition represents the HP Cloud Load Balancer as a Service in Beta release form. Functionality represented within this specification is supported.
+This API definition represents the HP Cloud Load Balancer as a Service in Beta release form. Functionality represented within this specification is supported. The LBaaS API defined within this specification represents version 1.1 of HP Cloud LBaaS.
 
 
 **Maturity Level**: *Experimental*
@@ -36,13 +36,13 @@ This API definition represents the HP Cloud Load Balancer as a Service in Beta r
 
 
 ### 2.1 Overview
-The HP Cloud Load Balancer as a Service (LBaaS) set of APIs provide a RESTful interface for the creation and management of load balancers in the cloud. These can be used for a variety of purposes including load balancers for your external services as well as internal load balancing needs. The load balancing solution is meant to provide both load balancing and high availability. The LBaaS APIs are integrated within the HP Cloud ecosystem including integration with the HP Cloud identity management system and billing systems.
+The HP Cloud Load Balancer as a Service (LBaaS) set of APIs provide a RESTful interface for the creation and management of load balancers in the cloud. Load balancers created can be used for a variety of purposes including load balancers for your external cloud hosted services as well as internal load balancing needs. The load balancing solution is meant to provide both load balancing and high availability in an industry standard manner. The LBaaS APIs defined are integrated within the HP Cloud API ecosystem including integration with the HP Cloud identity management system, billing and monitoring systems.
 
 ### 2.2 Conceptual/Logical Architecture View
-To use OpenStack Load Balancers API effectively, you should understand several key concepts.
+To use the HP Cloud Load Balancers API effectively, you should understand several key concepts.
 
 #### 2.2.1 Load Balancer
-A load balancer is a logical device. It is used to distribute workloads between multiple back-end systems or services called nodes, based on the criteria defined as part of its configuration.
+A load balancer is a logical device. It is used to distribute workloads between multiple back-end systems or services called 'nodes', based on the criteria defined as part of its configuration.
 
 #### 2.2.2 Virtual IP
 A virtual IP is an Internet Protocol (IP) address configured on the load balancer for use by clients connecting to a service that is load balanced. Incoming connections and requests are distributed to back-end nodes based on the configuration of the load balancer.
@@ -54,17 +54,16 @@ The nodes defined by the load balancer are responsible for servicing the request
 
 
 ### 2.3 Infrastructure Architecture View
-LBaaS fits into the HP Cloud ecosystem of APIs by utilizing the common authentication mechanisms as other HP cloud services. In order to use LBaaS, a users account must be enabled to do so and all API calls will require a valid HP Cloud authentication token.
+LBaaS fits into the HP Cloud ecosystem of APIs by utilizing the common authentication mechanisms as other HP cloud services. In order to use LBaaS, a user account must be 'activated' all API calls will require a valid HP Cloud authentication token.
 
 ## 3. Account-level View 
-Each HP Cloud account wishing to use LBaaS must have the account activated for LBaaS usage. Once the account is activated, the HP Cloud LBaaS service will show up in the service catelog returned during user login. In addition, LBaaS endpoints to be used will also be presented. Availability zone information may vary based on region.
-
+Once the account is activated, the HP Cloud LBaaS service will show up in the service catelog returned during user login. In addition, LBaaS endpoints to be used will also be presented. Availability zone information may vary based on region.
 
 
 ### 3.1 Service Catalog
-Once logged in the service catalog should list the availability of the LBaaS service, roles available and endpoints for the region you have logged into.
+Once logged into the HP Cloud, a service catalog will list the availability of the LBaaS service, roles  and endpoints for the region you have logged into and in which you are activated for.
 
-*The following is an example of LBaaS information within the service catalog:* 
+*The following is an example of LBaaS service information within the service catalog including roles and endpoints:* 
 
 	 "user": {
 	    "id": "59267322167978",
@@ -122,22 +121,22 @@ Once logged in the service catalog should list the availability of the LBaaS ser
 This section describes operations and guidelines that are common to all LBaaS APIs.
 
 ### 4.1 Authentication
-The LBaaS API uses the standard defined by OpenStack Keystone project for authentication. Please refer to the HP Cloud identity management system for more details on all authentication methods currently supported.
+The LBaaS API uses standard defined by OpenStack Keystone project and used by the HP Cloud for authentication. Please refer to the HP Cloud identity management system for more details on all authentication methods currently supported.
 
 ### 4.2 Service Access/Endpoints
 As shown in the example above, logging into your region will provide you with the appropriate LBaaS endpoints to use. In addition, all supported versions are published within the service catalog. A client may chose to use any LBaaS API version listed.
 
 ### 4.3 Request/Response Types
-The LBaaS API currently only supports JSON data serialization formats for request and response bodies. The request format is specified using the Content-Type header and is required for operations that have a request body. The response format should be specified in requests using the Accept header. If no response format is specified, JSON is the default.
+The LBaaS API currently only supports JSON data serialization formats for request and response bodies. The request format is specified using the 'Content-Type' header and is required for operations that have a request body. The response format should be specified in requests using the 'Accept'header. If no response format is specified, JSON is the default.
 
 ### 4.4 Persistent Connections
-By default, the API supports persistent connections via HTTP/1.1 keep-alives. All connections will be kept alive unless the connection header is set to close. In adherence with the IETF HTTP RFCs, the server may close the connection at any time and clients should not rely on this behavior.
+By default, the API supports persistent connections via HTTP/1.1 'keep-alive's. All connections will be kept alive unless the connection header is set to close. In adherence with the IETF HTTP RFCs, the server may close the connection at any time and clients should not rely on this behavior.
 
 ### 4.5 Paginated Collections
-Some LBaaS APIs have the capability to return collections of many resources. To reduce load on the service, list operations will return a maximum of 100 items at a time. To navigate the collection, Openstack style 'limit' and 'marker' query parameters are utilized. For example, ?limit=50&marker=1 can be set in the URI. If a marker beyond the end of a list is given, an empty list is returned.
+Some LBaaS APIs have the capability to return collections as a list of many resources. To reduce load on the service, list operations will return a maximum of 100 items at a time. To navigate the collection, Openstack style 'limit' and 'marker' query parameters are utilized. For example, '?limit=50&marker=1' can be set in the URI. If a marker beyond the end of a list is given, an empty list is returned.
 
 ### 4.6 Absolute Limits
-Absolute limits are limits which prohibit a user from creating too many LBaaS resources. For example, maxNodesPerLoadbalancer identifies the total number of nodes that may be associated with a given load balancer. Limits for a specific tenant may be queried for using the 'GET /limits' API. This will return the limit values which apply to the tenant who made the request.
+Absolute limits are limits which prohibit a user from creating too many LBaaS resources. For example, 'maxNodesPerLoadbalancer' identifies the total number of nodes that may be associated with a given load balancer. Limits for a specific tenant may be queried for using the 'GET /limits' API. This will return the limit values which apply to the tenant who made the request.
 
 |Limited Resource          |Description                                              |
 |:-------------------------|:--------------------------------------------------------|
@@ -149,9 +148,9 @@ Absolute limits are limits which prohibit a user from creating too many LBaaS re
 
 
 ### 4.7 Faults
-When issuing a LBaaS API request it is possible that an error can occur. In these cases, the system will return an HTTP error response code denoting the type of error and a response body with additional details regarding the error.(specific HTTP status codes possible are listed in each API definition)
+When issuing a LBaaS API request, it is possible that an error can occur. In these cases, the system will return an HTTP error response code denoting the type of error and a LBaaS response body with additional details regarding the error. Specific HTTP status codes possible are listed in each API definition.
 
-*The following represents the JSON response body used for all faults:*
+*The following JSON message represents the JSON response body used for all faults:*
 
 	{
 	   "message":"Description of fault",
@@ -161,7 +160,7 @@ When issuing a LBaaS API request it is possible that an error can occur. In thes
 
 
 ### 4.8 Specifying Tenant IDs
-Tenant identifiers with LBaaS API URIs are not required. The tenant identifier is derived from the Openstack Keystone authentication token provided which each call. This simplifies the REST URIs to only include the base URI and the resource. For example, to retrieve a list of load balancers the request would be 'GET https://<endpoint>/loadbalancers'. All LBaaS calls will behave in this manner.
+Tenant identifiers with LBaaS API URIs are not required. The tenant identifier is derived from the Openstack Keystone authentication token provided with each API call. This simplifies the REST URIs to only include the base URI and the resource. For example, to retrieve a list of load balancers the request would be 'GET https://<endpoint>/loadbalancers'. The tenant identifier is derived from the authentication token which is provided wi the API call. All LBaaS calls behave in this manner.
 
 
 
@@ -204,11 +203,11 @@ The following is a summary of all supported LBaaS API resources and methods. Eac
 
 *HTTP standard request headers*
 
-**Accept** - Internet media types that are acceptable in the response. HP Cloud LBaaS supports the media type application/json.
+**Accept** - Internet media types that are acceptable in the response. HP Cloud LBaaS API supports the media type 'application/json'.
 
 **Content-Length** - The length of the request body in octets (8-bit bytes).
 
-**Content-Type** - The Internet media type of the request body. Used with POST and PUT requests. 
+**Content-Type** - The Internet media type of the request body. Used with POST and PUT requests. HP Cloud LBaaS API supports 'application/json'.
 
 *Non-standard request headers*
 
@@ -240,7 +239,7 @@ The following is a summary of all supported LBaaS API resources and methods. Eac
 
 
 
-## 6. Get a List of All API Versions
+## 6. Get a List of All LBaaS API Versions Supported
 
 ### 6.1 Operation 
 |Resource            |Operation                                 |Method |Path                                                          |
@@ -248,7 +247,7 @@ The following is a summary of all supported LBaaS API resources and methods. Eac
 |versions            |Get list of all API versions              |GET    |{baseURI}/                                                    |
 
 ### 6.2 Description 
-This method allows querying the LBaaS service for all supported versions it supports. This method is also advertised within the Keystone service catalog which is presented upon user login.
+This method allows querying the LBaaS service for all supported versions it supports. This method is also advertised within the Keystone service catalog which is presented upon user login. All versions listed can be used for LBaaS.
 
 ### 6.3 Request Data
 None required.
@@ -306,7 +305,7 @@ The response body contains a list of all supported versions of LBaaS.
 
 
 
-## 7. Get Specific API Version Information
+## 7. Get Specific LBaaS API Version Information
 
 ### 7.1 Operation
 |Resource            |Operation                                 |Method |Path                                                          |
@@ -373,7 +372,7 @@ The response body contains information regarding a specific LBaaS API version.
 
 
 
-## 8. Get List of LBaaS Limits 
+## 8. Get List of LBaaS API Limits 
 
 ### 8.1 Operation
 |Resource            |Operation                                 |Method |Path                                                          |
@@ -381,7 +380,7 @@ The response body contains information regarding a specific LBaaS API version.
 |limits              |Get list of LBaaS limits                  |GET    |{baseURI}/{ver}/limits                                        |
 
 ### 8.2 Description
-This method allows querying the LBaaS service for a list of API limits which apply on a tenant basis. Each tenant may not utilize LBaaS API resources exceeded these limits. 
+This method allows querying the LBaaS service for a list of API limits which apply on a tenant basis. Each tenant may not utilize LBaaS API resources exceeding these limits and will receive and over limit error if attempted (413).
 
 ### 8.3 Request Data
 None required.
@@ -433,7 +432,7 @@ The response body contains information regarding limits imposed for the tenant m
 	}
 
 
-## 9. Get List Of Supported Protocols 
+## 9. Get List Of Supported LBaaS Protocols 
 
 ### 9.1 Operation
 |Resource            |Operation                                 |Method |Path                                                          |
@@ -497,7 +496,7 @@ The response body contains the currently supported protocols and port numbers.
 
 
 
-## 10. Get List Of Supported Algorithms 
+## 10. Get List Of Supported LBaaS Algorithms 
 
 ### 10.1 Operation
 |Resource            |Operation                                 |Method |Path                                                          |
@@ -505,7 +504,7 @@ The response body contains the currently supported protocols and port numbers.
 |algorithms          |Get list of supported algorithms          |GET    |{baseURI}/{ver}/algorithms                                    |
 
 ### 10.2 Description
-All load balancers utilize an algorithm that defines how traffic should be directed between back- end nodes. The default algorithm for newly created load balancers is ROUND_ROBIN, which can be overridden at creation time or changed after the load balancer has been initially provisioned.
+All load balancers utilize an algorithm that defines how traffic should be directed between back end nodes. The default algorithm for newly created load balancers is ROUND_ROBIN, which can be overridden at creation time or changed after the load balancer has been initially provisioned.
 
 The algorithm name is to be constant within a major revision of the load balancing API, though new algorithms may be created with a unique algorithm name within a given major revision of this API.
 
@@ -567,7 +566,7 @@ The response body contains the currently supported algorithms.
 
 
 
-## 11. Get List Of Load Balancers 
+## 11. Get List Of All Load Balancers 
 
 ### 11.1 Operation
 |Resource            |Operation                                 |Method |Path                                                          |
@@ -667,7 +666,7 @@ The response body contains a list of load balancers for the tenant making the re
 |load balancer       |Get a specific load balancer              |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                |
 
 ### 12.2 Description
-This operation provides detailed output for a specific load balancer configured and associated with your account. This operation is not capable of returning details for a load balancer which has been deleted. Details include load balancer virtual IP and node information.
+This operation provides detailed description for a specific load balancer configured and associated with your account. This operation is not capable of returning details for a load balancer which has been deleted. Details include load balancer virtual IP and node information.
 
 ### 12.3 Request Data
 None required.
@@ -1410,7 +1409,7 @@ None.
 
 **Curl Request**
 
-        curl -X DELETE -H "X-Auth-Token:HPAuth_d17efd" --data-binary "@node.json" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalancers/100/nodes/100
+        curl -X DELETE -H "X-Auth-Token:HPAuth_d17efd" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/loadbalancers/100/nodes/100
 
 
 **Response**
@@ -1426,11 +1425,13 @@ None.
 ## Features Currently Not Implemented or Supported
 The following features are not supported.
 
-1. Node 'weight' values are not implemented
+1. Node 'weight' values are not supported. 
 
-2. Passing node 'condition' on node create will not be honored, all new nodes will be set in ENABLED condition state
+2. Passing node 'condition' on node create will not be honored, all new nodes will be set in ENABLED condition state.
 
-3. IPV6 support is not implemented
+3. IPV6 address types are not supported. 
+
+4. HTTPS protocol for load balancers are not supported. 
 
 
 
