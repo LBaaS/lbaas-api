@@ -181,22 +181,22 @@ The following is a summary of all supported LBaaS API resources and methods. Eac
 
 |Resource            |Operation                                 |Method |Path                                                          |
 |:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
-|versions            |Get list of all API versions              |GET    |{baseURI}/                                                    | 
-|versions            |Get specific API version                  |GET    |{baseURI}/{ver}                                               |
-|limits              |Get list of LBaaS limits                  |GET    |{baseURI}/{ver}/limits                                        |
-|protocols           |Get list of supported protocols           |GET    |{baseURI}/{ver}/protocols                                     |
-|algorithms          |Get list of supported algorithms          |GET    |{baseURI}/{ver}/algorithms                                    |
-|load balancer       |Get list of all load balancers            |GET    |{baseURI}/{ver}/loadbalancers                                 | 
-|load balancer       |Get load balancer details                 |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                |
-|load balancer       |Create a new load balancer                |POST   |{baseURI}/{ver}/loadbalancers                                 |
-|load balancer       |Update load balancer attributes           |PUT    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                | 
-|load balancer       |Delete an existing load balancer          |DELETE |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                | 
-|node                |Get list of load balancer nodes           |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes          |
-|node                |Get a specific load balancer node         |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
-|node                |Create a new load balancer node           |POST   |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes          |
-|node                |Update a load balancer node               |PUT    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
-|node                |Delete a load balancer node               |DELETE |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
-|virtual IP          |Get list of virtual IPs                   |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}virtualips      |
+|Versions            |Get list of all API versions              |GET    |{baseURI}/                                                    | 
+|Versions            |Get specific API version                  |GET    |{baseURI}/{ver}                                               |
+|Limits              |Get list of LBaaS limits                  |GET    |{baseURI}/{ver}/limits                                        |
+|Protocols           |Get list of supported protocols           |GET    |{baseURI}/{ver}/protocols                                     |
+|Algorithms          |Get list of supported algorithms          |GET    |{baseURI}/{ver}/algorithms                                    |
+|Load Balancer       |Get list of all load balancers            |GET    |{baseURI}/{ver}/loadbalancers                                 | 
+|Load Balancer       |Get load balancer details                 |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                |
+|Load Balancer       |Create a new load balancer                |POST   |{baseURI}/{ver}/loadbalancers                                 |
+|Load Balancer       |Update load balancer attributes           |PUT    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                | 
+|Load Balancer       |Delete an existing load balancer          |DELETE |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                | 
+|Node                |Get list of load balancer nodes           |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes          |
+|Node                |Get a specific load balancer node         |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
+|Node                |Create a new load balancer node           |POST   |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes          |
+|Node                |Update a load balancer node               |PUT    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
+|Node                |Delete a load balancer node               |DELETE |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
+|Virtual IP          |Get list of virtual IPs                   |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}virtualips      |
 
 
 ### 5.2 Common Request Headers 
@@ -244,7 +244,7 @@ The following is a summary of all supported LBaaS API resources and methods. Eac
 ### 6.1 Operation 
 |Resource            |Operation                                 |Method |Path                                                          |
 |:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
-|versions            |Get list of all API versions              |GET    |{baseURI}/                                                    |
+|Versions            |Get list of all API versions              |GET    |{baseURI}/                                                    |
 
 ### 6.2 Description 
 This method allows querying the LBaaS service for all supported versions it supports. This method is also advertised within the Keystone service catalog which is presented upon user login. All versions listed can be used for LBaaS.
@@ -310,7 +310,7 @@ The response body contains a list of all supported versions of LBaaS.
 ### 7.1 Operation
 |Resource            |Operation                                 |Method |Path                                                          |
 |:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
-|versions            |Get specific API version                  |GET    |{baseURI}/{ver}                                               |
+|Versions            |Get specific API version                  |GET    |{baseURI}/{ver}                                               |
 
 ### 7.2 Description
 This method allows querying the LBaaS service for information regarding a specific version of the LBaaS API. This method is also advertised within the Keystone service catalog which is presented upon user login.
@@ -377,7 +377,7 @@ The response body contains information regarding a specific LBaaS API version.
 ### 8.1 Operation
 |Resource            |Operation                                 |Method |Path                                                          |
 |:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
-|limits              |Get list of LBaaS limits                  |GET    |{baseURI}/{ver}/limits                                        |
+|Limits              |Get list of LBaaS limits                  |GET    |{baseURI}/{ver}/limits                                        |
 
 ### 8.2 Description
 This method allows querying the LBaaS service for a list of API limits which apply on a tenant basis. Each tenant may not utilize LBaaS API resources exceeding these limits and will receive and over limit error if attempted (413).
@@ -437,7 +437,7 @@ The response body contains information regarding limits imposed for the tenant m
 ### 9.1 Operation
 |Resource            |Operation                                 |Method |Path                                                          |
 |:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
-|protocols           |Get list of supported protocols           |GET    |{baseURI}/{ver}/protocols                                     |
+|Protocols           |Get list of supported protocols           |GET    |{baseURI}/{ver}/protocols                                     |
 
 
 ### 9.2 Description
@@ -501,7 +501,7 @@ The response body contains the currently supported protocols and port numbers.
 ### 10.1 Operation
 |Resource            |Operation                                 |Method |Path                                                          |
 |:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
-|algorithms          |Get list of supported algorithms          |GET    |{baseURI}/{ver}/algorithms                                    |
+|Algorithms          |Get list of supported algorithms          |GET    |{baseURI}/{ver}/algorithms                                    |
 
 ### 10.2 Description
 All load balancers utilize an algorithm that defines how traffic should be directed between back end nodes. The default algorithm for newly created load balancers is ROUND_ROBIN, which can be overridden at creation time or changed after the load balancer has been initially provisioned.
@@ -571,7 +571,7 @@ The response body contains the currently supported algorithms.
 ### 11.1 Operation
 |Resource            |Operation                                 |Method |Path                                                          |
 |:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
-|load balancer       |Get list of all load balancers            |GET    |{baseURI}/{ver}/loadbalancers                                 |
+|Load Balancer       |Get list of all load balancers            |GET    |{baseURI}/{ver}/loadbalancers                                 |
 
 ### 11.2 Description
 This operation provides a list of all load balancers configured and associated with your account. This includes a summary of attributes for each load balancer. In order to retrieve all the details for a load balancer, an individual request for the load balancer must be made.
@@ -663,7 +663,7 @@ The response body contains a list of load balancers for the tenant making the re
 ### 12.1 Operation
 |Resource            |Operation                                 |Method |Path                                                          |
 |:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
-|load balancer       |Get a specific load balancer              |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                |
+|Load Balancer       |Get a specific load balancer              |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                |
 
 ### 12.2 Description
 This operation provides detailed description for a specific load balancer configured and associated with your account. This operation is not capable of returning details for a load balancer which has been deleted. Details include load balancer virtual IP and node information.
@@ -746,12 +746,12 @@ The response body contains the load balancer requested or 404, if not found.
 ### 13.1 Operation
 |Resource            |Operation                                 |Method |Path                                                          |
 |:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
-|load balancer       |Create a new load balancer                |POST   |{baseURI}/{ver}/loadbalancers                                 |
+|Load Balancer       |Create a new load balancer                |POST   |{baseURI}/{ver}/loadbalancers                                 |
 
 ### 13.2 Description
 This operation provisions a new load balancer based on the configuration defined in the request object. Once the request is validated and progress has started on the provisioning process, a response object will be returned. The object will contain a unique identifier and status of the request.
 
-If the status returned is set to "BUILD", then using the identifier of the load balancer, the caller can check on the progress of the creation operation by performing a GET on loadbalancers/{loadbalancerId}. When the status of the load balancer returned changes to "ACTIVE", then the load balancer has been successfully provisioned and is now operational.
+If the status returned is set to 'BUILD', then using the identifier of the load balancer, the caller can check on the progress of the creation operation by performing a GET on loadbalancers/{loadbalancerId}. When the status of the load balancer returned changes to 'ACTIVE', then the load balancer has been successfully provisioned and is now operational.
 
 **Load Balancer Status Values**
 
@@ -770,7 +770,7 @@ The caller of this operation must specify at least the following attributes of t
 
 If the request cannot be fulfilled due to insufficient or invalid data, an HTTP 400 (Bad Request) error response will be returned with information regarding the nature of the failure in the body of the response. Failures in the validation process are non-recoverable and require the caller to correct the cause of the failure and POST the request again.
 
-By default the system will create a loadbalancer with protocol set to HTTP, port set to 80 (or 443 if protocol is HTTPS), and assign a public IPV4 address to the loadbalancer. The default algorithm used is set to ROUND_ROBIN.
+By default, the system will create a loadbalancer with protocol set to HTTP, port set to 80 (or 443 if protocol is HTTPS), and assign a public IPV4 address to the loadbalancer. The default algorithm used is set to ROUND_ROBIN.
 
 A load balancer name has a max length that can be queried when querying limits.
 
@@ -836,7 +836,7 @@ The request body must follow the correct format for new load balancer creation, 
 |202               |Accepted             |
 
 ### 13.8 Response Body
-The response body contains the load balancer requested or 404, if not found.
+The response body contains the load balancer requested or appropriate error.
 
 **Create Load Balancer (Required Attributes with Shared IP) Response: JSON**
 
@@ -943,16 +943,16 @@ The response body contains the load balancer requested or 404, if not found.
 
 
 
-## 14. Update Load Balancer Attributes
+## 14. Update An Existing Load Balancer 
 
 ### 14.1 Operation
 |Resource            |Operation                                 |Method |Path                                                          |
 |:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
-|load balancer       |Update load balancer attributes           |PUT    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                |
+|Load Balancer       |Update load balancer attributes           |PUT    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                |
 
 
 ### 14.2 Description
-This operation updates the attributes of the specified load balancer. Upon successful validation of the request, the service will return a 202 (Accepted) response code. A caller should check that the load balancer status is ACTIVE to confirm that the update has taken effect. If the load balancer status is "PENDING_UPDATE" then the caller can poll the load balancer with its ID (using a GET operation) to wait for the changes to be applied and the load balancer to return to an ACTIVE status.
+This operation updates the attributes of the specified load balancer. Upon successful validation of the request, the service will return a 202 (Accepted) response code. A caller should check that the load balancer status is ACTIVE to confirm that the update has taken effect. If the load balancer status is 'PENDING_UPDATE' then the caller can poll the load balancer with its ID (using a GET operation) to wait for the changes to be applied and the load balancer to return to an ACTIVE status.
 
 This operation allows the caller to change one or more of the following attributes:
 
@@ -962,7 +962,7 @@ This operation allows the caller to change one or more of the following attribut
 
 This operation does not return a response body.
 
-Note, The load balancers ID, status, port and protocol are immutable attributes and cannot be modified by the caller. Supplying an unsupported attribute will result in a 400 (badRequest) fault.
+Note, The load balancer ID, status, port and protocol are immutable attributes and cannot be modified by the caller. Supplying an unsupported attribute will result in a 400 (badRequest) fault.
 
 ### 14.3 Request Data
 Load balancer body with attributes to be updated.
@@ -1022,7 +1022,7 @@ None.
 ### 15.1 Operation
 |Resource            |Operation                                 |Method |Path                                                          |
 |:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
-|load balancer       |Delete an existing load balancer          |DELETE |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                |
+|Load Balancer       |Delete an existing load balancer          |DELETE |{baseURI}/{ver}/loadbalancers/{loadbalancerId}                |
 
 
 ### 15.2 Description
@@ -1031,8 +1031,6 @@ The remove load balancer function removes the specified load balancer and its as
 This operation does not require a request body.
 
 This operation does not return a response body.
-
-Deleted load balancers are still displayed for a number of days after deletion when listing load balancers of an account. 
 
 ### 15.3 Request Data
 None required.
@@ -1079,10 +1077,10 @@ None.
 ### 16.1 Operation
 |Resource            |Operation                                 |Method |Path                                                          |
 |:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
-|node                |Get list of load balancer nodes           |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes          |
+|Node                |Get list of load balancer nodes           |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes          |
 
 ### 16.2 Description
-List all nodes of a load balancer.
+List all nodes for a specified load balancer.
 
 ### 16.3 Request Data
 None required.
@@ -1094,7 +1092,7 @@ None required.
 **X-Auth-Token**
 
 ### 16.6 Request Body
-List of the load balancers nodes.
+List of the load balancer nodes.
 
 ### 16.7 Normal Response Code
 | HTTP Status Code | Description         |
@@ -1148,12 +1146,12 @@ The response body contains the load balancer nodes requested or 404, if not foun
 
 
 
-## 17. Get Load Balancer Node Details
+## 17. Get Load Balancer Node 
 
 ### 17.1 Operation
 |Resource            |Operation                                 |Method |Path                                                          |
 |:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
-|node                |Get a specific load balancer node         |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
+|Node                |Get a specific load balancer node         |GET    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
 
 ### 17.2 Description
 This operation retrieves the configuration of a node.
@@ -1205,12 +1203,12 @@ The response body contains the load balancer node requested or 404, if not found
 
 
 
-## 18. Add a new Load Balancer Node 
+## 18. Add Load Balancer Node 
 
 ### 18.1 Operation
 |Resource            |Operation                                 |Method |Path                                                          |
 |:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
-|node                |Create a new load balancer node           |POST   |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes          |
+|Node                |Create a new load balancer node           |POST   |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes          |
 
 
 ### 18.2 Description
@@ -1308,17 +1306,17 @@ The response body contains the load balancer requested or 404, if not found.
 
 
 
-## 19. Update a Load Balancer Node Condition 
+## 19. Update Load Balancer Node Condition 
 
 ### 19.1 Operation
 |Resource            |Operation                                 |Method |Path                                                          |
 |:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
-|node                |Update a load balancer node               |PUT    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
+|Node                |Update a load balancer node               |PUT    |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
 
 ### 19.2 Description
-Every node in the load balancer is either enabled or disabled which determines its role within the load balancer. When the node has condition="ENABLED" the node is permitted to accept new connections. Its status will eventually become ONLINE to reflect this configuration. When the node has condition="DISABLED" the node is not permitted to accept any new connections. Existing connections to the node are forcibly terminated. The nodes status changes to OFFLINE once the configuration has been successfully applied.
+Every node in the load balancer is either enabled or disabled which determines its role within the load balancer. When the node has condition='ENABLED' the node is permitted to accept new connections. Its status will eventually become ONLINE to reflect this configuration. When the node has condition='DISABLED' the node is not permitted to accept any new connections. Existing connections to the node are forcibly terminated. The nodes status changes to OFFLINE once the configuration has been successfully applied.
 
-The nodes IP and port are immutable attributes and cannot be modified with a PUT request. Supplying an unsupported attribute will result in a 400 (badRequest) fault. A load balancer supports a maximum number of nodes. The maximum number of nodes per loadbalancer is returned when querying the limits of the LB service.
+The node IP and port are immutable attributes and cannot be modified with a PUT request. Supplying an unsupported attribute will result in a 400 (badRequest) fault. A load balancer supports a maximum number of nodes. The maximum number of nodes per loadbalancer is returned when querying the limits of the LB service.
 
 ### 19.3 Request Data
 Request data includes the desired condition of the node.
@@ -1372,10 +1370,10 @@ None.
 ### 20.1 Operation
 |Resource            |Operation                                 |Method |Path                                                          |
 |:-------------------|:-----------------------------------------|:------|:-------------------------------------------------------------|
-|node                |Delete a load balancer node               |DELETE |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
+|Node                |Delete a load balancer node               |DELETE |{baseURI}/{ver}/loadbalancers/{loadbalancerId}/nodes/{nodeId} |
 
 ### 20.2 Description
-Delete a node for a load balancer. Note, A load balancer must have at least one node. Attempting to remove the last node of a loadbalancer will result in a badRequest (401) error.
+Delete node for a load balancer. Note, A load balancer must have at least one node. Attempting to remove the last node of a loadbalancer will result in a badRequest (401) error.
 
 ### 20.3 Request Data
 None required.
