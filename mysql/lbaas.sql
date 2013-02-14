@@ -27,7 +27,7 @@ CREATE TABLE loadbalancers (
     updated   TIMESTAMP                NOT NULL,                 # timestamp of when LB was last updated
     device    BIGINT                   NOT NULL,                 # reference to associated device OR '0' for unassigned
     PRIMARY KEY (id)                                             # ids are unique accross all LBs
- );
+ ) DEFAULT CHARSET utf8 DEFAULT COLLATE utf8_general_ci;
  
  #nodes
  CREATE TABLE nodes (
@@ -39,7 +39,7 @@ CREATE TABLE loadbalancers (
     enabled        BOOLEAN               NOT NULL,                  # is node enabled or not
     status         VARCHAR(128)          NOT NULL,                  # status of node 'OFFLINE', 'ONLINE', 'ERROR', this value is reported by the device
     PRIMARY KEY (id)                                                # ids are unique accross all Nodes
- );
+ ) DEFAULT CHARSET utf8 DEFAULT COLLATE utf8_general_ci;
 
  
  # devices
@@ -55,7 +55,7 @@ CREATE TABLE devices (
     updated        TIMESTAMP             NOT NULL,                  # timestamp of when device was last updated
     status         VARCHAR(128)          NOT NULL,                  # status of device 'OFFLINE', 'ONLINE', 'ERROR', this value is reported by the device
     PRIMARY KEY (id)
-);
+) DEFAULT CHARSET utf8 DEFAULT COLLATE utf8_general_ci;
 
 
 
