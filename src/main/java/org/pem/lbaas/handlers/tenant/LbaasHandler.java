@@ -1342,7 +1342,7 @@ public class LbaasHandler {
 			   }
 			   
 			   if ( !ProtocolHandler.supports( lb.getProtocol(), port )) {
-				   throw new LBaaSException("port number :" + port + " is not supported for protocol : " + lb.getProtocol() + " see /protocols for supported protocold and ports", 400); 
+				   throw new LBaaSException("port number: " + port + " is not supported for protocol: " + lb.getProtocol() + ".  See /protocols for supported protocols and ports", 400); 
 			   }
 			   lb.setPort(port);
 		   }
