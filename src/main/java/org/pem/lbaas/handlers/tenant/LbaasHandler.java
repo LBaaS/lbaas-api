@@ -1309,6 +1309,8 @@ public class LbaasHandler {
 		   // name
 	       if ( jsonObject.has(JSON_NAME)) {		   
 		      String name = (String) jsonObject.get(JSON_NAME);
+		      if ( name.length() > LimitsHandler.LIMIT_MAX_NAME_SIZE)
+		         	throw new LBaaSException("'name' is over max allowed length of : " + LimitsHandler.LIMIT_MAX_NAME_SIZE, 400);
 		      lb.setName(name);
 		      logger.info("   name = " + name);
 	       }
