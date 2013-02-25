@@ -14,7 +14,7 @@ author:Peter Mellquist, pemellquist@gmail.com
 
 **Date:** February 8, 2013
 
-**Document Version:** 0.4
+**Document Version:** 0.5
 
 
 ## 1. Overview
@@ -36,7 +36,7 @@ This API definition represents the HP Cloud Load Balancer as a Service in Beta r
 
 
 ### 2.1 Overview
-The HP Cloud Load Balancer as a Service (LBaaS) set of APIs provide a RESTful interface for the creation and management of load balancers in the cloud. Load balancers created can be used for a variety of purposes including load balancers for your external cloud hosted services as well as internal load balancing needs. The load balancing solution is meant to provide both load balancing and high availability in an industry standard manner. The LBaaS APIs defined are integrated within the HP Cloud API ecosystem including integration with the HP Cloud identity management system, billing and monitoring systems.
+The HP Cloud Load Balancer as a Service (LBaaS) is a set of APIs that provide a RESTful interface for the creation and management of load balancers in the cloud. Load balancers created can be used for a variety of purposes including load balancers for your external cloud hosted services as well as internal load balancing needs. The load balancing solution is meant to provide both load balancing and high availability in an industry standard manner. The LBaaS APIs defined are integrated within the HP Cloud API ecosystem including integration with the HP Cloud identity management system, billing and monitoring systems.
 
 ### 2.2 Conceptual/Logical Architecture View
 To use the HP Cloud Load Balancers API effectively, you should understand several key concepts.
@@ -54,14 +54,14 @@ The nodes defined by the load balancer are responsible for servicing the request
 
 
 ### 2.3 Infrastructure Architecture View
-LBaaS fits into the HP Cloud ecosystem of APIs by utilizing the common authentication mechanisms as other HP cloud services. In order to use LBaaS, a user account must be 'activated' all API calls will require a valid HP Cloud authentication token.
+LBaaS fits into the HP Cloud ecosystem of APIs by utilizing the common authentication mechanisms as any other HP cloud services. In order to use LBaaS, a user account must have activated "Load Balancer" service. All API calls require require a valid HP Cloud authentication token.
 
 ## 3. Account-level View 
 Once the account is activated, the HP Cloud LBaaS service will show up in the service catelog returned during user login. In addition, LBaaS endpoints to be used will also be presented. Availability zone information may vary based on region.
 
 
 ### 3.1 Service Catalog
-Once logged into the HP Cloud, a service catalog will list the availability of the LBaaS service, roles  and endpoints for the region you have logged into and in which you are activated for.
+Once user authenticates into the HP Cloud using REST API, a service catalog will list the availability of the LBaaS service, roles  and endpoints for the region you have logged into and in which you are activated for.
 
 *The following is an example of LBaaS service information within the service catalog including roles and endpoints:* 
 
@@ -73,19 +73,19 @@ Once logged into the HP Cloud, a service catalog will list the availability of t
 	        "id": "83241756956007",
 	        "serviceId": "220",
 	        "name": "lbaas-user",
-	        "tenantId": "22994259061625"
+	        "tenantId": "11223344556677"
 	      },
 	      {
 	        "id": "00000000004024",
 	        "serviceId": "140",
 	        "name": "user",
-	        "tenantId": "22994259061625"
+	        "tenantId": "11223344556677"
 	      },
 	      {
 	        "id": "00000000004013",
 	        "serviceId": "130",
 	        "name": "block-admin",
-	        "tenantId": "22994259061625"
+	        "tenantId": "11223344556677"
 	      }
 	    ]
 	  },
@@ -104,7 +104,7 @@ Once logged into the HP Cloud, a service catalog will list the availability of t
 	      "name": "Load Balancer",
 	      "type": "hpext:lbaas",
 	      "endpoints": [{
-	        "tenantId": "22994259061625",
+	        "tenantId": "11223344556677",
 	        "publicURL": "https:\/\/usa.region-b.geo-1.lbaas.hpcloudsvc.com\/v1.1",
 	        "publicURL2": "",
 	        "region": "region-b.geo-1",
@@ -160,7 +160,7 @@ When issuing a LBaaS API request, it is possible that an error can occur. In the
 
 
 ### 4.8 Specifying Tenant IDs
-Tenant identifiers with LBaaS API URIs are not required. The tenant identifier is derived from the Openstack Keystone authentication token provided with each API call. This simplifies the REST URIs to only include the base URI and the resource. For example, to retrieve a list of load balancers the request would be 'GET https://<endpoint>/loadbalancers'. The tenant identifier is derived from the authentication token which is provided wi the API call. All LBaaS calls behave in this manner.
+Tenant identifiers with LBaaS API URIs are not required. The tenant identifier is derived from the Openstack Keystone authentication token provided with each API call. This simplifies the REST URIs to only include the base URI and the resource. The tenant identifier is derived from the authentication token which is provided wi the API call. All LBaaS calls behave in this manner.
 
 
 
@@ -272,6 +272,7 @@ The response body contains a list of all supported versions of LBaaS.
 ### 6.9 Error Response Codes 
 |HTTP Status Code  |Description          |
 |:-----------------|:--------------------|
+|400               |Bad Request          |
 |401               |Unauthorized         |
 |404               |Not Found            |
 |405               |Not Allowed          |
@@ -338,6 +339,7 @@ The response body contains information regarding a specific LBaaS API version.
 ### 7.9 Error Response Codes
 |HTTP Status Code  |Description          |
 |:-----------------|:--------------------|
+|400               |Bad Request          |
 |401               |Unauthorized         |
 |404               |Not Found            |
 |405               |Not Allowed          |
@@ -382,6 +384,14 @@ The response body contains information regarding a specific LBaaS API version.
 ### 8.2 Description
 This method allows querying the LBaaS service for a list of API limits which apply on a tenant basis. Each tenant may not utilize LBaaS API resources exceeding these limits and will receive and over limit error if attempted (413).
 
+|Returned Limit Name       |Value                                                    |
+|:-------------------------|:--------------------------------------------------------|
+|maxLoadBalancers          |Maximum number of load balancers allowed for this tenant |
+|maxNodesPerLoadBalancer   |Maximum number of nodes allowed for each load balancer   |
+|maxLoadBalancerNameLength |Maximum length allowed for a load balancer name          |
+|maxVIPsPerLoadBalancer    |Maximum number of Virtual IPs for each load balancer     |
+
+
 ### 8.3 Request Data
 None required.
 
@@ -405,6 +415,7 @@ The response body contains information regarding limits imposed for the tenant m
 ### 8.9 Error Response Codes
 |HTTP Status Code  |Description          |
 |:-----------------|:--------------------|
+|400               |Bad Request          |
 |401               |Unauthorized         |
 |404               |Not Found            |
 |405               |Not Allowed          |
@@ -468,6 +479,7 @@ The response body contains the currently supported protocols and port numbers.
 ### 9.9 Error Response Codes
 |HTTP Status Code  |Description          |
 |:-----------------|:--------------------|
+|400               |Bad Request          |
 |401               |Unauthorized         |
 |404               |Not Found            |
 |405               |Not Allowed          |
@@ -513,8 +525,8 @@ The algorithm name is to be constant within a major revision of the load balanci
 
 |Name               |Description                                                           |
 |:------------------|:---------------------------------------------------------------------|
-|LEAST_CONNECTIONS  |The node with the lowest number of connections will receive requests. Weights can be defined as part of the node configuration. |
-|ROUND_ROBIN        |Connections are routed to each of the back-end servers in turn. Weights can be defined as part of the node configuration. | 
+|LEAST_CONNECTIONS  |The node with the lowest number of connections will receive requests. |
+|ROUND_ROBIN        |Connections are routed to each of the back-end servers in turn.       | 
 
 
 ### 10.3 Request Data
@@ -540,6 +552,7 @@ The response body contains the currently supported algorithms.
 ### 10.9 Error Response Codes
 | HTTP Status Code | Description         |
 |:-----------------|:--------------------|
+|400               |Bad Request          |
 |401               |Unauthorized         |
 |404               |Not Found            |
 |405               |Not Allowed          |
@@ -618,6 +631,7 @@ The response body contains a list of load balancers for the tenant making the re
 ### 11.9 Error Response Codes
 | HTTP Status Code | Description         |
 |:-----------------|:--------------------|
+|400               |Bad Request          |
 |401               |Unauthorized         |
 |404               |Not Found            |
 |405               |Not Allowed          |
@@ -691,6 +705,7 @@ The response body contains the load balancer requested or 404, if not found.
 ### 12.9 Error Response Codes
 | HTTP Status Code | Description         |
 |:-----------------|:--------------------|
+|400               |Bad Request          |
 |401               |Unauthorized         |
 |404               |Not Found            |
 |405               |Not Allowed          |
@@ -764,9 +779,9 @@ If the status returned is set to 'BUILD', then using the identifier of the load 
 
 The caller of this operation must specify at least the following attributes of the load balancer:
 
-**name**
+*name
 
-**At least one node**
+*At least one node
 
 If the request cannot be fulfilled due to insufficient or invalid data, an HTTP 400 (Bad Request) error response will be returned with information regarding the nature of the failure in the body of the response. Failures in the validation process are non-recoverable and require the caller to correct the cause of the failure and POST the request again.
 
@@ -878,6 +893,7 @@ The response body contains the load balancer requested or appropriate error.
 |405               |Not Allowed          |
 |413               |Over Limit           |
 |500               |LBaaS Fault          |
+|503               |Service Unavailable  |
 
 ### 13.10 Example
 
@@ -956,9 +972,9 @@ This operation updates the attributes of the specified load balancer. Upon succe
 
 This operation allows the caller to change one or more of the following attributes:
 
-**name**
+*name
 
-**algorithm**
+*algorithm
 
 This operation does not return a response body.
 
@@ -993,6 +1009,7 @@ None.
 ### 14.9 Error Response Codes
 | HTTP Status Code | Description         |
 |:-----------------|:--------------------|
+|400               |Bad Request          |
 |401               |Unauthorized         |
 |404               |Not Found            |
 |405               |Not Allowed          |
@@ -1026,11 +1043,10 @@ None.
 
 
 ### 15.2 Description
-Remove load balancer removes the specified load balancer and its associated configuration from the account. Any and all configuration data is immediately purged and is not recoverable.
+Delete load balancer removes the specified load balancer and its associated configuration from the account. Any and all configuration data is immediately purged and is not recoverable.
 
 This operation does not require a request body.
 
-This operation does not return a response body.
 
 ### 15.3 Request Data
 None required.
@@ -1055,6 +1071,7 @@ None.
 ### 15.9 Error Response Codes
 | HTTP Status Code | Description         |
 |:-----------------|:--------------------|
+|400               |Bad Request          |
 |401               |Unauthorized         |
 |404               |Not Found            |
 |405               |Not Allowed          |
@@ -1105,6 +1122,7 @@ The response body contains the load balancer nodes requested or 404, if not foun
 ### 16.9 Error Response Codes
 | HTTP Status Code | Description         |
 |:-----------------|:--------------------|
+|400               |Bad Request          |
 |401               |Unauthorized         |
 |404               |Not Found            |
 |405               |Not Allowed          |
@@ -1179,6 +1197,7 @@ The response body contains the load balancer node requested or 404, if not found
 ### 17.9 Error Response Codes
 | HTTP Status Code | Description         |
 |:-----------------|:--------------------|
+|400               |Bad Request          |
 |401               |Unauthorized         |
 |404               |Not Found            |
 |405               |Not Allowed          |
@@ -1212,7 +1231,7 @@ The response body contains the load balancer node requested or 404, if not found
 
 
 ### 18.2 Description
-Add a new node to and existing loadbalancer. When a node is added, it is assigned a unique identifier that can be used for mutating operations such as changing the condition or the weight of a node, or removing the node from the load balancer. When a node is added to a load balancer, it is enabled by default.
+Add a new node to any existing loadbalancer. When a node is added, it is assigned a unique identifier that can be used for mutating operations such as changing the condition, or removing the node from the load balancer. When a node is added to a load balancer, it is enabled by default.
 
 
 ### 18.3 Request Data
@@ -1238,6 +1257,7 @@ The response body contains the load balancer requested or 404, if not found.
 ### 18.9 Error Response Codes
 | HTTP Status Code | Description         |
 |:-----------------|:--------------------|
+|400               |Bad Request          |
 |401               |Unauthorized         |
 |404               |Not Found            |
 |405               |Not Allowed          |
@@ -1256,14 +1276,12 @@ The response body contains the load balancer requested or 404, if not found.
              		},
              		{
                			"address": "10.2.2.1",
-               			"port": "80",
-               			"weight": "2"
+               			"port": "80"
              		},
              		{
                			"address": "10.2.2.2",
                			"port": "88",
-               			"condition": "DISABLED",
-               			"weight": "2"
+               			"condition": "DISABLED"
              		}
            	]
 	}
@@ -1288,7 +1306,6 @@ The response body contains the load balancer requested or 404, if not found.
                			"id": "293",
                			"address": "10.2.2.1",
                			"port": "80",
-               			"weight": "2",
                			"condition": "ENABLED",
                			"status": "OFFLINE"
              		},
@@ -1296,7 +1313,6 @@ The response body contains the load balancer requested or 404, if not found.
                			"id": "183",
                			"address": "10.2.2.2",
                			"port": "88",
-               			"weight": "2",
                			"condition": "DISABLED",
                			"status": "OFFLINE"
              		}
@@ -1341,6 +1357,7 @@ None.
 ### 19.9 Error Response Codes
 | HTTP Status Code | Description         |
 |:-----------------|:--------------------|
+|400               |Bad Request          |
 |401               |Unauthorized         |
 |404               |Not Found            |
 |405               |Not Allowed          |
@@ -1398,6 +1415,7 @@ None.
 ### 20.9 Error Response Codes
 | HTTP Status Code | Description         |
 |:-----------------|:--------------------|
+|400               |Bad Request          |
 |401               |Unauthorized         |
 |404               |Not Found            |
 |405               |Not Allowed          |
@@ -1451,6 +1469,7 @@ The response body contains the load balancer VIP list requested or 404, if not f
 ### 21.9 Error Response Codes
 | HTTP Status Code | Description         |
 |:-----------------|:--------------------|
+|400               |Bad Request          |
 |401               |Unauthorized         |
 |404               |Not Found            |
 |405               |Not Allowed          |
@@ -1488,7 +1507,9 @@ The following features are not supported.
 
 3. IPV6 address types are not supported. 
 
-4. HTTPS protocol for load balancers are not supported. 
+4. HTTPS protocol for load balancers are not supported. It is not advertised in /protocols request.
+
+5. The ability to list deleted load balancers is not supported.
 
 
 
