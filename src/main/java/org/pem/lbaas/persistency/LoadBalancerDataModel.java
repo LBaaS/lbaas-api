@@ -31,6 +31,7 @@ public class LoadBalancerDataModel {
 	private static NodeDataModel nodeModel = new NodeDataModel();
 	private static DeviceDataModel deviceModel = new DeviceDataModel();
 	protected Connection  dbConnection = null;
+	private static Calendar calendar = Calendar.getInstance();
 	
 	protected final static String SQL_ID            = "id";
 	protected final static String SQL_NAME          = "name";	
@@ -160,7 +161,7 @@ public class LoadBalancerDataModel {
 	    * @return boolean
 	    * @throws DeviceModelAccessException if internal database error
 	    */
-	public boolean setStatus( String status, long id, String tenantId) throws DeviceModelAccessException {	
+	public synchronized boolean setStatus( String status, long id, String tenantId) throws DeviceModelAccessException {	
 	   logger.info("setStatus : " + status + "lbID: " + id + " tenantId: " + tenantId);
 	   LoadBalancer lb = this.getLoadBalancer(id,tenantId);
 	   if (lb == null) {
@@ -179,7 +180,7 @@ public class LoadBalancerDataModel {
 	    * @return Device or null if not found
 	    * @throws DeviceModelAccessException if internal database error
 	    */
-	public LoadBalancer getLoadBalancer( long lbId, String tenantId) throws DeviceModelAccessException {
+	public synchronized LoadBalancer getLoadBalancer( long lbId, String tenantId) throws DeviceModelAccessException {
 		logger.info("getLoadBalancer");
 		Connection conn = dbConnect();
 		Statement stmt=null;
@@ -246,7 +247,7 @@ public class LoadBalancerDataModel {
 	    * @return boolean
 	    * @throws DeviceModelAccessException if internal database error
 	    */
-	public boolean setLoadBalancer(LoadBalancer lb)  throws DeviceModelAccessException {
+	public synchronized boolean setLoadBalancer(LoadBalancer lb)  throws DeviceModelAccessException {
 		
 		logger.info("setLoadBalancer name: " + lb.getName() + " alogorithm: " + lb.getAlgorithm() + " status: " + lb.getStatus() + " for lbid: " + lb.getId() + " tenantid: " + lb.getTenantId());
 		Connection conn = dbConnect();
@@ -258,7 +259,7 @@ public class LoadBalancerDataModel {
 			statement.setString(2,lb.getAlgorithm());
 			statement.setString(3,lb.getStatus());
 			
-			Calendar calendar = Calendar.getInstance();
+			
 			Date dNow = calendar.getTime();						
 			statement.setTimestamp(4,new java.sql.Timestamp(dNow.getTime()));
 			
@@ -281,7 +282,7 @@ public class LoadBalancerDataModel {
 	 * @return new id for LoadBalancer
 	 * @throws DeviceModelAccessException
 	 */
-	public Long createLoadBalancer( LoadBalancer lb) throws DeviceModelAccessException {	
+	public synchronized Long createLoadBalancer( LoadBalancer lb) throws DeviceModelAccessException {	
 				
 		logger.info("createLoadBalancer");
 		long val=0;
@@ -299,7 +300,7 @@ public class LoadBalancerDataModel {
 			statement.setInt(4,lb.getPort());
 			statement.setString(5,lb.getStatus());
 			statement.setString(6,lb.getAlgorithm());  
-			Calendar calendar = Calendar.getInstance();
+			
 			Date dNow = calendar.getTime();
 			statement.setTimestamp(7,new java.sql.Timestamp(dNow.getTime()));	
 			statement.setTimestamp(8,new java.sql.Timestamp(dNow.getTime()));	
@@ -342,7 +343,7 @@ public class LoadBalancerDataModel {
 	 * @return List of LoadBalancer
 	 * @throws DeviceModelAccessException
 	 */
-	public  List<LoadBalancer> getLoadBalancers(String condition) throws DeviceModelAccessException {
+	public synchronized List<LoadBalancer> getLoadBalancers(String condition) throws DeviceModelAccessException {
 		
 		logger.info("getLoadBalancers");
 		List<LoadBalancer> lbs = new  ArrayList<LoadBalancer>();
@@ -388,7 +389,7 @@ public class LoadBalancerDataModel {
 	 * @return
 	 * @throws DeviceModelAccessException
 	 */
-	public  List<LoadBalancer> getLoadBalancersWithDevice(Long deviceId) throws DeviceModelAccessException {
+	public  synchronized List<LoadBalancer> getLoadBalancersWithDevice(Long deviceId) throws DeviceModelAccessException {
 		logger.info("getLoadBalancersWithDevice");
 		String condition = SQL_DEVICE + "=" + deviceId.toString();
 		return getLoadBalancers(condition);
@@ -401,7 +402,7 @@ public class LoadBalancerDataModel {
 	 * @return number deleted, should be 1 or 0 if not found
 	 * @throws DeviceModelAccessException
 	 */
-	public int deleteLoadBalancer( long lbId, String tenantId) throws DeviceModelAccessException {
+	public synchronized int deleteLoadBalancer( long lbId, String tenantId) throws DeviceModelAccessException {
 		logger.info("deleteLoadBalancer");
 		Connection conn = dbConnect();
 		Statement stmt=null;
