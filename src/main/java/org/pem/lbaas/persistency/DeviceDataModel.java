@@ -24,6 +24,7 @@ import org.pem.lbaas.datamodel.VirtualIp;
 public class DeviceDataModel {
    private static Logger logger       = Logger.getLogger(DeviceDataModel.class);
    protected Connection  dbConnection = null;
+   private static Calendar calendar = Calendar.getInstance();
    
    protected final static String SQL_ID             = "id";
    protected final static String SQL_NAME           = "name";
@@ -181,7 +182,7 @@ public class DeviceDataModel {
     * @return List of Device objects
     * @throws DeviceModelAccessException if internal database error
     */
-   public  List<Device> getDevices( String condition) throws DeviceModelAccessException {
+   public  synchronized List<Device> getDevices( String condition) throws DeviceModelAccessException {
       List<Device> devices = new  ArrayList<Device>();		
 	  Connection conn = dbConnect();
 	  Statement stmt=null;
@@ -214,7 +215,7 @@ public class DeviceDataModel {
     * @return List of Device objects
     * @throws DeviceModelAccessException if internal database error
     */
-   public  List<Device> getDevicesMarkerAndLimit(long marker, long limit) throws DeviceModelAccessException {
+   public synchronized List<Device> getDevicesMarkerAndLimit(long marker, long limit) throws DeviceModelAccessException {
       List<Device> devices = new  ArrayList<Device>();		
 	  Connection conn = dbConnect();
 	  Statement stmt=null;
@@ -243,7 +244,7 @@ public class DeviceDataModel {
     * @param address
     * @return List of Devices
     */
-   public  List<Device> getDevicesWithAddr( String address) throws DeviceModelAccessException {
+   public synchronized List<Device> getDevicesWithAddr( String address) throws DeviceModelAccessException {
 	   String condition = " floatingIpAddr =  '" + address + "'";
 	   return getDevices(condition); 
    }
@@ -256,7 +257,7 @@ public class DeviceDataModel {
     * @return Device or null if not found
     * @throws DeviceModelAccessException if internal database error
     */
-   public Device getDevice(long id) throws DeviceModelAccessException {
+   public synchronized Device getDevice(long id) throws DeviceModelAccessException {
       Connection conn = dbConnect();
       Statement stmt=null;	
       String query = "SELECT * FROM devices WHERE id=" + id;
@@ -295,7 +296,7 @@ public class DeviceDataModel {
     * @return Device or null if none found
     * @throws DeviceModelAccessException if internal database error
     */
-   public Device findFreeDevice() throws DeviceModelAccessException {		
+   public synchronized Device findFreeDevice() throws DeviceModelAccessException {		
       Connection conn = dbConnect();
       Statement stmt=null;		
       String query = "SELECT * FROM devices WHERE loadbalancers = " + EMPTY_LBIDS;
@@ -332,7 +333,7 @@ public class DeviceDataModel {
     * @return boolean
     * @throws DeviceModelAccessException if internal database error
     */
-   public boolean existsName(String name) throws DeviceModelAccessException {
+   public synchronized boolean existsName(String name) throws DeviceModelAccessException {
       Connection conn = dbConnect();
       Statement stmt=null;
       String query = "SELECT * FROM devices WHERE name = '" + name + "'";
@@ -359,7 +360,7 @@ public class DeviceDataModel {
     * @return 1 if deleted or 0 if not ( delete count )
     * @throws DeviceModelAccessException if internal database error
     */
-   public int deleteDevice(long id) throws DeviceModelAccessException {
+   public synchronized int deleteDevice(long id) throws DeviceModelAccessException {
       Connection conn = dbConnect();
       Statement stmt=null;		
       String query = "DELETE FROM devices WHERE id=" + id;
@@ -386,7 +387,7 @@ public class DeviceDataModel {
     * @return boolean
     * @throws DeviceModelAccessException if internal database error
     */
-   public boolean setStatus(String status, long id) throws DeviceModelAccessException {	
+   public synchronized boolean setStatus(String status, long id) throws DeviceModelAccessException {	
       Device device = this.getDevice(id);
       if ( device == null)
     	  return false;                           // id not found
@@ -405,7 +406,7 @@ public class DeviceDataModel {
     * @return boolean
     * @throws DeviceModelAccessException if internal database error
     */
-   public boolean setDevice(Device device) throws DeviceModelAccessException {
+   public synchronized boolean setDevice(Device device) throws DeviceModelAccessException {
 	     
 	   
 	  if ( this.getDevice(device.getId())==null)
@@ -419,7 +420,6 @@ public class DeviceDataModel {
 			statement.setString(2, device.getAddress());
 			statement.setString(3, lbIdsToJson( device.lbIds).toString());
 			statement.setString(4, device.getStatus());
-			Calendar calendar = Calendar.getInstance();
 			Date dNow = calendar.getTime();
 			statement.setTimestamp( 5,new java.sql.Timestamp(dNow.getTime()));	
 			statement.setInt(6,device.getId().intValue());
@@ -446,7 +446,7 @@ public class DeviceDataModel {
     * @return boolean
     * @throws DeviceModelAccessException if internal database error
     */
-   public boolean markAsFree(long deviceId, long lbId) throws DeviceModelAccessException {
+   public synchronized boolean markAsFree(long deviceId, long lbId) throws DeviceModelAccessException {
       Device device = this.getDevice(deviceId);
       if (device==null)
     	  return false;                        // id not found
@@ -465,7 +465,7 @@ public class DeviceDataModel {
     * 
     * @return DeviceUsage
     */
-   public DeviceUsage getUsage() throws DeviceModelAccessException{
+   public synchronized DeviceUsage getUsage() throws DeviceModelAccessException{
       Connection conn = dbConnect();
       Statement stmt=null;
       long count=0;
@@ -503,7 +503,7 @@ public class DeviceDataModel {
     * @return new device id
     * @throws DeviceModelAccessException if internal database error
     */
-   public long createDevice(Device device) throws DeviceModelAccessException {		
+   public synchronized long createDevice(Device device) throws DeviceModelAccessException {		
 		
 		long val=0;				
 		Connection conn = dbConnect();
@@ -515,7 +515,6 @@ public class DeviceDataModel {
 			statement.setString(3, device.getPublicIP());			
 			statement.setString(4,lbIdsToJson( device.lbIds).toString());
 			statement.setString(5,device.getLbType());
-			Calendar calendar = Calendar.getInstance();
 			Date dNow = calendar.getTime();
 			statement.setTimestamp(6,new java.sql.Timestamp(dNow.getTime()));	
 			statement.setTimestamp(7,new java.sql.Timestamp(dNow.getTime()));	
