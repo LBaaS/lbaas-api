@@ -3,6 +3,7 @@ package org.pem.lbaas.messaging;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.Semaphore;
 
 
 import org.apache.log4j.Logger;
@@ -33,6 +34,7 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String>, Runnab
 	private static Logger logger = Logger.getLogger(LBaaSTaskManager.class);
 	private static DeviceDataModel deviceModel = new DeviceDataModel();
 	private static LoadBalancerDataModel loadbalancerModel = new LoadBalancerDataModel();
+	private static Semaphore semaphore = new Semaphore(1);
 	private static HashMap requestMap = new HashMap();
 	private static long life=0;
 	private static Thread runner=null;
@@ -61,6 +63,35 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String>, Runnab
 	}
 	
 	/**
+	 *  get rid of old jobs 
+	 *  */
+	private void ageOutDeadJobs() {
+		try {
+			semaphore.acquire();
+			Iterator it = requestMap.entrySet().iterator();
+		    while (it.hasNext()) {
+		    	Map.Entry entry = (Map.Entry) it.next();
+		    	String key = (String)entry.getKey();
+		    	LBaaSTrackedJob job = (LBaaSTrackedJob)entry.getValue();
+		    	if ( job.lifeInSecs > TASK_MGR_MAX_LIFE) {
+		    		logger.info("timing out job " + key);
+		    		jobCompletedFail(job.trackedJob);
+		    		requestMap.remove(key);
+		    	}
+		    	else
+		    		job.lifeInSecs++;			        
+		    }	
+		}
+		catch (InterruptedException ie) {
+			logger.info("job depth InterruptedException");
+		}
+		finally {
+			semaphore.release();
+		}
+		
+	}
+	
+	/**
 	 * Task manager background thread for timing out dead jobs
 	 */
 	public void run() {
@@ -68,21 +99,9 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String>, Runnab
 			life++;
 			try {
 				Thread.sleep(TASK_MGR_SLEEP_TOV);
-				Iterator it = requestMap.entrySet().iterator();
-			    while (it.hasNext()) {
-			    	Map.Entry entry = (Map.Entry) it.next();
-			    	String key = (String)entry.getKey();
-			    	LBaaSTrackedJob job = (LBaaSTrackedJob)entry.getValue();
-			    	if ( job.lifeInSecs > TASK_MGR_MAX_LIFE) {
-			    		logger.info("timing out job " + key);
-			    		jobCompletedFail(job.trackedJob);
-			    		requestMap.remove(key);
-			    	}
-			    	else
-			    		job.lifeInSecs++;			        
-			    }				
+				ageOutDeadJobs();
 			} catch (InterruptedException e) {
-				
+			   logger.info("Task Manager run InterruptedException");
 			}
 		}
 	}
@@ -100,7 +119,19 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String>, Runnab
 	 * @return
 	 */
 	public int jobDepth() {
-		return requestMap.size();
+		int size=0;
+		try {
+			semaphore.acquire();
+			size = requestMap.size();			
+		}
+		catch (InterruptedException ie) {
+			logger.info("job depth InterruptedException");
+		}
+		finally {
+			semaphore.release();
+		}
+		
+		return size;
 	}
 	
 	/**
@@ -126,16 +157,28 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String>, Runnab
 	 */
 	public void jobCompletedSuccess( String message) {
 		logger.info("jobCompletedSuccess");
-		requestMap.remove(getJobRequestId(message));
+		try {
+		   semaphore.acquire();
+		   String jobRequestId = getJobRequestId(message);
+		   if (jobRequestId!=null)
+		      requestMap.remove(jobRequestId);
+		   else
+			  logger.error("could not mark job completed!");
+		}
+		catch (InterruptedException ie) {
+			logger.info("jobCompletedSuccess InterruptedException");
+		}
+		finally {
+			semaphore.release();
+		}
 	}
 	
 	/**
 	 * Stop tracking a job due to a failure or timeout
 	 * @param message
 	 */
-	public void jobCompletedFail( String message) {
+	public synchronized void jobCompletedFail( String message) {
 		logger.info("jobCompletedFail");
-		requestMap.remove(getJobRequestId(message));
 		
 		// mark device in error
 		try {
@@ -198,10 +241,22 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String>, Runnab
 	public void sendJob( String workerName, String message ) throws InterruptedException {
        logger.info("gearman client submitting job to :" + workerName);	
        logger.info("gearman client job request msg : " + message);
-       GearmanJoin<String> join = gearmanClient.submitJob( workerName, message.getBytes(), workerName, this);  
+       gearmanClient.submitJob( workerName, message.getBytes(), workerName, this);  
        String jobRequestId = getJobRequestId(message);
-       if (jobRequestId!=null )
-    	   requestMap.put(jobRequestId, new LBaaSTrackedJob(message));       
+       if (jobRequestId!=null ) {
+    	   try {
+    		  semaphore.acquire();
+    	      requestMap.put(jobRequestId, new LBaaSTrackedJob(message));
+    	   }
+    	   catch (InterruptedException ie) {
+   			   logger.info("sendjob InterruptedException");
+   		   }
+   		   finally {
+   			   semaphore.release();
+   		   }
+       }
+       else
+    	   logger.error("could not get job id to track job!");
        logger.info("gearman job submitted");
 	}
 	
@@ -211,7 +266,7 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String>, Runnab
 	 * @param job to send is the LBaaS job encoded in JSON
 	 * @return
 	 */
-	public void sendJob( Long deviceId, String job) throws DeviceModelAccessException, InterruptedException {
+	public synchronized void sendJob( Long deviceId, String job) throws DeviceModelAccessException, InterruptedException {
 		DeviceDataModel deviceModel = new DeviceDataModel();
 		Device device = null;
 		try {
@@ -243,7 +298,7 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String>, Runnab
 	 * is extracted and used to update database for loadbalancer and device.
 	 * @param message
 	 */
-	public void processLoadBalancerSuccess( String message) {
+	public synchronized void processLoadBalancerSuccess( String message) {
 		logger.info("gearman job sucess");		
 		try {
 		    JSONObject jsonObject=new JSONObject(message);			   
@@ -339,18 +394,45 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String>, Runnab
      * process a worker submit failure, not much to do other than log it out
      * @param message
      */
-    public void processLoadBalancerSubmitFail( String message) {
+    public synchronized void processLoadBalancerSubmitFail( String message) {
     	logger.error("gearman job submit failure message :" + message);
-    	jobCompletedFail(message);
+    	jobCompletedFail(message);    	
+    	
+    	try {
+			semaphore.acquire();
+			String jobRequestId = getJobRequestId(message);
+			if (jobRequestId!=null)
+			   requestMap.remove(jobRequestId);		
+		}
+		catch (InterruptedException ie) {
+			logger.info("job depth InterruptedException");
+		}
+		finally {
+			semaphore.release();
+		}
+		
 	}
     
     /**
      * process a worker failure, not much to do other than log it out
      * @param message
      */
-    public void processLoadBalancerWorkerFail( String message) {
+    public synchronized void processLoadBalancerWorkerFail( String message) {
     	logger.error("gearman job worker failure message :" + message);    	
     	jobCompletedFail(message);
+    	
+    	try {
+			semaphore.acquire();
+			String jobRequestId = getJobRequestId(message);
+			if (jobRequestId!=null)
+			   requestMap.remove(jobRequestId);		
+		}
+		catch (InterruptedException ie) {
+			logger.info("job depth InterruptedException");
+		}
+		finally {
+			semaphore.release();
+		}
 	}
 	
 	
