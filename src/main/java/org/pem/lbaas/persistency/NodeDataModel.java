@@ -136,7 +136,7 @@ public class NodeDataModel {
     * @return List of Node objects
     * @throws NodeModelAccessException if internal database error
     */
-   public  List<Node> getNodes( String condition) throws NodeModelAccessException {
+   public  synchronized List<Node> getNodes( String condition) throws NodeModelAccessException {
       List<Node> nodes = new  ArrayList<Node>();		
 	  Connection conn = dbConnect();
 	  Statement stmt=null;
@@ -166,7 +166,7 @@ public class NodeDataModel {
     * @param lbid
     * @return List of Nodes
     */
-   public  List<Node> getNodesForLb( long lbid) throws NodeModelAccessException {
+   public  synchronized List<Node> getNodesForLb( long lbid) throws NodeModelAccessException {
 	   String condition = " lbid =  " + lbid;
 	   return getNodes(condition); 
    }
@@ -179,7 +179,7 @@ public class NodeDataModel {
     * @return Node or null if not found
     * @throws DeviceModelAccessException if internal database error
     */
-   public Node getNode(long nodeId) throws NodeModelAccessException {
+   public synchronized Node getNode(long nodeId) throws NodeModelAccessException {
 	  logger.info("getNode"); 
       Connection conn = dbConnect();
       Statement stmt=null;	
@@ -216,7 +216,7 @@ public class NodeDataModel {
     * @return 1 if deleted or 0 if not ( delete count )
     * @throws NodeModelAccessException if internal database error
     */
-   public int deleteNode(long nodeId) throws NodeModelAccessException {
+   public synchronized int deleteNode(long nodeId) throws NodeModelAccessException {
 	  logger.info("deleteNode");  
       Connection conn = dbConnect();
       Statement stmt=null;		
@@ -240,7 +240,7 @@ public class NodeDataModel {
     * @return
     * @throws NodeModelAccessException
     */
-   public int deleteNodes(long lbid) throws NodeModelAccessException {
+   public synchronized int deleteNodes(long lbid) throws NodeModelAccessException {
 	      logger.info("deleteNodes"); 
 	      Connection conn = dbConnect();
 	      Statement stmt=null;		
@@ -265,7 +265,7 @@ public class NodeDataModel {
     * @return new node id
     * @throws DeviceModelAccessException if internal database error
     */
-   public long createNode(Node node) throws NodeModelAccessException {		
+   public synchronized long createNode(Node node) throws NodeModelAccessException {		
 	    logger.info("createNode"); 
 		long val=0;				
 		Connection conn = dbConnect();
@@ -307,7 +307,7 @@ public class NodeDataModel {
     * @param nodeid
     * @throws NodeModelAccessException
     */
-   public boolean enable( boolean value, long nodeid) throws NodeModelAccessException {
+   public synchronized boolean enable( boolean value, long nodeid) throws NodeModelAccessException {
 	   logger.info("enable nodeid :" + nodeid + " enabled: " + value); 
 	   
 		  if ( this.getNode(nodeid)==null)
@@ -336,7 +336,7 @@ public class NodeDataModel {
     * @param lbid 
     * @throws NodeModelAccessException
     */
-   public void createNodes( Nodes nodes, long lbid) throws NodeModelAccessException {
+   public synchronized void createNodes( Nodes nodes, long lbid) throws NodeModelAccessException {
 	   logger.info("createNodes"); 
 	   List<Node> nodeList = nodes.getNodes();
 	   for ( int z=0;z<nodeList.size();z++) {
