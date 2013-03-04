@@ -6,7 +6,6 @@ description: "HP Cloud Load Balancer Service API Specification"
 keywords: "lbaas,loadbalancer"
 product: LoadBalancer
 published: false
-author:Peter Mellquist, pemellquist@gmail.com
 
 ---
 
@@ -14,7 +13,7 @@ author:Peter Mellquist, pemellquist@gmail.com
 
 **Date:** February 8, 2013
 
-**Document Version:** 0.5
+**Document Version:** 0.6
 
 
 ## 1. Overview
@@ -425,7 +424,7 @@ The response body contains information regarding limits imposed for the tenant m
 
 **Curl Request**
 
-	curl -H "X-Auth-Token:HPAuth_d17a1fb4e1e0b8857b9d" https://ntt.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/limits 
+	curl -H "X-Auth-Token:HPAuth_d17a1fb4e1e0b8857b9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/limits 
 
 **Response**
 
@@ -562,7 +561,7 @@ The response body contains the currently supported algorithms.
 
 **Curl Request**
 
-	curl -H "X-Auth-Token:HPAuth_d17a1fbb9d" https://ntt.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/algorithms 
+	curl -H "X-Auth-Token:HPAuth_d17a1fbb9d" https://uswest.region-b.geo-1.lbaas.hpcloudsvc.com/v1.1/algorithms 
 
 **Response**
 
