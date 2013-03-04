@@ -3,6 +3,7 @@ package org.pem.lbaas.handlers.tenant;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -51,6 +52,7 @@ public class LbaasHandler {
 	private static DeviceDataModel deviceModel = new DeviceDataModel();
 	private static NodeDataModel nodeModel = new NodeDataModel();
     private static LBaaSTaskManager lbaasTaskManager = new LBaaSTaskManager();
+    private static Semaphore semaphore = new Semaphore(1);
     private static long requestId=0;
     
     // actions and HPCS private JSON names
@@ -1406,7 +1408,9 @@ public class LbaasHandler {
 				throw new LBaaSException( ve.message, 400);  
 		   } 
 		   
-		   
+		   // tenant who created this
+		   lb.setTenantId(tenantId);
+		   		   
 		   
 		   if ( virtualIps != null) {
 			    
@@ -1417,79 +1421,105 @@ public class LbaasHandler {
 			   }			   
 			   // check that vip is the same address as existing device and this is a new protocol not an existing one
 			   String address = vipList.get(0).getAddress();
-			   List<Device> devices = deviceModel.getDevicesWithAddr(address);
-			   if (devices.size()==0) {
-				   throw new LBaaSException("VIP specified does not exist" , 400);    //  not available
-			   }
 			   
-			    
-			   // use this device
-			   device = devices.get(0);
-			   
-			   // set the vip into the newly created lb
-			   lb.setVirtualIps(virtualIps);
-			   
-			    
-			   // get the other LBs used by this device to submit with the request
-			   //device.lbIds
-			   for (int z=0;z<device.lbIds.size();z++) {
-				   LoadBalancer existingLb = lbModel.getLoadBalancer(device.lbIds.get(z),tenantId);
-				   
-				   if (existingLb.getProtocol().equalsIgnoreCase(lb.getProtocol())) {
-					   throw new LBaaSException("VIP already has loadbalancer with this protoocol for tenant "+ tenantId , 400);     
+			   // find existing VIP
+			   try {
+				   List<Device> devices = deviceModel.getDevicesWithAddr(address);
+				   if (devices.size()==0) {
+					   throw new LBaaSException("VIP specified does not exist" , 400);    //  not available
 				   }
 				   
-				   lbs.add(existingLb);
+				    
+				   // use this device
+				   device = devices.get(0);
+				   
+				   // set the vip into the newly created lb
+				   lb.setVirtualIps(virtualIps);
+				   
+				    
+				   // get the other LBs used by this device to submit with the request
+				   //device.lbIds
+				   for (int z=0;z<device.lbIds.size();z++) {
+					   LoadBalancer existingLb = lbModel.getLoadBalancer(device.lbIds.get(z),tenantId);
+					   
+					   if (existingLb.getProtocol().equalsIgnoreCase(lb.getProtocol())) {
+						   throw new LBaaSException("VIP already has loadbalancer with this protoocol for tenant "+ tenantId , 400);     
+					   }
+					   
+					   lbs.add(existingLb);
+				   }
 			   }
-			   
+			   catch ( DeviceModelAccessException dme) {
+			      throw new LBaaSException(dme.message, 500);
+			   }
 			    
-			   lbs.add(lb);     // add this LB as as well			   
+			   lbs.add(lb);     // add this LB as as well
+			   
+			   // mark lb as using found device
+			   lb.setDevice( new Long(device.getId()));     
+			   		   
+			   // write it to datamodel
+			   try {
+			      lbId = lbModel.createLoadBalancer(lb);
+			      
+			      // set device lb and write it back to data model
+				  device.lbIds.add(lbId);
+				  
+				  // update device with new lb info
+				  deviceModel.setDevice(device);
+				   
+			   }
+			   catch ( DeviceModelAccessException dme) {
+			      throw new LBaaSException(dme.message, 500);
+			   }
+			   			   			   
 		   }
 		   else {
+			   
 			   // find free device to use
 			   try {
+				  semaphore.acquire(); 
+				   
 			      device = deviceModel.findFreeDevice();
+			   			   		   
+			      if ( device == null) {
+			    	 semaphore.release(); 
+				     throw new LBaaSException("no available devices found" , 503);     
+			      }
+			   
+			      logger.info("found free device at id : " + device.getId().toString());
+			   
+			      virtualIps = deviceToVips( device);
+			      lb.setVirtualIps(virtualIps);
+			      lbs.add(lb);     // only a single LB in this update
+			   			   
+			      // mark lb as using found device
+			      lb.setDevice( new Long(device.getId()));     
+			   		          	   			   		   				   			     
+			    
+			      // create the load balancer
+			      lbId = lbModel.createLoadBalancer(lb);
+			      
+			      // set device lb and write it back to data model
+			      device.lbIds.add(lbId);
+			      
+			      // update device with lb reference
+			      deviceModel.setDevice(device);
+			      
 			   }
 			   catch (DeviceModelAccessException dme) {
 		             throw new LBaaSException(dme.message, 500);
 	           }
-			   		   
-			   if ( device == null) {
-				   throw new LBaaSException("cannot find free device available" , 503);     
+			   catch (InterruptedException ie) {
+					logger.info("job depth InterruptedException");
+			   }
+			   finally {
+			      semaphore.release();
 			   }
 			   
-			   logger.info("found free device at id : " + device.getId().toString());
-			   
-			   virtualIps = deviceToVips( device);
-			   lb.setVirtualIps(virtualIps);
-			   lbs.add(lb);     // only a single LB in this update
 		   }
-		   		   		   		   
-		     	   
-		   // mark lb as using found device
-		   lb.setDevice( new Long(device.getId()));     
-		   
-		   // tenant who created this
-		   lb.setTenantId(tenantId);
-		   
-		   // write it to datamodel
-		   lbId = lbModel.createLoadBalancer(lb);	       	   	
-		   
-		   	
-		   
-		   // set device lb and write it back to data model
-		   device.lbIds.add(lbId);
-		   try {
-		      deviceModel.setDevice(device);
-		   }
-		   catch (DeviceModelAccessException dme) {
-	             throw new LBaaSException(dme.message, 500);
-         }
-		   
+		   		   		   		   		     	   		   		   		   
 		}
-		catch ( DeviceModelAccessException dme) {
-	         throw new LBaaSException(dme.message, 500);
-	      }
 		catch (JSONException e) {
 			return e.toString();
 		}
