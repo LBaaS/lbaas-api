@@ -1,7 +1,11 @@
 #!/bin/bash
 JAR="/opt/lbaasapi/lbaasapi-0.1.9-jar-with-dependencies.jar"
+KILLPATTERN="/opt/lbaasapi/lbaasapi-"
 LOGCFG="file:/opt/lbaasapi/log4j.properties"
 CONFIG="./lbaas.config"
+NOW=$(date +"%F-%H%M%S")
+LBAASSTDOUT=/var/log/lbaasapi/lbaas-stdout-$NOW.log
+LBAASLOG=/var/log/lbaasapi/lbaas.log
 
 if [ $# -lt 1 ]
 then
@@ -11,25 +15,27 @@ fi
 
 if [ $1 = "start" ]
 then
-	echo "starting lbaas ..."
-        RPID=$(ps -ef | grep $JAR | grep java | awk '{print $2}' | head -1)
+	echo "starting lbaasapi ..."
+        RPID=$(ps -ef | grep $KILLPATTERN | grep java | awk '{print $2}' | head -1)
 	if [ -z $RPID ]
 	then
-		echo "application :" $JAR
-		echo "logging cfg :" $LOGCFG
-		java -Dlog4j.configuration=$LOGCFG -jar $JAR $CONFIG > /var/log/lbaasapi/launch.log 2>&1 & 
+		echo "application     :" $JAR
+		echo "logging cfg     :" $LOGCFG
+		echo "lbaasapi stdout :" $LBAASSTDOUT
+		echo "lbaasapi log    :" $LBAASLOG
+		java -Dlog4j.configuration=$LOGCFG -jar $JAR $CONFIG > $LBAASSTDOUT 2>&1 & 
 		echo "started"
 		exit 0
 	else
-		echo "lbaasapi already running!"
+		echo "lbaasapi already running! version : " $(ps -ef | grep $KILLPATTERN)
 		exit 0
 	fi
 fi
 
 if [ $1 = "stop" ]
 then
-	echo "stopping lbaas ..."
-	RPID=$(ps -ef | grep $JAR | grep java | awk '{print $2}' | head -1)
+	echo "stopping lbaasapi ..."
+	RPID=$(ps -ef | grep $KILLPATTERN | grep java | awk '{print $2}' | head -1)
 	if [ -z $RPID ]
 	then
 		echo "lbaasapi does not appear to be running!"
@@ -37,7 +43,7 @@ then
 	fi
 	echo "stopping pid " $RPID
 	kill $RPID
-	echo "stopped"
+	echo "stopped : "
 	exit 0
 fi
 
