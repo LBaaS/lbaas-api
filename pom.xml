@@ -4,7 +4,7 @@
 
   <groupId>org.pem.lbaas</groupId>
   <artifactId>lbaasapi</artifactId>
-  <version>0.1.9</version>
+  <version>0.1.12</version>
   <packaging>jar</packaging>
 
   <name>lbaasapi</name>
