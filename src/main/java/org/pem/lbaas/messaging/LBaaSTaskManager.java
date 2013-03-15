@@ -66,7 +66,7 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String>, Runnab
 	 *  get rid of old jobs 
 	 *  */
 	private void ageOutDeadJobs() {
-		try {
+		try {			
 			semaphore.acquire();
 			Iterator it = requestMap.entrySet().iterator();
 		    while (it.hasNext()) {
@@ -78,8 +78,10 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String>, Runnab
 		    		jobCompletedFail(job.trackedJob);
 		    		requestMap.remove(key);
 		    	}
-		    	else
-		    		job.lifeInSecs++;			        
+		    	else {
+		    		logger.info("job life :" + job.lifeInSecs);
+		    		job.lifeInSecs++;
+		    	}
 		    }	
 		}
 		catch (InterruptedException ie) {
