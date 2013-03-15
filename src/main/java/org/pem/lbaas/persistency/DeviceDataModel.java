@@ -299,7 +299,7 @@ public class DeviceDataModel {
    public synchronized Device findFreeDevice() throws DeviceModelAccessException {		
       Connection conn = dbConnect();
       Statement stmt=null;		
-      String query = "SELECT * FROM devices WHERE loadbalancers = " + EMPTY_LBIDS;
+      String query = "SELECT * FROM devices WHERE loadbalancers = " + EMPTY_LBIDS + " AND status = '" + Device.STATUS_OFFLINE + "'" ;
       try {
          stmt=conn.createStatement();
          ResultSet rs=stmt.executeQuery(query);
@@ -307,6 +307,7 @@ public class DeviceDataModel {
 		    Device device = rsToDevice(rs);
 		    rs.close();
 		    stmt.close();
+		    logger.info("Free Device id: " + device.getId() + " status : " + device.getStatus() + "  lbs : " + device.lbIds );
 		    return device;
 		 }
 		 else {
@@ -471,7 +472,7 @@ public class DeviceDataModel {
       long count=0;
       long free=0;
       String queryCount = "SELECT COUNT(*) FROM devices";
-      String queryFree = "SELECT COUNT(*) FROM devices WHERE loadbalancers = " + EMPTY_LBIDS;
+      String queryFree = "SELECT COUNT(*) FROM devices WHERE loadbalancers = " + EMPTY_LBIDS + " AND status = '" + Device.STATUS_OFFLINE + "'" ;
 	  try {
 		  stmt=conn.createStatement();
 		  ResultSet res = stmt.executeQuery(queryCount);
