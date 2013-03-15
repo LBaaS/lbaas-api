@@ -599,6 +599,11 @@ public class LbaasHandler {
 			throw new LBaaSException("could not find loadbalancer id : " + lbid + " for tenant :" + tenantId, 404);     			
 		}
 		
+		// PUTs not allowed while LB is in BUILD or PENDING-UPDATE state
+		if ((lb.getStatus().equalsIgnoreCase(LoadBalancer.STATUS_BUILD)) || (lb.getStatus().equalsIgnoreCase(LoadBalancer.STATUS_PENDING_UPDATE))) {
+			throw new LBaaSException("operation not allowed while load balancer status : " + lb.getStatus() + " for tenant :" + tenantId, 422);  
+		}
+		
 		String name, algorithm;
 		JSONObject jsonObject=null;
 		
@@ -728,6 +733,12 @@ public class LbaasHandler {
 	    }		
 		if ( lb == null) {
 			throw new LBaaSException("could not find loadbalancer id : " + lbid + " for tenant :" + tenantId, 404);               	
+		}
+		
+		
+		// DELETEs not allowed while LB is in BUILD or PENDING-UPDATE state
+		if ((lb.getStatus().equalsIgnoreCase(LoadBalancer.STATUS_BUILD)) || (lb.getStatus().equalsIgnoreCase(LoadBalancer.STATUS_PENDING_UPDATE))) {
+			throw new LBaaSException("operation not allowed while load balancer status : " + lb.getStatus() + " for tenant :" + tenantId, 422);  
 		}
 		
 		// delete LB
@@ -1004,6 +1015,11 @@ public class LbaasHandler {
 			throw new LBaaSException("loadbalancer id:" + lbid + " not found for tenant :" + tenantId, 404);  
 		}
 		
+		// POSTs not allowed while LB is in BUILD or PENDING-UPDATE state
+		if ((lb.getStatus().equalsIgnoreCase(LoadBalancer.STATUS_BUILD)) || (lb.getStatus().equalsIgnoreCase(LoadBalancer.STATUS_PENDING_UPDATE))) {
+			throw new LBaaSException("operation not allowed while load balancer status : " + lb.getStatus() + " for tenant :" + tenantId, 422);  
+		}
+		
 		int currentNodeSize = lb.getNodes().getNodes().size();
 						
 	    //  extract nodes from content, check for errors and over limits
@@ -1027,6 +1043,17 @@ public class LbaasHandler {
 		   throw new LBaaSException( pae.message, 400);  
         } 
 		
+		// mark as change pending
+		lb.setStatus(LoadBalancer.STATUS_PENDING_UPDATE);		
+		
+		// write changes to DB
+		try {
+			lbModel.setLoadBalancer(lb);
+		}
+		catch ( DeviceModelAccessException dme) {
+	         throw new LBaaSException(dme.message, 500);
+	    }
+		
 		
 		// update Node model with new nodes
 		try {
@@ -1035,6 +1062,8 @@ public class LbaasHandler {
 		catch (NodeModelAccessException nme) {
 			throw new LBaaSException(nme.getMessage(),500);
 		}
+		
+		
 				
 		// have the device process the job 
 		try {
@@ -1096,6 +1125,11 @@ public class LbaasHandler {
 		if (lb == null) {
 			throw new LBaaSException("loadbalancer id:" + lbid + " not found for tenant :" + tenantId, 404);   
 		}
+		
+		// node DELETEs not allowed while LB is in BUILD or PENDING-UPDATE state
+		if ((lb.getStatus().equalsIgnoreCase(LoadBalancer.STATUS_BUILD)) || (lb.getStatus().equalsIgnoreCase(LoadBalancer.STATUS_PENDING_UPDATE))) {
+			throw new LBaaSException("operation not allowed while load balancer status : " + lb.getStatus() + " for tenant :" + tenantId, 422);  
+		}
 				
 		// find the node
 		long longNodeId=0;
@@ -1110,6 +1144,17 @@ public class LbaasHandler {
 		if (node == null) {
 			throw new LBaaSException("node id: " + nodeid + " not found", 404);  
 		}
+		
+		// mark as change pending
+		lb.setStatus(LoadBalancer.STATUS_PENDING_UPDATE);		
+		
+		// write changes to DB
+		try {
+			lbModel.setLoadBalancer(lb);
+		}
+		catch ( DeviceModelAccessException dme) {
+	         throw new LBaaSException(dme.message, 500);
+	    }
 		
 		// update Node model with new nodes
 		try {
@@ -1185,6 +1230,11 @@ public class LbaasHandler {
 		if (lb == null) {
 			throw new LBaaSException("loadbalancer id:" + lbid + " not found for tenant :" + tenantId, 404);   
 		}
+		
+		// node DELETEs not allowed while LB is in BUILD or PENDING-UPDATE state
+		if ((lb.getStatus().equalsIgnoreCase(LoadBalancer.STATUS_BUILD)) || (lb.getStatus().equalsIgnoreCase(LoadBalancer.STATUS_PENDING_UPDATE))) {
+			throw new LBaaSException("operation not allowed while load balancer status : " + lb.getStatus() + " for tenant :" + tenantId, 422);  
+		}
 				
 		// find the node
 		long longNodeId=0;
@@ -1238,6 +1288,17 @@ public class LbaasHandler {
 				catch (NodeModelAccessException nme) {
 					throw new LBaaSException(nme.getMessage(),500);
 				}
+				
+				// mark as change pending
+				lb.setStatus(LoadBalancer.STATUS_PENDING_UPDATE);		
+				
+				// write changes to DB
+				try {
+					lbModel.setLoadBalancer(lb);
+				}
+				catch ( DeviceModelAccessException dme) {
+			         throw new LBaaSException(dme.message, 500);
+			    }
 				
 				// have the device process the job 
 				try {
@@ -1467,6 +1528,8 @@ public class LbaasHandler {
 				  
 				  // update device with new lb info
 				  deviceModel.setDevice(device);
+				  
+				  logger.info("device taken :" + device.getId().toString());
 				   
 			   }
 			   catch ( DeviceModelAccessException dme) {
@@ -1505,6 +1568,8 @@ public class LbaasHandler {
 			      
 			      // update device with lb reference
 			      deviceModel.setDevice(device);
+			      
+			      logger.info("device taken :" + device.getId().toString());
 			      
 			   }
 			   catch (DeviceModelAccessException dme) {
