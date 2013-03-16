@@ -1541,12 +1541,13 @@ public class LbaasHandler {
 			   
 			   // find free device to use
 			   try {
+				   
+				  logger.info("semaphore available permits : " + semaphore.availablePermits()); 
 				  semaphore.acquire(); 
 				   
 			      device = deviceModel.findFreeDevice();
 			   			   		   
-			      if ( device == null) {
-			    	 semaphore.release(); 
+			      if ( device == null) { 
 				     throw new LBaaSException("no available devices found" , 503);     
 			      }
 			   
