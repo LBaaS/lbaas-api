@@ -19,6 +19,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
+import org.eclipse.jetty.util.log.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -31,6 +32,7 @@ import org.pem.lbaas.datamodel.Nodes;
 import org.pem.lbaas.datamodel.VipType;
 import org.pem.lbaas.datamodel.VirtualIp;
 import org.pem.lbaas.datamodel.VirtualIps;
+import org.pem.lbaas.messaging.LBaaSArchiveRequest;
 import org.pem.lbaas.messaging.LBaaSTaskManager;
 import org.pem.lbaas.persistency.DeviceDataModel;
 import org.pem.lbaas.persistency.DeviceModelAccessException;
@@ -61,12 +63,17 @@ public class LbaasHandler {
     public static String HPCS_RESPONSE       = "hpcs_response";
     public static String HPCS_DEVICE         = "hpcs_device";
     public static String HPCS_TENANTID       = "hpcs_tenantid";
+    public static String HPCS_OBJECT_STORE_TYPE     = "hpcs_object_store_type";
+    public static String HPCS_OBJECT_STORE_ENDPOINT = "hpcs_object_store_endpoint";
+    public static String HPCS_OBJECT_STORE_BASEPATH = "hpcs_object_store_basepath";
+    public static String HPCS_OBJECT_STORE_TOKEN    = "hpcs_object_store_token";
     public static String HPCS_RESPONSE_PASS  = "PASS";
     public static String HPCS_RESPONSE_FAIL  = "FAIL";
     public static String ACTION_UPDATE       = "UPDATE";
     public static String ACTION_SUSPEND      = "SUSPEND";
     public static String ACTION_ENABLE       = "ENABLE";
     public static String ACTION_DELETE       = "DELETE";
+    public static String ACTION_ARCHIVE      = "ARCHIVE";
     
     // JSON names
     public    static String JSON_NAME        = "name";
@@ -87,6 +94,9 @@ public class LbaasHandler {
     protected static String JSON_VIPS        = "virtualIps";
     protected static String JSON_NODES       = "nodes";
     public    static String JSON_LBS         = "loadBalancers";
+    public    static String JSON_AUTH_TOKEN  = "authToken";
+    public    static String JSON_OBJ_ENDPNT  = "objectStoreEndpoint";
+    public    static String JSON_OBJ_PATH    = "objectStoreBasePath";
     
     // node info
     public static String    NODE_ONLINE      = "ONLINE";
@@ -140,7 +150,7 @@ public class LbaasHandler {
      * @return JSON encoded array
      * @throws JSONException
      */
-	protected String LbToJsonArray(List<LoadBalancer> lbs, String action) throws JSONException {
+	protected String LbToJsonArray(List<LoadBalancer> lbs, LBaaSArchiveRequest lbaaSArchiveRequest, String action) throws JSONException {
 		
 		JSONObject jsonObject=new JSONObject();
 		JSONArray jsonArray = new JSONArray();
@@ -172,7 +182,20 @@ public class LbaasHandler {
 		   jsonObject.put(HPCS_REQUESTID,++requestId);
 		   jsonObject.put(HPCS_ACTION, action);
 		   jsonObject.put(HPCS_DEVICE,lbs.get(0).getDevice()); 
-		   jsonObject.put(JSON_LBS,jsonArray);		   				   	   		   
+		   jsonObject.put(JSON_LBS,jsonArray);		 
+		   
+		   // archive request if present
+		   if (action.equalsIgnoreCase(ACTION_ARCHIVE)) {
+			   if (lbaaSArchiveRequest != null) {
+				   jsonObject.put(HPCS_OBJECT_STORE_TYPE, lbaaSArchiveRequest.objectStoreType);
+				   jsonObject.put(HPCS_OBJECT_STORE_ENDPOINT,lbaaSArchiveRequest.objectStoreEndpoint);
+				   jsonObject.put(HPCS_OBJECT_STORE_BASEPATH, lbaaSArchiveRequest.objectStoreBasePath);
+				   jsonObject.put(HPCS_OBJECT_STORE_TOKEN, lbaaSArchiveRequest.objectStoreToken);
+			   }
+			   else
+				   logger.error("archive request requires LBaaSArchiveRequest instance!");
+		   }
+		   
 		   return jsonObject.toString();
 		}
 		catch ( JSONException jsone) {
@@ -666,7 +689,7 @@ public class LbaasHandler {
 		// have the device process the job 
 		try {
 		   List<LoadBalancer> lbs = lbModel.getLoadBalancersWithDevice(lb.getDevice());
-		   lbaasTaskManager.sendJob( new Long(lb.getDevice()), LbToJsonArray(lbs, ACTION_UPDATE ));
+		   lbaasTaskManager.sendJob( new Long(lb.getDevice()), LbToJsonArray(lbs, null, ACTION_UPDATE ));
 		}
 		catch ( JSONException jsone) {
 			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);   
@@ -769,7 +792,7 @@ public class LbaasHandler {
 		   }
 		   else
 			   action = ACTION_UPDATE;
-		   lbaasTaskManager.sendJob( new Long(lb.getDevice()), LbToJsonArray(lbs, action ));
+		   lbaasTaskManager.sendJob( new Long(lb.getDevice()), LbToJsonArray(lbs, null, action ));
 		}
 		catch ( JSONException jsone) {
 			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);   
@@ -1068,7 +1091,7 @@ public class LbaasHandler {
 		// have the device process the job 
 		try {
 		   List<LoadBalancer> lbs = lbModel.getLoadBalancersWithDevice(lb.getDevice());
-		   lbaasTaskManager.sendJob( new Long(lb.getDevice()), LbToJsonArray(lbs, ACTION_UPDATE ));
+		   lbaasTaskManager.sendJob( new Long(lb.getDevice()), LbToJsonArray(lbs, null, ACTION_UPDATE ));
 		}
 		catch ( JSONException jsone) {
 			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);   
@@ -1167,7 +1190,7 @@ public class LbaasHandler {
 		// have the device process the job 
 		try {
 		   List<LoadBalancer> lbs = lbModel.getLoadBalancersWithDevice(lb.getDevice());
-		   lbaasTaskManager.sendJob( new Long(lb.getDevice()), LbToJsonArray(lbs, ACTION_UPDATE ));
+		   lbaasTaskManager.sendJob( new Long(lb.getDevice()), LbToJsonArray(lbs, null, ACTION_UPDATE ));
 		}
 		catch ( JSONException jsone) {
 			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);   
@@ -1303,7 +1326,7 @@ public class LbaasHandler {
 				// have the device process the job 
 				try {
 				   List<LoadBalancer> lbs = lbModel.getLoadBalancersWithDevice(lb.getDevice());
-				   lbaasTaskManager.sendJob( new Long(lb.getDevice()), LbToJsonArray(lbs, ACTION_UPDATE ));
+				   lbaasTaskManager.sendJob( new Long(lb.getDevice()), LbToJsonArray(lbs, null, ACTION_UPDATE ));
 				}
 				catch ( JSONException jsone) {
 					throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);   
@@ -1601,7 +1624,7 @@ public class LbaasHandler {
  		
 		// have the device process the request
 		try {           			   
-		   lbaasTaskManager.sendJob( lbResponse.getDevice(), LbToJsonArray(lbs, ACTION_UPDATE ));		    	
+		   lbaasTaskManager.sendJob( lbResponse.getDevice(), LbToJsonArray(lbs, null, ACTION_UPDATE ));		    	
 		}
 		catch ( JSONException jsone) {
 			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);   
@@ -1622,6 +1645,141 @@ public class LbaasHandler {
 		} 
 		
 	}	
+	
+	
+	
+	/**
+	 * Create a connection log on the specified Object store
+	 * @param request
+	 * @param lbid
+	 * @param content
+	 * @return
+	 */
+	@POST
+	@Path("/{lbid}/logs")
+	@Consumes("application/json")
+	@Produces("application/json")
+	public void createLog(@Context HttpServletRequest request, @PathParam("lbid") String lbid, String content, @Context UriInfo info) 
+	{
+		if (!KeystoneAuthFilter.authenticated(request)) {
+	    	throw new LBaaSException("POST /loadbalancers/{id}/logs request cannot be authenticated", 401);   
+	    }
+		
+		logger.info("POST loadbalancer logs lbid: " + lbid );
+        String tenantId = KeystoneAuthFilter.getTenantId(request);
+		
+		// must have tenant id
+		if ((tenantId == null) || ( tenantId.isEmpty())) {
+			throw new LBaaSException("token and/or tenant id was not specified", 401);   
+		}
+		
+		// check for admin role tenantId
+		tenantId = getAdminTenantId( request, info, tenantId);
+		
+		LoadBalancer lb = null;
+		
+		// read LB 
+		long longId=0;
+		try {
+		   longId= Long.parseLong(lbid);		         
+        } catch (NumberFormatException nfe) 
+        {
+		   throw new LBaaSException("loadbalaner id : " + lbid + " is not a valid id",404);
+		}	
+		try {
+		   lb = lbModel.getLoadBalancer(longId,tenantId);
+		}
+		catch ( DeviceModelAccessException dme) {
+			throw new LBaaSException(dme.message, 500);                                     
+		}		
+		if (lb == null) {
+			throw new LBaaSException("loadbalancer id:" + lbid + " not found for tenant :" + tenantId, 404);  
+		}
+		
+		// POSTs not allowed while LB is in BUILD or PENDING-UPDATE state
+		if ((lb.getStatus().equalsIgnoreCase(LoadBalancer.STATUS_BUILD)) || (lb.getStatus().equalsIgnoreCase(LoadBalancer.STATUS_PENDING_UPDATE))) {
+			throw new LBaaSException("operation not allowed while load balancer status : " + lb.getStatus() + " for tenant :" + tenantId, 422);  
+		}
+		
+		// defaults for archive request
+		LBaaSArchiveRequest lbaaSArchiveRequest = new LBaaSArchiveRequest();
+		lbaaSArchiveRequest.objectStoreType = Lbaas.lbaasConfig.objectStoreType;
+		lbaaSArchiveRequest.objectStoreEndpoint = Lbaas.lbaasConfig.objectStoreEndpoint;
+		lbaaSArchiveRequest.objectStoreBasePath = Lbaas.lbaasConfig.objectStoreLogBasePath;
+		lbaaSArchiveRequest.objectStoreToken =  request.getHeader(KeystoneAuthFilter.KEYSTONE_AUTH_TOKEN);
+		
+		// look for JSON body and extract and override values 
+		if ( !content.isEmpty()) {
+			try {
+				JSONObject jsonObject=new JSONObject(content);
+				
+				// auth token
+				if ( jsonObject.has(JSON_AUTH_TOKEN)) {
+				   String token = (String) jsonObject.get(JSON_AUTH_TOKEN);
+				   if ( token.length() > LimitsHandler.LIMIT_MAX_NAME_SIZE)
+		              throw new LBaaSException("'token' is over max allowed length of : " + LimitsHandler.LIMIT_MAX_NAME_SIZE, 400); 
+				   lbaaSArchiveRequest.objectStoreToken = token;
+				   logger.info("over riding token value with : " + token);
+				}
+				
+				// object endpoint				
+				if ( jsonObject.has(JSON_OBJ_ENDPNT)) {
+					   String endpoint = (String) jsonObject.get(JSON_OBJ_ENDPNT);
+					   if ( endpoint.length() > LimitsHandler.LIMIT_MAX_NAME_SIZE)
+			              throw new LBaaSException("'objectStoreEndpoint' is over max allowed length of : " + LimitsHandler.LIMIT_MAX_NAME_SIZE, 400); 
+					   lbaaSArchiveRequest.objectStoreEndpoint = endpoint;
+					   logger.info("over riding endpoint value with : " + endpoint);
+				}
+				
+				// object store base path				
+				if ( jsonObject.has(JSON_OBJ_PATH)) {
+					   String path = (String) jsonObject.get(JSON_OBJ_PATH);
+					   if ( path.length() > LimitsHandler.LIMIT_MAX_NAME_SIZE)
+			              throw new LBaaSException("'objectStoreBasePath' name is over max allowed length of : " + LimitsHandler.LIMIT_MAX_NAME_SIZE, 400); 
+					   lbaaSArchiveRequest.objectStoreBasePath=path;
+					   logger.info("over riding base path value with : " + path);
+				}
+				
+			}
+			catch ( JSONException jsone) {
+				throw new LBaaSException( jsone.toString(), 400);    
+			} 
+			
+		}
+		
+		// mark as change pending
+		lb.setStatus(LoadBalancer.STATUS_PENDING_UPDATE);		
+		
+		// write changes to DB
+		try {
+			lbModel.setLoadBalancer(lb);
+		}
+		catch ( DeviceModelAccessException dme) {
+	         throw new LBaaSException(dme.message, 500);
+	    }
+	    
+		// make worker request
+		List<LoadBalancer> lbs = new  ArrayList<LoadBalancer>();
+		
+		// only a single LB log is generated at a time
+		lbs.add(lb);
+		
+		// have the device process the request
+		try {           			   
+		   lbaasTaskManager.sendJob( lb.getDevice(), LbToJsonArray(lbs, lbaaSArchiveRequest, ACTION_ARCHIVE ));		    	
+		}
+		catch ( JSONException jsone) {
+			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);   
+		} 
+		catch ( InterruptedException ie) {
+			throw new LBaaSException("internal server error JSON exception :" + ie.toString(), 500);   
+		}
+		catch ( DeviceModelAccessException dme) {
+			throw new LBaaSException("internal server error JSON exception :" + dme.toString(), 500);   
+		}
+		
+		
+	}
 
 	
 }
