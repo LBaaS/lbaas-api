@@ -21,6 +21,7 @@ public class KeystoneAuthFilter {
 	private static String KEYSTONE_TRUSTSTORE     = "Truststore";
 	private static String KEYSTONE_TRUSTSTORE_PWD = "TruststorePass";
 	
+	public static String KEYSTONE_AUTH_TOKEN     = "X-AUTH-TOKEN";
 	private static String KEYSTONE_TENANT_ID      = "X-TENANT-ID";
 	private static String KEYSTONE_TENANT_NAME    = "X-TENANT-NAME";
 	private static String KEYSTONE_STATUS         = "X-IDENTITY-STATUS";
@@ -90,6 +91,11 @@ public class KeystoneAuthFilter {
     public static String getRoles(HttpServletRequest request) {
     	String roles = (String) request.getAttribute(KEYSTONE_ROLES);
 		return roles;
+	}
+    
+    public static String getToken(HttpServletRequest request) {
+    	String token = (String) request.getAttribute(KEYSTONE_AUTH_TOKEN);
+		return token;
 	}
     
     public static boolean isAdmin(HttpServletRequest request) {
