@@ -34,6 +34,9 @@ public class LbaasConfig {
 	public static String LIMITS_MAX_VIPS_PER_LB  = "max-vips-per-lb";
 	public static String LIMITS_MAX_NODES_PER_LB = "max-nodes-per-lb";
 	public static String PAGE_LIMIT              = "page-limit";
+	public static String OBJECT_STORE_ENDPOINT   = "object-store-endpoint";
+	public static String OBJECT_STORE_TYPE       = "object-store-type";
+	public static String OBJECT_STORE_LOG_PATH   = "object-store-log-base-path";
 	
 		
 	
@@ -59,6 +62,9 @@ public class LbaasConfig {
 	public int maxVipsPerLb;
 	public int maxNodesperLb;
 	public int pageLimit;
+	public String objectStoreType;
+	public String objectStoreEndpoint;
+	public String objectStoreLogBasePath;
 	
 	
 	public boolean load(String filename) {		
@@ -92,6 +98,10 @@ public class LbaasConfig {
        		   maxNodesperLb = serviceConfig.getInt(LIMITS_MAX_NODES_PER_LB);
        		   
        		   pageLimit = serviceConfig.getInt(PAGE_LIMIT);
+       		   
+       		   objectStoreType = serviceConfig.getString(OBJECT_STORE_TYPE);
+       		   objectStoreEndpoint = serviceConfig.getString(OBJECT_STORE_ENDPOINT);
+       		   objectStoreLogBasePath = serviceConfig.getString(OBJECT_STORE_LOG_PATH);
 	        	   
 		}  
 	    catch(ConfigurationException cex) {
@@ -121,7 +131,10 @@ public class LbaasConfig {
 	   logger.info("Max VIPs Per LB        : " + maxVipsPerLb);
 	   logger.info("Max Nodes Per LB       : " + maxNodesperLb);
 	   logger.info("Pagination Limit       : " + pageLimit);
-	      
+	   logger.info("Object Store Type      : " + objectStoreType);
+	   logger.info("Object Store Endpoint  : " + objectStoreEndpoint);
+	   logger.info("Object Store Log Path  : " + objectStoreLogBasePath);   
+	   
 	}
 
 
