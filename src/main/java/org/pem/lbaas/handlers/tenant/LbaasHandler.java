@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.concurrent.Semaphore;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -16,6 +17,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
@@ -186,6 +188,15 @@ public class LbaasHandler {
 		   
 		   // archive request if present
 		   if (action.equalsIgnoreCase(ACTION_ARCHIVE)) {
+			   
+			   // trim trailing slash from endpoint if present
+			   if (lbaaSArchiveRequest.objectStoreEndpoint.endsWith("/"))
+				   lbaaSArchiveRequest.objectStoreEndpoint = lbaaSArchiveRequest.objectStoreEndpoint.substring(0, lbaaSArchiveRequest.objectStoreEndpoint.length()-1);
+			   
+			   // trim leading slash from basepath if present
+			   if (lbaaSArchiveRequest.objectStoreBasePath.startsWith("/"))
+				   lbaaSArchiveRequest.objectStoreBasePath = lbaaSArchiveRequest.objectStoreBasePath.substring(1, lbaaSArchiveRequest.objectStoreBasePath.length());
+			   
 			   if (lbaaSArchiveRequest != null) {
 				   jsonObject.put(HPCS_OBJECT_STORE_TYPE, lbaaSArchiveRequest.objectStoreType);
 				   jsonObject.put(HPCS_OBJECT_STORE_ENDPOINT,lbaaSArchiveRequest.objectStoreEndpoint);
@@ -336,7 +347,7 @@ public class LbaasHandler {
 			   jsonVIP.put(JSON_ADDRESS, vipslist.get(y).getAddress());
 			   jsonVIP.put(JSON_ID, vipslist.get(y).getId().toString());
 			   jsonVIP.put(JSON_TYPE, vipslist.get(y).getType());
-			   jsonVIP.put(JSON_IPVER, vipslist.get(y).getIpVersion());
+			   jsonVIP.put(JSON_IPVER, vipslist.get(y).getIpVersion().value());
 			   jsonVipArray.put(jsonVIP);
 		   }
 	   }	
@@ -718,7 +729,7 @@ public class LbaasHandler {
 	@DELETE
 	@Path("/{lbid}")
 	@Produces("application/json")
-	public void deleteLb(@Context HttpServletRequest request, @PathParam("lbid") String lbid, @Context UriInfo info) 
+	public Response deleteLb(@Context HttpServletRequest request, @PathParam("lbid") String lbid, @Context UriInfo info) 
 	{
 		if (!KeystoneAuthFilter.authenticated(request)) {
 	    	throw new LBaaSException("DELETE /loadbalancers/{id} request cannot be authenticated", 401);   
@@ -803,6 +814,8 @@ public class LbaasHandler {
 		catch ( DeviceModelAccessException dme) {
 			throw new LBaaSException("internal server error JSON exception :" + dme.toString(), 500);   
 		}
+		
+		return Response.status(202).build();
 	}
 	
 	
@@ -1354,7 +1367,7 @@ public class LbaasHandler {
 	@POST
 	@Consumes("application/json")
 	@Produces("application/json")
-	public String post(@Context HttpServletRequest request, String content, @Context UriInfo info) {
+	public Response post(@Context HttpServletRequest request, String content, @Context UriInfo info) {
 		
 		if (!KeystoneAuthFilter.authenticated(request)) {
 	    	throw new LBaaSException("POST /loadbalancers request cannot be authenticated", 401);   
@@ -1609,8 +1622,8 @@ public class LbaasHandler {
 		   }
 		   		   		   		   		     	   		   		   		   
 		}
-		catch (JSONException e) {
-			return e.toString();
+		catch (JSONException jsone) {
+			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);
 		}
 		 							
 		// read LB back from data model, it will now have valid id
@@ -1637,8 +1650,8 @@ public class LbaasHandler {
 		}
 		
 		//respond with JSON
-		try {
-		   return LbToJson(lbResponse);
+		try {		   
+		   return Response.status(202).entity( LbToJson(lbResponse)).build();
 		}
 		catch ( JSONException jsone) {
 			throw new LBaaSException("internal server error JSON exception :" + jsone.toString(), 500);   
