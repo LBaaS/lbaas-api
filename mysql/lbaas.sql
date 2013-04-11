@@ -12,7 +12,7 @@ create TABLE versions (
    minor     INT                       NOT NULL,
    PRIMARY KEY (major) 
 );
-INSERT INTO versions values (1,0);
+INSERT INTO versions values (2,0);
 
 # loadbalancers
 CREATE TABLE loadbalancers ( 
@@ -26,6 +26,7 @@ CREATE TABLE loadbalancers (
     created   TIMESTAMP                NOT NULL,                 # timestamp of when LB was created
     updated   TIMESTAMP                NOT NULL,                 # timestamp of when LB was last updated
     device    BIGINT                   NOT NULL,                 # reference to associated device OR '0' for unassigned
+    errmsg    VARCHAR(128),                                      # optional error message which can describe details regarding LBs state, can be blank if no error state exists             
     PRIMARY KEY (id)                                             # ids are unique accross all LBs
  ) DEFAULT CHARSET utf8 DEFAULT COLLATE utf8_general_ci;
  
