@@ -188,9 +188,13 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String>, Runnab
 		   
 		    Long deviceId = (Long) jsonObject.getLong(LbaasHandler.HPCS_DEVICE);
 		    Long requestId = (Long) jsonObject.getLong(LbaasHandler.HPCS_REQUESTID);
+		    String errorMsg = null;
+		    if (jsonObject.has(LbaasHandler.HPCS_ERROR)) 
+		    	errorMsg = (String) jsonObject.get(LbaasHandler.HPCS_ERROR);
 		    
 		    logger.info("Device ID : " + deviceId);
 		    logger.info("requestID : " + requestId);
+		    logger.info("errorMsg  : " + errorMsg);
 		    
 		    
 		    // put device in error state
@@ -309,10 +313,15 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String>, Runnab
 		    String action = (String) jsonObject.get(LbaasHandler.HPCS_ACTION);
 		    Long requestId = (Long) jsonObject.getLong(LbaasHandler.HPCS_REQUESTID);
 		    String response = (String) jsonObject.get(LbaasHandler.HPCS_RESPONSE);
+		    String errorMsg = null;
+		    if (jsonObject.has(LbaasHandler.HPCS_ERROR)) 
+		    	errorMsg = (String) jsonObject.get(LbaasHandler.HPCS_ERROR);
+		    
 		    logger.info("Device ID : " + deviceId);
 		    logger.info("requestID : " + requestId);
 		    logger.info("action    : " + action);
 		    logger.info("response  : " + response);
+		    logger.info("errorMsg  : " + errorMsg);
 		    
 		    // stop tracking this job
 		    jobCompletedSuccess(message);
@@ -362,28 +371,64 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String>, Runnab
 					       logger.error(dme.message);
 				        }
 				   }
+				   else if ( action.equalsIgnoreCase(LbaasHandler.ACTION_ARCHIVE)) {
+					    // move lb to active state
+				    	try {
+				    		loadbalancerModel.setStatus(LoadBalancer.STATUS_ACTIVE, lbId,tenantId);
+				    	}
+				    	catch (DeviceModelAccessException dme) {
+				             logger.error(dme.message);
+			            }
+				    	
+				    	// move device status to online
+				    	try {
+				    		deviceModel.setStatus(Device.STATUS_ONLINE, deviceId);
+				    	}
+				    	catch (DeviceModelAccessException dme) {
+				             logger.error(dme.message);
+			           }
+				   }
 		        }
 		        else {
 			    	logger.info("worker response not PASS value : " + response + " marking LB and device as ERROR");
 			    	logger.info("message : " + message);
-			    	
-			    	// move lb to error state
-			    	if ( !action.equalsIgnoreCase(LbaasHandler.ACTION_DELETE)) {
+			    				    	
+			    	if ( action.equalsIgnoreCase(LbaasHandler.ACTION_UPDATE)) {
+			    		
+			    	   // check for log archive failure, which is treated as a non failure but we save error message			    		
 			    	   try {			    	
 			    		   loadbalancerModel.setStatus(LoadBalancer.STATUS_ERROR, lbId, tenantId);
 			    	   }
 			    	   catch (DeviceModelAccessException dme) {
 				             logger.error(dme.message);
 			           }
+			    	 			    	
+			    	   // move device to error state
+			    	   try {
+			    	      deviceModel.setStatus(Device.STATUS_ERROR, deviceId);
+			    	   }
+			    	   catch (DeviceModelAccessException dme) {
+			              logger.error(dme.message);
+		               }
+			    	}
+			    	else if( action.equalsIgnoreCase(LbaasHandler.ACTION_DELETE)) {
+			    		   // move device to error state
+				    	   try {
+				    	      deviceModel.setStatus(Device.STATUS_ERROR, deviceId);
+				    	   }
+				    	   catch (DeviceModelAccessException dme) {
+				              logger.error(dme.message);
+			               }
+			    	}
+                    else if( action.equalsIgnoreCase(LbaasHandler.ACTION_ARCHIVE)) {
+                    	try {			    	
+ 			    		   loadbalancerModel.setErrMsg(errorMsg, lbId, tenantId);
+ 			    	   }
+ 			    	   catch (DeviceModelAccessException dme) {
+ 				             logger.error(dme.message);
+ 			           }
 			    	}
 			    	
-			    	// move device to error state
-			    	try {
-			    		deviceModel.setStatus(Device.STATUS_ERROR, deviceId);
-			    	}
-			    	catch (DeviceModelAccessException dme) {
-			             logger.error(dme.message);
-		           }
 		        }	
 			}
 		}
