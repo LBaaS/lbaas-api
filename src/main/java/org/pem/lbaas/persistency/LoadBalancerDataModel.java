@@ -23,6 +23,7 @@ import org.pem.lbaas.datamodel.Nodes;
 import org.pem.lbaas.datamodel.VipType;
 import org.pem.lbaas.datamodel.VirtualIp;
 import org.pem.lbaas.datamodel.VirtualIps;
+import org.pem.lbaas.handlers.tenant.LimitsHandler;
 import org.pem.lbaas.handlers.tenant.ProtocolHandler;
 
 public class LoadBalancerDataModel {
@@ -43,6 +44,7 @@ public class LoadBalancerDataModel {
 	protected final static String SQL_CREATED       = "created";
 	protected final static String SQL_UPDATED       = "updated";
 	protected final static String SQL_DEVICE        = "device";
+	protected final static String SQL_ERRMSG        = "errmsg";
 	
 	static final protected String DEFAULT_ALGO      = "ROUND_ROBIN";
 	
@@ -141,6 +143,8 @@ public class LoadBalancerDataModel {
 	       lb.setUpdated( ft.format(updatedDate));
 		   
 		   lb.setDevice(new Long(rs.getInt(SQL_DEVICE)));
+		   
+		   lb.setErrorMsg(rs.getString(SQL_ERRMSG));
 		  		   		   		   		   
 	   }
 	   catch (SQLException sqle){                                              
@@ -168,6 +172,36 @@ public class LoadBalancerDataModel {
 		   throw new DeviceModelAccessException("Could not find loadbalancer id: " + id + " tenantid: " +  tenantId);
 	   }
 	   lb.setStatus( status);
+	   // clear error msg if LB is OK
+	   if ( status.equalsIgnoreCase(LoadBalancer.STATUS_ACTIVE))
+		   lb.setErrorMsg(null);
+	   
+	   this.setLoadBalancer(lb);	
+	   return true;	
+	}
+	
+	 /**
+	    * Change the errmsg on a Loadbalancer
+	    * 
+	    * Changes device status returns true if changed or false if Device not found
+	    * 
+	    * @param message
+	    * @param id
+	    * @return boolean
+	    * @throws DeviceModelAccessException if internal database error
+	    */
+	public synchronized boolean setErrMsg( String msg, long id, String tenantId) throws DeviceModelAccessException {
+		
+	   // trim the message if its too long 
+	   if ( msg.length()> LimitsHandler.LIMIT_MAX_NAME_SIZE)
+		   msg = msg.substring(0,LimitsHandler.LIMIT_MAX_NAME_SIZE-1);
+		
+	   logger.info("setErrMsg : " + msg + "lbID: " + id + " tenantId: " + tenantId);
+	   LoadBalancer lb = this.getLoadBalancer(id,tenantId);
+	   if (lb == null) {
+		   throw new DeviceModelAccessException("Could not find loadbalancer id: " + id + " tenantid: " +  tenantId);
+	   }
+	   lb.setErrorMsg(msg);
 	   this.setLoadBalancer(lb);	
 	   return true;	
 	}
@@ -253,7 +287,7 @@ public class LoadBalancerDataModel {
 		Connection conn = dbConnect();
 		
 		try {
-			String query = "UPDATE loadbalancers SET name = ?, algorithm = ?, status = ?, updated = ? WHERE id = ? AND tenantid = ?";			
+			String query = "UPDATE loadbalancers SET name = ?, algorithm = ?, status = ?, updated = ?, errmsg = ? WHERE id = ? AND tenantid = ?";			
 			PreparedStatement statement = conn.prepareStatement(query);
 			statement.setString(1,lb.getName());
 			statement.setString(2,lb.getAlgorithm());
@@ -263,8 +297,10 @@ public class LoadBalancerDataModel {
 			Date dNow = calendar.getTime();						
 			statement.setTimestamp(4,new java.sql.Timestamp(dNow.getTime()));
 			
-			statement.setLong(5,lb.getId());
-			statement.setString(6,lb.getTenantId());
+			statement.setString(5,lb.getErrorMsg());
+			
+			statement.setLong(6,lb.getId());
+			statement.setString(7,lb.getTenantId());
 			statement.executeUpdate();
 			statement.close();
 			return true;
@@ -292,7 +328,7 @@ public class LoadBalancerDataModel {
 				
 		Connection conn = dbConnect();
 		try {
-			String query = "insert into loadbalancers (name,tenantid, protocol,port,status,algorithm,created,updated,device ) values(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			String query = "insert into loadbalancers (name,tenantid, protocol,port,status,algorithm,created,updated,device,errmsg ) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 			PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);	
 			statement.setString(1,lb.getName() );
 			statement.setString(2,lb.getTenantId());
@@ -305,6 +341,7 @@ public class LoadBalancerDataModel {
 			statement.setTimestamp(7,new java.sql.Timestamp(dNow.getTime()));	
 			statement.setTimestamp(8,new java.sql.Timestamp(dNow.getTime()));	
 			statement.setLong(9,lb.getDevice());         
+			statement.setString( 10, lb.getErrorMsg());
 			
 			int affectedRows = statement.executeUpdate();
 			if (affectedRows == 0) {
