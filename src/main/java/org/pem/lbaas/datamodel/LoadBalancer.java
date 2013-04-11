@@ -115,6 +115,7 @@ public class LoadBalancer
     
     // PEM
     protected Long device;
+    protected String errorMsg=null;
 
     public Long getDevice() {
         return device;
@@ -132,6 +133,14 @@ public class LoadBalancer
 
     public void setTenantId(String id) {
         this.tenantId = id;
+    }
+    
+    public String getErrorMsg() {
+    	return errorMsg;
+    }
+    
+    public void setErrorMsg( String msg) {
+    	errorMsg=msg;
     }
         
 
