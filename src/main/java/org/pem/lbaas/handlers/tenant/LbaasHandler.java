@@ -65,6 +65,7 @@ public class LbaasHandler {
     public static String HPCS_RESPONSE       = "hpcs_response";
     public static String HPCS_DEVICE         = "hpcs_device";
     public static String HPCS_TENANTID       = "hpcs_tenantid";
+    public static String HPCS_ERROR          = "hpcs_error";
     public static String HPCS_OBJECT_STORE_TYPE     = "hpcs_object_store_type";
     public static String HPCS_OBJECT_STORE_ENDPOINT = "hpcs_object_store_endpoint";
     public static String HPCS_OBJECT_STORE_BASEPATH = "hpcs_object_store_basepath";
@@ -84,6 +85,7 @@ public class LbaasHandler {
     protected static String JSON_PORT        = "port";
     protected static String JSON_ALGORITHM   = "algorithm";
     protected static String JSON_STATUS      = "status";
+    protected static String JSON_STATUSDESCR = "statusDescription";
     protected static String JSON_CREATED     = "created";
     protected static String JSON_UPDATED     = "updated";
     protected static String JSON_ADDRESS     = "address";
@@ -130,6 +132,9 @@ public class LbaasHandler {
 		   jsonResponseObject.put(JSON_CREATED,lb.getCreated());
 		   jsonResponseObject.put(JSON_UPDATED,lb.getUpdated());
 		   
+		   if (lb.getErrorMsg()!=null)
+			   jsonResponseObject.put(JSON_STATUSDESCR, lb.getErrorMsg());
+		   
 		   // vips
 		   jsonResponseObject.put(JSON_VIPS, vipsToJSON(lb.getVirtualIps()));
 
@@ -170,6 +175,9 @@ public class LbaasHandler {
 			   jsonLb.put(JSON_CREATED,lbs.get(x).getCreated());
 			   jsonLb.put(JSON_UPDATED,lbs.get(x).getUpdated());
 			   jsonLb.put(HPCS_TENANTID,lbs.get(x).getTenantId());
+			   
+			   if (lbs.get(x).getErrorMsg()!=null)
+				   jsonLb.put(JSON_STATUSDESCR, lbs.get(x).getErrorMsg());
 			   
 			   // vips
 			   jsonLb.put(JSON_VIPS,vipsToJSON(lbs.get(x).getVirtualIps()));
