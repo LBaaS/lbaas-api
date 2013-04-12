@@ -421,7 +421,8 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String>, Runnab
 			               }
 			    	}
                     else if( action.equalsIgnoreCase(LbaasHandler.ACTION_ARCHIVE)) {
-                    	try {			    	
+                    	try {		
+                    	   loadbalancerModel.setStatus(LoadBalancer.STATUS_ACTIVE, lbId,tenantId);	
  			    		   loadbalancerModel.setErrMsg(errorMsg, lbId, tenantId);
  			    	   }
  			    	   catch (DeviceModelAccessException dme) {
