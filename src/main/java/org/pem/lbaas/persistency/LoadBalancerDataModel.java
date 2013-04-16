@@ -219,7 +219,11 @@ public class LoadBalancerDataModel {
 		Connection conn = dbConnect();
 		Statement stmt=null;
 		if (conn!=null) {
-		   String query = "SELECT * FROM loadbalancers WHERE " + SQL_ID + "=" + lbId +" AND " + SQL_TENANTID + "=\'" + tenantId + "\'";
+			String query=null;
+		   if (tenantId !=null)
+		      query = "SELECT * FROM loadbalancers WHERE " + SQL_ID + "=" + lbId +" AND " + SQL_TENANTID + "=\'" + tenantId + "\'";
+		   else
+			   query = "SELECT * FROM loadbalancers WHERE " + SQL_ID + "=" + lbId;
 		   try {
 		      stmt=conn.createStatement();
 		      ResultSet rs=stmt.executeQuery(query);
