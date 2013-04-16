@@ -1,5 +1,6 @@
 package org.pem.lbaas.handlers.device;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -18,10 +19,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.pem.lbaas.Lbaas;
 import org.pem.lbaas.datamodel.Device;
+import org.pem.lbaas.datamodel.LoadBalancer;
 import org.pem.lbaas.persistency.DeviceDataModel;
 import org.pem.lbaas.persistency.DeviceModelAccessException;
 import org.pem.lbaas.persistency.DeviceUsage;
+import org.pem.lbaas.persistency.LoadBalancerDataModel;
 import org.pem.lbaas.handlers.tenant.LBaaSException;
+import org.pem.lbaas.handlers.tenant.LbaasHandler;
 import org.pem.lbaas.handlers.tenant.LimitsHandler;
 import org.pem.lbaas.handlers.tenant.ProtocolAddressException;
 import org.pem.lbaas.handlers.tenant.ProtocolHandler;
@@ -42,6 +46,7 @@ import javax.ws.rs.core.UriInfo;
 public class DeviceHandler {
    private static Logger logger = Logger.getLogger(DeviceHandler.class);
    private static DeviceDataModel deviceModel = new DeviceDataModel();
+   private static LoadBalancerDataModel loadbalancerModel = new LoadBalancerDataModel();
    public final String DEFAULT_TYPE       = "HAProxy";
    public final int    LB_UNASSIGNED      = 0;
 	
@@ -68,7 +73,7 @@ public class DeviceHandler {
     * @return JSON encoded Device
     * @throws JSONException
     */
-   protected String deviceToJson(Device device) throws JSONException {		
+   protected String deviceToJson(Device device) throws JSONException, DeviceModelAccessException {		
       JSONObject jsonDevice=new JSONObject();
       try {		  				
          jsonDevice.put(JSON_ID, device.getId());
@@ -76,7 +81,7 @@ public class DeviceHandler {
          jsonDevice.put(JSON_FLOAT_ADDRESS, device.getAddress());
          jsonDevice.put(JSON_PUBLIC_ADDRESS, device.getPublicIP());
          jsonDevice.put(JSON_AZ, device.getAz());
-         jsonDevice.put(JSON_LOADBALANCERS, DeviceDataModel.lbIdsToJson(device.lbIds));
+         jsonDevice.put(LbaasHandler.JSON_LBS, deviceToLoadBalancers(device.lbIds));
          jsonDevice.put(JSON_TYPE, device.getLbType());
          jsonDevice.put(JSON_STATUS, device.getStatus());	
          jsonDevice.put(JSON_CREATED, device.getCreated());
@@ -86,6 +91,40 @@ public class DeviceHandler {
       }
       catch ( JSONException jsone) {
          throw jsone;
+      }
+   }
+   
+   
+   /**
+    * Return JSON array of LB which are used by a device in admin view 
+    * @param device
+    * @return JSONArray
+    * @throws JSONException
+    */
+   protected JSONArray deviceToLoadBalancers(ArrayList<Long> lbIds) throws JSONException, DeviceModelAccessException {		
+	   JSONObject jsonObject=new JSONObject();
+	   JSONArray jsonArray = new JSONArray();
+      
+      try {	
+    	 for (int x=0;x<lbIds.size();x++) {
+    		 JSONObject jsonLb=new JSONObject();
+    		 jsonLb.put(LbaasHandler.JSON_ID, lbIds.get(x).toString());
+    		 
+    		 LoadBalancer lb =  loadbalancerModel.getLoadBalancer( lbIds.get(x), null);
+    		 if ( lb!=null) {
+    			 jsonLb.put(LbaasHandler.HPCS_TENANTID, lb.getTenantId());
+    		 }
+    		     		 
+    		 jsonArray.put(jsonLb);
+    	 }
+    	  			  			   			   
+         return jsonArray;
+      }
+      catch ( JSONException jsone) {
+         throw jsone;
+      }
+      catch (DeviceModelAccessException dme) {
+    	  throw dme;
       }
    }
    
@@ -141,7 +180,7 @@ public class DeviceHandler {
             jsonDevice.put(JSON_FLOAT_ADDRESS, devices.get(x).getAddress());
             jsonDevice.put(JSON_PUBLIC_ADDRESS, devices.get(x).getPublicIP());
             jsonDevice.put(JSON_AZ, devices.get(x).getAz());
-            jsonDevice.put(JSON_LOADBALANCERS, DeviceDataModel.lbIdsToJson(devices.get(x).lbIds));
+            jsonDevice.put(LbaasHandler.JSON_LBS, deviceToLoadBalancers(devices.get(x).lbIds));
             jsonDevice.put(JSON_TYPE, devices.get(x).getLbType());
             jsonDevice.put(JSON_STATUS, devices.get(x).getStatus());
             jsonDevice.put(JSON_CREATED, devices.get(x).getCreated());
@@ -154,6 +193,9 @@ public class DeviceHandler {
       }
       catch ( JSONException jsone) {			
          throw new LBaaSException("Internal JSON Exception : " + jsone.toString(), 500);  
+      }
+      catch ( DeviceModelAccessException dme) {			
+          throw new LBaaSException("Internal Exception : " + dme.toString(), 500);  
       }
    }
    
@@ -196,6 +238,9 @@ public class DeviceHandler {
 		catch ( JSONException jsone) {
 			throw new LBaaSException("Internal JSON Exception : " + jsone.toString(), 500);   
 		} 
+		catch ( DeviceModelAccessException dme) {			
+	          throw new LBaaSException("Internal Exception : " + dme.toString(), 500);  
+	    }
 	}
 	
    /**
@@ -501,6 +546,6 @@ public class DeviceHandler {
       } 
 										
 	}
-
+   
 		
 }
