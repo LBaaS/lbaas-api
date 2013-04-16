@@ -55,6 +55,7 @@ CREATE TABLE devices (
     created        TIMESTAMP             NOT NULL,                  # timestamp of when device was created
     updated        TIMESTAMP             NOT NULL,                  # timestamp of when device was last updated
     status         VARCHAR(128)          NOT NULL,                  # status of device 'OFFLINE', 'ONLINE', 'ERROR', this value is reported by the device
+    errmsg         VARCHAR(128)          DEFAULT NULL,              # Holds errmsg output from log archive operations, etc
     PRIMARY KEY (id)
 ) DEFAULT CHARSET utf8 DEFAULT COLLATE utf8_general_ci;
 
