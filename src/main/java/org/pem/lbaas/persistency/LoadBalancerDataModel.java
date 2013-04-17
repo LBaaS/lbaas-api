@@ -193,8 +193,9 @@ public class LoadBalancerDataModel {
 	public synchronized boolean setErrMsg( String msg, long id, String tenantId) throws DeviceModelAccessException {
 		
 	   // trim the message if its too long 
-	   if ( msg.length()> LimitsHandler.LIMIT_MAX_NAME_SIZE)
-		   msg = msg.substring(0,LimitsHandler.LIMIT_MAX_NAME_SIZE-1);
+	   if ( msg != null)
+	      if ( msg.length()> LimitsHandler.LIMIT_MAX_NAME_SIZE)
+		     msg = msg.substring(0,LimitsHandler.LIMIT_MAX_NAME_SIZE-1);
 		
 	   logger.info("setErrMsg : " + msg + "lbID: " + id + " tenantId: " + tenantId);
 	   LoadBalancer lb = this.getLoadBalancer(id,tenantId);
