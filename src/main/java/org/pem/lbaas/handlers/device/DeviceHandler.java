@@ -62,6 +62,7 @@ public class DeviceHandler {
    protected final String JSON_UPDATED        = "updated";
    protected final String JSON_TYPE           = "type";
    protected final String JSON_STATUS         = "status";
+   protected final String JSON_STATUS_DESCR   = "statusDescription";
    protected final String JSON_TOTAL_DEVICES  = "total";
    protected final String JSON_FREE_DEVICES   = "free";
    protected final String JSON_TAKEN_DEVICES  = "taken";
@@ -475,7 +476,8 @@ public class DeviceHandler {
          throw new LBaaSException("could not find id : " + id + " on put : " + id, 404);
       }
 		
-      String name, address;
+      String name, address, status;
+      String statusDescription=null;
       JSONObject jsonObject=null;
 		
       try {
@@ -520,9 +522,40 @@ public class DeviceHandler {
       catch (JSONException e) {
 			address=null;
       }
+      
+      // change the status, only PUT'ing to ERROR status is allowed since other states are managed by API server!
+      try {
+          status = (String) jsonObject.get(JSON_STATUS);
+          
+          if ( status.equalsIgnoreCase(Device.STATUS_ERROR)) 
+        	  status = Device.STATUS_ERROR;
+          else if (status.equalsIgnoreCase(Device.STATUS_ONLINE))
+        	  status = Device.STATUS_ONLINE;
+          else
+        	  throw new LBaaSException("'status' can only be set to a value of 'ERROR' or 'ONLINE'", 400);          
+      
+          // if there are no existing LBs setting it ONLINE will be changed to OFFLINE
+          if ( status.equalsIgnoreCase(Device.STATUS_ONLINE) && device.lbIds.size()==0)
+        	  status = Device.STATUS_OFFLINE;
+          
+          device.setStatus(status);
+          
+          // get statusDescription if present
+          if ( jsonObject.has(JSON_STATUS_DESCR)) {
+        	  statusDescription = (String) jsonObject.get(JSON_STATUS_DESCR);
+              if (statusDescription.length() > LimitsHandler.LIMIT_MAX_NAME_SIZE)
+        	      throw new LBaaSException("'statusDescription' exceeds max length of :'" + LimitsHandler.LIMIT_MAX_NAME_SIZE, 400);
+          }
+          
+          logger.info("status :" + status + " statusDescription :" + statusDescription);
+      }
+      catch (JSONException e) {
+         status=null;
+      }
 		
-      if ((name==null) && (address==null)) {
-         throw new LBaaSException("missing 'name' and 'address' ", 400);  
+       
+      if ((name==null) && (address==null) && (status==null)) {
+         throw new LBaaSException("PUT needs at least 'name', 'address' or 'status' ", 400);  
       }
 		
       try {
@@ -531,6 +564,35 @@ public class DeviceHandler {
       catch (DeviceModelAccessException dme) {
           throw new LBaaSException(dme.message, 500);
       }
+      
+      // if device has any LBs, status must be updated on these
+      try {
+	      if (( device.lbIds.size()>0)&&(status!=null)) {
+	    	  String lbStatus=null;
+	    	  if (status.equalsIgnoreCase(Device.STATUS_ERROR))
+	    		  lbStatus = LoadBalancer.STATUS_ERROR;
+	    	  else
+	    		  lbStatus = LoadBalancer.STATUS_ACTIVE;
+	    	  for (int x=0;x<device.lbIds.size();x++) {
+	    		  LoadBalancer lb = loadbalancerModel.getLoadBalancer(device.lbIds.get(x), null);
+	    		  if (lb!=null) {
+	    		     if ( (!lb.getStatus().equalsIgnoreCase(LoadBalancer.STATUS_BUILD)) && (!lb.getStatus().equalsIgnoreCase(LoadBalancer.STATUS_PENDING_UPDATE))) {
+	    		        loadbalancerModel.setStatus(lbStatus, lb.getId(), lb.getTenantId());
+	    		        if (lbStatus.equalsIgnoreCase(LoadBalancer.STATUS_ACTIVE))
+	    		        	loadbalancerModel.setErrMsg( null,lb.getId(), lb.getTenantId());
+	    		        else
+	    		        	loadbalancerModel.setErrMsg( statusDescription,lb.getId(), lb.getTenantId());
+	    		     }
+	    		  }
+	    		  else
+	    			  logger.error("device references non existent lbid: " + device.lbIds.get(x));
+	    	  }
+	      }
+      }
+      catch ( DeviceModelAccessException dme) {
+    	  throw new LBaaSException("internal error accessing device loadbalancers " + dme.toString(), 500);
+      }
+      
       
       // return back entire device with changes
       Device deviceResponse = null;
