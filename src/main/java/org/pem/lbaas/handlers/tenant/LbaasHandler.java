@@ -1724,9 +1724,22 @@ public class LbaasHandler {
 		
 		// defaults for archive request
 		LBaaSArchiveRequest lbaaSArchiveRequest = new LBaaSArchiveRequest();
+		
+		// always swift at this point
 		lbaaSArchiveRequest.objectStoreType = Lbaas.lbaasConfig.objectStoreType;
+		
+		// endpoint represents object storage endpoint as advertised in service catalog
+		// by default use tenant id from requestor 
 		lbaaSArchiveRequest.objectStoreEndpoint = Lbaas.lbaasConfig.objectStoreEndpoint;
+		 if (!lbaaSArchiveRequest.objectStoreEndpoint.endsWith("/"))
+			 lbaaSArchiveRequest.objectStoreEndpoint += "/";
+		 lbaaSArchiveRequest.objectStoreEndpoint += tenantId;
+		
+		
+		// base path of object store
 		lbaaSArchiveRequest.objectStoreBasePath = Lbaas.lbaasConfig.objectStoreLogBasePath;
+		
+		// use requestor's token as default
 		lbaaSArchiveRequest.objectStoreToken =  request.getHeader(KeystoneAuthFilter.KEYSTONE_AUTH_TOKEN);
 		
 		// look for JSON body and extract and override values 
@@ -1743,7 +1756,7 @@ public class LbaasHandler {
 				   logger.info("over riding token value with : " + token);
 				}
 				
-				// object endpoint				
+				// object endpoint including tenant id if desired, note auth token should match				
 				if ( jsonObject.has(JSON_OBJ_ENDPNT)) {
 					   String endpoint = (String) jsonObject.get(JSON_OBJ_ENDPNT);
 					   if ( endpoint.length() > LimitsHandler.LIMIT_MAX_NAME_SIZE)
