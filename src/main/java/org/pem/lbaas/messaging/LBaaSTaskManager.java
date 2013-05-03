@@ -45,7 +45,8 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String>, Runnab
 	// gearman
 	Gearman gearman=null;
 	GearmanClient gearmanClient=null;
-	GearmanServer gearmanServer=null;
+	GearmanServer gearmanServer1=null;
+	GearmanServer gearmanServer2=null;
 	
 	/**
 	 * Constructor sets up gearman for client behavior
@@ -53,8 +54,15 @@ public class LBaaSTaskManager implements GearmanJobEventCallback<String>, Runnab
 	public LBaaSTaskManager() {
 	   gearman = Gearman.createGearman();
        gearmanClient = gearman.createGearmanClient();
-       gearmanServer = gearman.createGearmanServer( Lbaas.lbaasConfig.gearmanServerAddr, Lbaas.lbaasConfig.gearmanServerPort);
-       gearmanClient.addServer(gearmanServer);
+       gearmanServer1 = gearman.createGearmanServer( Lbaas.lbaasConfig.gearmanServer1Addr, Lbaas.lbaasConfig.gearmanServerPort);
+       gearmanClient.addServer(gearmanServer1);
+       
+       // HA Gearman setup
+       if (( Lbaas.lbaasConfig.gearmanServer2Addr!=null) && (!Lbaas.lbaasConfig.gearmanServer2Addr.isEmpty())) {
+    	   gearmanServer2 = gearman.createGearmanServer( Lbaas.lbaasConfig.gearmanServer2Addr, Lbaas.lbaasConfig.gearmanServerPort);
+           gearmanClient.addServer(gearmanServer2);
+       }
+       
        logger.info("LBaaSTaskManager constructor");
        if (runner==null) {
           runner = new Thread(this);

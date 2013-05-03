@@ -21,7 +21,8 @@ public class LbaasConfig {
 	public static String DB_USER        = "db-user";
 	public static String DB_PWD         = "db-pwd";
 	public static String DB_VALID_TO    = "db-valid-to";
-	public static String GEARMAN_JOB_SERVER_ADDR = "gearman-job-server-addr";
+	public static String GEARMAN_JOB_SERVER1_ADDR = "gearman-job-server1-addr";
+	public static String GEARMAN_JOB_SERVER2_ADDR = "gearman-job-server2-addr";
 	public static String GEARMAN_JOB_SERVER_PORT = "gearman-job-server-port";
 	public static String KEYSTONE_SERVICE_ID     = "keystone-service-id";
 	public static String KEYSTONE_SERVER_VIP     = "keystone-server-vip";	
@@ -49,7 +50,8 @@ public class LbaasConfig {
 	public String dbUser;
 	public String dbPwd;
 	public int dbValidTimeOut;
-	public String gearmanServerAddr;
+	public String gearmanServer1Addr;
+	public String gearmanServer2Addr;
 	public int gearmanServerPort;
 	public String keystoneServiceId;
 	public String keystoneServerVIP;	
@@ -82,7 +84,8 @@ public class LbaasConfig {
 	           dbPwd = serviceConfig.getString(DB_PWD);
 	           dbValidTimeOut = serviceConfig.getInt(DB_VALID_TO);
 	           
-	           gearmanServerAddr = serviceConfig.getString(GEARMAN_JOB_SERVER_ADDR);
+	           gearmanServer1Addr = serviceConfig.getString(GEARMAN_JOB_SERVER1_ADDR);
+	           gearmanServer2Addr = serviceConfig.getString(GEARMAN_JOB_SERVER2_ADDR);
 	           gearmanServerPort = serviceConfig.getInt(GEARMAN_JOB_SERVER_PORT);
 	           
 	           keystoneServiceId = serviceConfig.getString(KEYSTONE_SERVICE_ID);
@@ -114,26 +117,30 @@ public class LbaasConfig {
 	           
 	public void log() {
 	   
-	   logger.info("API port               : " + apiPort);
-	   logger.info("ADMIN port             : " + adminPort);
-	   logger.info("Keystore               : " + keystore);
-	   logger.info("DB Path                : " + dbPath);
-	   logger.info("DB Driver              : " + dbDriver);
-	   logger.info("DB Valid Time Out      : " + dbValidTimeOut);
-	   logger.info("Gearman Server Address : " + gearmanServerAddr);
-	   logger.info("Gearman Server Port    : " + gearmanServerPort);
-	   logger.info("Keystone Service Id    : " + keystoneServiceId);
-	   logger.info("Keystone Server VIP    : " + keystoneServerVIP);
-	   logger.info("Keystone Server Port   : " + keystoneServerPort);
-	   logger.info("Keystone Keystore      : " + keystoneKeystore);
-	   logger.info("Keystone Truststore    : " + keystoneTruststore);
-	   logger.info("Max LBs Per Tenant     : " + maxLbs);
-	   logger.info("Max VIPs Per LB        : " + maxVipsPerLb);
-	   logger.info("Max Nodes Per LB       : " + maxNodesperLb);
-	   logger.info("Pagination Limit       : " + pageLimit);
-	   logger.info("Object Store Type      : " + objectStoreType);
-	   logger.info("Object Store Endpoint  : " + objectStoreEndpoint);
-	   logger.info("Object Store Log Path  : " + objectStoreLogBasePath);   
+	   logger.info("API port                : " + apiPort);
+	   logger.info("ADMIN port              : " + adminPort);
+	   logger.info("Keystore                : " + keystore);
+	   logger.info("DB Path                 : " + dbPath);
+	   logger.info("DB Driver               : " + dbDriver);
+	   logger.info("DB Valid Time Out       : " + dbValidTimeOut);
+	   logger.info("Gearman Server1 Address : " + gearmanServer1Addr);
+	   if (( Lbaas.lbaasConfig.gearmanServer2Addr!=null) && (!Lbaas.lbaasConfig.gearmanServer2Addr.isEmpty()))
+	      logger.info("Gearman Server2 Address : " + gearmanServer2Addr);
+	   else
+		  logger.info("Gearman Server2 Address : Not Defined");
+	   logger.info("Gearman Server Port     : " + gearmanServerPort);
+	   logger.info("Keystone Service Id     : " + keystoneServiceId);
+	   logger.info("Keystone Server VIP     : " + keystoneServerVIP);
+	   logger.info("Keystone Server Port    : " + keystoneServerPort);
+	   logger.info("Keystone Keystore       : " + keystoneKeystore);
+	   logger.info("Keystone Truststore     : " + keystoneTruststore);
+	   logger.info("Max LBs Per Tenant      : " + maxLbs);
+	   logger.info("Max VIPs Per LB         : " + maxVipsPerLb);
+	   logger.info("Max Nodes Per LB        : " + maxNodesperLb);
+	   logger.info("Pagination Limit        : " + pageLimit);
+	   logger.info("Object Store Type       : " + objectStoreType);
+	   logger.info("Object Store Endpoint   : " + objectStoreEndpoint);
+	   logger.info("Object Store Log Path   : " + objectStoreLogBasePath);   
 	   
 	}
 
